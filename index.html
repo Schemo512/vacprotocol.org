@@ -599,7 +599,7 @@
       For technical enquiries, standards collaboration, or demonstration requests:
     </p>
     <p>
-      <a href="/cdn-cgi/l/email-protection#81e0e5ece8efc1f7e8eeede4f5f2e9eef3e4f2afe2eeec"><span class="__cf_email__" data-cfemail="9efffaf3f7f0dee8f7f1f2fbeaedf6f1ecfbedb0fdf1f3">[email&#160;protected]</span></a>
+      <a href="mailto:admin@violetshores.com">admin@violetshores.com</a>
     </p>
     <p style="margin-top: 1.5rem; font-size: 13px; color: #6b7280;">
       Responding to NIST CAISI RFI on AI Agent Security (NIST-2025-0035) and NCCoE concept paper on Software and AI Agent Identity and Authorization.
@@ -610,9 +610,20 @@
 <!-- FOOTER -->
 <footer>
   <p>&copy; 2026 Violet Shores Pty Ltd. All rights reserved.</p>
-  <p><a href="/cdn-cgi/l/email-protection#4b2a2f2622250b3d2224272e3f382324392e3865282426"><span class="__cf_email__" data-cfemail="6f0e0b0206012f190600030a1b1c07001d0a1c410c0002">[email&#160;protected]</span></a></p>
+  <p><a href="mailto:admin@violetshores.com">admin@violetshores.com</a></p>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // Nav scroll effect
   window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
