@@ -3,37 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAC Protocol</title>
-<meta name="robots" content="noindex, nofollow">
+<title>VAC Protocol — Verified Authority Chain</title>
+<meta name="description" content="Biometric human-to-agent attribution for AI agent systems.">
+<meta property="og:title" content="VAC Protocol — Verified Authority Chain">
+<meta property="og:description" content="Biometric human-to-agent attribution for AI agent systems.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://vacprotocol.org">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --ink: #0a0f1a;
+    --paper: #f8f7f4;
+    --accent: #1a3a5c;
+    --muted: #6b7280;
+    --border: #d4d0c8;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --serif: 'DM Serif Display', Georgia, serif;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0a0f1a;
-    color: #e5e7eb;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    text-align: center;
+    padding: 2rem;
+    -webkit-font-smoothing: antialiased;
   }
-  .container { padding: 2rem; }
-  h1 {
-    font-size: 1.4rem;
+  .mark {
+    font-family: var(--mono);
+    font-size: 15px;
     font-weight: 500;
-    letter-spacing: 2px;
-    color: #93c5fd;
-    margin-bottom: 1rem;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 0.6s 0.1s forwards;
   }
-  p { font-size: 15px; color: #6b7280; }
-  .copy { margin-top: 3rem; font-size: 12px; color: #374151; }
+  .mark span { color: var(--muted); font-weight: 400; }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.2;
+    color: var(--ink);
+    text-align: center;
+    max-width: 600px;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeIn 0.6s 0.25s forwards;
+  }
+  .sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-weight: 300;
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 0.6s 0.4s forwards;
+  }
+  .divider {
+    width: 50px;
+    height: 2px;
+    background: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 0.6s 0.55s forwards;
+  }
+  .contact {
+    font-size: 14px;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeIn 0.6s 0.65s forwards;
+  }
+  .contact a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .contact a:hover { text-decoration: underline; }
+  footer {
+    position: fixed;
+    bottom: 2rem;
+    font-size: 12px;
+    color: var(--border);
+    opacity: 0;
+    animation: fadeIn 0.6s 0.8s forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>VAC PROTOCOL</h1>
-  <p>Coming soon.</p>
-  <p class="copy">&copy; 2026 Violet Shores Pty Ltd</p>
-</div>
+  <div class="mark">VAC <span>PROTOCOL</span></div>
+  <h1>Verified Authority Chain</h1>
+  <p class="sub">Biometric human-to-agent attribution for AI agent systems. Protocol specification forthcoming.</p>
+  <div class="divider"></div>
+  <p class="contact"><a href="mailto:admin@violetshores.com">admin@violetshores.com</a></p>
+  <footer>&copy; 2026 Violet Shores Pty Ltd</footer>
 </body>
 </html>
