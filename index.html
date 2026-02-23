@@ -4,111 +4,626 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Verified Authority Chain</title>
-<meta name="description" content="Biometric human-to-agent attribution for AI agent systems.">
+<meta name="description" content="The VAC Protocol provides biometric human-to-agent attribution for AI agent systems. Every agent action cryptographically traceable to a verified human.">
 <meta property="og:title" content="VAC Protocol — Verified Authority Chain">
-<meta property="og:description" content="Biometric human-to-agent attribution for AI agent systems.">
+<meta property="og:description" content="Biometric human-to-agent attribution for AI agent systems. Securing the link between human intent and agent action.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vacprotocol.org">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #0a0f1a;
     --paper: #f8f7f4;
     --accent: #1a3a5c;
+    --accent-light: #2e6e9e;
     --muted: #6b7280;
     --border: #d4d0c8;
-    --mono: 'IBM Plex Mono', 'Courier New', monospace;
-    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --surface: #efeee9;
+    --highlight: #e8f0f8;
     --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
   body {
     font-family: var(--sans);
-    background: var(--paper);
     color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
+    background: var(--paper);
+    font-size: 17px;
+    line-height: 1.7;
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
-  .mark {
-    font-family: var(--mono);
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-    margin-bottom: 3rem;
-    opacity: 0;
-    animation: fadeIn 0.6s 0.1s forwards;
+
+  /* === NAV === */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(248, 247, 244, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: box-shadow 0.3s;
   }
-  .mark span { color: var(--muted); font-weight: 400; }
-  h1 {
-    font-family: var(--serif);
-    font-size: clamp(2rem, 4vw, 3rem);
-    line-height: 1.2;
-    color: var(--ink);
-    text-align: center;
-    max-width: 600px;
+  nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-mark {
+    font-family: var(--mono); font-weight: 500; font-size: 15px;
+    color: var(--accent); text-decoration: none; letter-spacing: 0.5px;
+  }
+  .nav-mark span { color: var(--muted); font-weight: 400; }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a {
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    text-decoration: none; letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* === HERO === */
+  .hero {
+    max-width: 1100px; margin: 0 auto;
+    padding: 10rem 2rem 6rem;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    color: var(--accent-light); letter-spacing: 1.5px; text-transform: uppercase;
     margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeIn 0.6s 0.25s forwards;
+    opacity: 0; animation: fadeUp 0.6s 0.1s forwards;
   }
-  .sub {
-    font-size: 1.05rem;
-    color: var(--muted);
-    font-weight: 300;
-    text-align: center;
-    max-width: 480px;
-    line-height: 1.7;
-    margin-bottom: 3rem;
-    opacity: 0;
-    animation: fadeIn 0.6s 0.4s forwards;
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.15; color: var(--ink); max-width: 800px;
+    margin-bottom: 2rem;
+    opacity: 0; animation: fadeUp 0.6s 0.25s forwards;
   }
-  .divider {
-    width: 50px;
-    height: 2px;
-    background: var(--accent);
-    margin-bottom: 3rem;
-    opacity: 0;
-    animation: fadeIn 0.6s 0.55s forwards;
+  .hero-sub {
+    font-size: 1.15rem; line-height: 1.8; color: var(--muted);
+    max-width: 620px; font-weight: 300;
+    opacity: 0; animation: fadeUp 0.6s 0.4s forwards;
   }
-  .contact {
-    font-size: 14px;
-    color: var(--muted);
-    opacity: 0;
-    animation: fadeIn 0.6s 0.65s forwards;
+  .hero-sub strong { font-weight: 500; color: var(--ink); }
+
+  .hero-divider {
+    width: 60px; height: 3px; background: var(--accent);
+    margin: 3.5rem 0;
+    opacity: 0; animation: fadeUp 0.6s 0.55s forwards;
   }
-  .contact a {
+
+  .hero-stat-row {
+    display: flex; gap: 3rem; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.6s 0.65s forwards;
+  }
+  .hero-stat {
+    display: flex; flex-direction: column;
+  }
+  .hero-stat-value {
+    font-family: var(--mono); font-size: 1.6rem; font-weight: 500;
     color: var(--accent);
-    text-decoration: none;
-    font-weight: 500;
   }
-  .contact a:hover { text-decoration: underline; }
+  .hero-stat-label {
+    font-size: 13px; color: var(--muted); margin-top: 0.2rem;
+  }
+
+  /* === SECTIONS === */
+  section {
+    max-width: 1100px; margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+  section + section { border-top: 1px solid var(--border); }
+
+  .section-label {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    color: var(--accent-light); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  section h2 {
+    font-family: var(--serif); font-size: 2rem; line-height: 1.25;
+    color: var(--ink); margin-bottom: 1.5rem; max-width: 700px;
+  }
+  section p {
+    max-width: 680px; color: #374151; margin-bottom: 1.25rem;
+  }
+
+  /* === PROBLEM / SOLUTION === */
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+    margin-top: 2.5rem;
+  }
+  .problem-card {
+    padding: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+  .problem-card.current { border-left: 3px solid #b45309; }
+  .problem-card.vac { border-left: 3px solid var(--accent); background: var(--highlight); }
+  .problem-card h3 {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .problem-card.current h3 { color: #b45309; }
+  .problem-card.vac h3 { color: var(--accent); }
+  .problem-card p { font-size: 15px; line-height: 1.7; color: #4b5563; margin-bottom: 0.75rem; }
+  .problem-card p:last-child { margin-bottom: 0; }
+
+  /* === HOW IT WORKS === */
+  .chain {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: var(--ink);
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  .chain-node {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1rem 1.5rem;
+    min-width: 120px;
+  }
+  .chain-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 0.6rem;
+  }
+  .chain-node.human .chain-icon { background: #1a3a5c; border: 2px solid #4a90c4; }
+  .chain-node.agent .chain-icon { background: #1a3a3a; border: 2px solid #4ac4a0; }
+  .chain-node.action .chain-icon { background: #3a1a3a; border: 2px solid #c44ac4; }
+  .chain-label {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    color: #9ca3af; text-align: center; letter-spacing: 0.5px;
+  }
+  .chain-sublabel {
+    font-size: 10px; color: #6b7280; text-align: center;
+    margin-top: 0.2rem;
+  }
+  .chain-arrow {
+    color: #4b5563; font-size: 18px; padding: 0 0.25rem;
+    font-family: var(--mono);
+  }
+
+  /* === VAT PROPERTIES === */
+  .properties {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    margin: 2.5rem 0;
+  }
+  .prop {
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .prop-name {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    color: var(--accent); margin-bottom: 0.6rem;
+    letter-spacing: 0.3px;
+  }
+  .prop p {
+    font-size: 14px; line-height: 1.65; color: #6b7280;
+    margin-bottom: 0;
+  }
+
+  /* === LAYERS === */
+  .layers {
+    display: flex; flex-direction: column; gap: 0;
+    margin: 2.5rem 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .layer {
+    display: grid; grid-template-columns: 200px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .layer:last-child { border-bottom: none; }
+  .layer-label {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    padding: 1.25rem 1.5rem;
+    background: var(--surface);
+    color: var(--accent);
+    display: flex; align-items: center;
+    letter-spacing: 0.3px;
+  }
+  .layer-content {
+    padding: 1.25rem 1.5rem;
+    font-size: 15px; color: #4b5563; line-height: 1.6;
+  }
+
+  /* === ALIGNMENT === */
+  .alignment-table {
+    width: 100%; border-collapse: collapse;
+    margin: 2rem 0;
+  }
+  .alignment-table th {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--accent); text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--accent);
+  }
+  .alignment-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; color: #4b5563; line-height: 1.5;
+  }
+  .alignment-table tr:last-child td { border-bottom: none; }
+
+  /* === IP STATUS === */
+  .ip-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    margin: 2rem 0;
+  }
+  .ip-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .ip-card h3 {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    color: var(--accent); margin-bottom: 0.75rem;
+    letter-spacing: 0.3px;
+  }
+  .ip-card p {
+    font-size: 14px; color: #6b7280; line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+  .ip-card p:last-child { margin-bottom: 0; }
+
+  /* === CONTACT === */
+  .contact-box {
+    background: var(--ink); color: #e5e7eb;
+    padding: 3rem;
+    border-radius: 4px;
+    margin-top: 2rem;
+  }
+  .contact-box h3 {
+    font-family: var(--serif); font-size: 1.4rem; color: white;
+    margin-bottom: 1rem;
+  }
+  .contact-box p {
+    color: #9ca3af; font-size: 15px; line-height: 1.7;
+    max-width: 600px; margin-bottom: 1rem;
+  }
+  .contact-box a {
+    color: #93c5fd; text-decoration: none; font-weight: 500;
+  }
+  .contact-box a:hover { text-decoration: underline; }
+
+  /* === FOOTER === */
   footer {
-    position: fixed;
-    bottom: 2rem;
-    font-size: 12px;
-    color: var(--border);
-    opacity: 0;
-    animation: fadeIn 0.6s 0.8s forwards;
+    max-width: 1100px; margin: 0 auto;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+  footer p {
+    font-size: 13px; color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .hero { padding: 8rem 1.5rem 4rem; }
+    section { padding: 3.5rem 1.5rem; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .properties { grid-template-columns: 1fr; }
+    .ip-grid { grid-template-columns: 1fr; }
+    .chain { flex-direction: column; align-items: flex-start; }
+    .chain-arrow { transform: rotate(90deg); padding: 0.25rem 0; align-self: center; }
+    .layer { grid-template-columns: 1fr; }
+    .layer-label { border-bottom: 1px solid var(--border); }
+    .hero-stat-row { gap: 2rem; }
+    .nav-links { display: none; }
   }
 </style>
 </head>
 <body>
-  <div class="mark">VAC <span>PROTOCOL</span></div>
-  <h1>Verified Authority Chain</h1>
-  <p class="sub">Biometric human-to-agent attribution for AI agent systems. Protocol specification forthcoming.</p>
-  <div class="divider"></div>
-  <p class="contact"><a href="mailto:admin@violetshores.com">admin@violetshores.com</a></p>
-  <footer>&copy; 2026 Violet Shores Pty Ltd</footer>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-mark">VAC <span>PROTOCOL</span></a>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#how">How It Works</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#alignment">Standards</a>
+      <a href="#ip">IP Status</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Verified Authority Chain</div>
+  <h1>Securing the link between human intent and agent action</h1>
+  <p class="hero-sub">
+    The VAC Protocol provides <strong>biometric human-to-agent attribution</strong> for AI agent systems. Every agent action — at any depth in a multi-agent chain — is cryptographically traceable to a <strong>verified human</strong>.
+  </p>
+  <div class="hero-divider"></div>
+  <div class="hero-stat-row">
+    <div class="hero-stat">
+      <div class="hero-stat-value">167</div>
+      <div class="hero-stat-label">Patent claims filed</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">4</div>
+      <div class="hero-stat-label">Biometric modalities</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">∞</div>
+      <div class="hero-stat-label">Delegation depth</div>
+    </div>
+  </div>
+</header>
+
+<!-- PROBLEM -->
+<section id="problem" class="reveal">
+  <div class="section-label">The Problem</div>
+  <h2>Agent security without human attribution is incomplete</h2>
+  <p>
+    Current approaches to AI agent security focus on securing the agent — its credentials, permissions, and deployment environment. They answer <em>"Is this agent authorised?"</em> but not the more fundamental question: <em>"Is the human who authorised this agent actually present and verified right now?"</em>
+  </p>
+
+  <div class="problem-grid">
+    <div class="problem-card current">
+      <h3>Current State</h3>
+      <p>Agent operates under credentials. Credentials prove possession, not identity. Shared credentials, stolen tokens, and abandoned sessions all grant the same access as the legitimate user.</p>
+      <p>In multi-agent chains, the link to the authorising human is lost within 1–2 levels of delegation. By the third agent, there is no mechanism to verify human authority.</p>
+      <p>The "someone used my login" defence is irrefutable.</p>
+    </div>
+    <div class="problem-card vac">
+      <h3>With VAC Protocol</h3>
+      <p>Human performs multi-modal biometric verification. A Verified Authority Token (VAT) carries that verification through the entire agent chain — coordinator to specialist to sub-agent.</p>
+      <p>At every action point, any system can verify the chain traces back to a biometrically-verified human. Trust can only narrow, never expand.</p>
+      <p>Non-repudiation is cryptographic. You cannot deny your own biometrics.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="reveal">
+  <div class="section-label">How It Works</div>
+  <h2>Verified Authority Token (VAT) propagation</h2>
+  <p>
+    When a biometrically-verified human authorises an operation, the system generates a VAT — a cryptographic object encoding verified identity, trust score, authorised scope, delegation depth, and validity period. The token propagates through the agent chain with strict narrowing rules.
+  </p>
+
+  <div class="chain">
+    <div class="chain-node human">
+      <div class="chain-icon">👤</div>
+      <div class="chain-label">Verified Human</div>
+      <div class="chain-sublabel">Biometric auth</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node agent">
+      <div class="chain-icon">◎</div>
+      <div class="chain-label">VAT Created</div>
+      <div class="chain-sublabel">Full scope</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node agent">
+      <div class="chain-icon">◎</div>
+      <div class="chain-label">Coordinator</div>
+      <div class="chain-sublabel">Derived VAT</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node agent">
+      <div class="chain-icon">◎</div>
+      <div class="chain-label">Specialist</div>
+      <div class="chain-sublabel">Narrowed scope</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node action">
+      <div class="chain-icon">⚡</div>
+      <div class="chain-label">Action</div>
+      <div class="chain-sublabel">VAT verified</div>
+    </div>
+  </div>
+
+  <div class="properties">
+    <div class="prop">
+      <div class="prop-name">Scope narrows</div>
+      <p>Each delegation restricts scope. No agent acquires permissions exceeding its parent.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-name">Trust decreases</div>
+      <p>Trust score can only decrease with delegation depth. Deeper chains carry inherently lower trust.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-name">Time shortens</div>
+      <p>Validity period inherits from parent and can only shorten. Expiry cascades through the chain.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-name">Re-verification</div>
+      <p>Sensitive actions trigger biometric re-verification of the root human before proceeding.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-name">Instant revocation</div>
+      <p>Root human ends session or trust drops — all derived VATs in all chains immediately invalidated.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-name">Full audit trail</div>
+      <p>Every action linked to its VAT, delegation chain, and biometrically-verified human. Legally admissible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="reveal">
+  <div class="section-label">Architecture</div>
+  <h2>Three layers of verified authority</h2>
+
+  <div class="layers">
+    <div class="layer">
+      <div class="layer-label">Layer 1: Identity</div>
+      <div class="layer-content">
+        Multi-modal biometric verification combining facial geometry, voice pattern, behavioural biometrics, and device-contextual signals. Single-gesture authentication completes in under 5 seconds. Continuous trust scoring replaces binary authentication.
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-label">Layer 2: Delegation</div>
+      <div class="layer-content">
+        Agent delegation framework with trust-level-gated permissions. Verified Authority Token (VAT) carries biometric provenance through arbitrarily deep multi-agent chains. Organisational trust hierarchies: Organisation → Group → Human → Agent.
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-label">Layer 3: Attribution</div>
+      <div class="layer-content">
+        Verified Contribution Ledger — tamper-resistant, cryptographically signed audit trail recording every agent action with biometrically-verified human attribution. AI agent contribution chains prove which human directed which agent action. Portable across systems.
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top: 2rem;">
+    Additional capabilities include M-of-N multi-party biometric authorisation for high-stakes actions, cross-organisational agent trust verification, zero-knowledge proof-based selective disclosure, and conflict detection with verified resolution chains.
+  </p>
+</section>
+
+<!-- STANDARDS ALIGNMENT -->
+<section id="alignment" class="reveal">
+  <div class="section-label">Standards Alignment</div>
+  <h2>Extending existing frameworks</h2>
+  <p>
+    The VAC Protocol is not a replacement for existing security controls. It is the missing layer that completes them by adding biometric human attribution.
+  </p>
+
+  <table class="alignment-table">
+    <thead>
+      <tr>
+        <th>Framework</th>
+        <th>Current scope</th>
+        <th>VAC extension</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>NIST SP 800-63-4</td>
+        <td>Digital identity; password/token authentication</td>
+        <td>Multi-modal biometric verification; continuous trust scoring</td>
+      </tr>
+      <tr>
+        <td>NIST SP 800-207</td>
+        <td>Zero trust architecture</td>
+        <td>Verify the human behind the agent, not just the agent's credential</td>
+      </tr>
+      <tr>
+        <td>NIST AI RMF</td>
+        <td>Accountability and traceability for AI systems</td>
+        <td>Cryptographic mechanism: every agent action traceable to a verified human</td>
+      </tr>
+      <tr>
+        <td>OWASP Agentic Top 10</td>
+        <td>Identity abuse; cascading failures</td>
+        <td>Biometric binding prevents identity abuse; trust narrowing limits cascading failure</td>
+      </tr>
+      <tr>
+        <td>ISO/IEC 27001</td>
+        <td>Information security management</td>
+        <td>Legally admissible audit trails with biometric non-repudiation</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- IP STATUS -->
+<section id="ip" class="reveal">
+  <div class="section-label">Intellectual Property</div>
+  <h2>Patent-protected protocol</h2>
+
+  <div class="ip-grid">
+    <div class="ip-card">
+      <h3>Provisional Patent</h3>
+      <p>Australian Provisional Patent Application AU 2026901425</p>
+      <p>Filed 21 February 2026</p>
+      <p>Priority date: 21 February 2026</p>
+    </div>
+    <div class="ip-card">
+      <h3>Supplementary Filing</h3>
+      <p>Supplementary AU 2026901428</p>
+      <p>Filed 22 February 2026</p>
+      <p>Extends coverage across zero-knowledge proofs, blockchain oracles, biometric aging, agent resource allocation, and unified trust graphs</p>
+    </div>
+    <div class="ip-card">
+      <h3>Coverage</h3>
+      <p>167 claims across identity verification, agent delegation, trust propagation, organisational hierarchies, multi-party authorisation, attribution maturity model, and VAT token specification</p>
+    </div>
+    <div class="ip-card">
+      <h3>Developed by</h3>
+      <p>Violet Shores Pty Ltd</p>
+      <p>ACN 154 978 122</p>
+      <p>Australia</p>
+    </div>
+  </div>
+  <p style="margin-top: 2rem;">
+    <a href="/vac-whitepaper-v3.pdf" style="display: inline-block; padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; font-family: var(--sans); font-size: 15px; font-weight: 500; border-radius: 4px; transition: background 0.2s;">Download Whitepaper v3.0 (PDF)</a>
+  </p>
+</section>
+<section id="contact" class="reveal">
+  <div class="section-label">Get Involved</div>
+  <h2>Standards engagement &amp; collaboration</h2>
+  <p>
+    The VAC Protocol is being developed as an open standard for biometric human-to-agent attribution. We welcome engagement from standards bodies, AI agent platform developers, enterprise security teams, and regulatory agencies.
+  </p>
+
+  <div class="contact-box">
+    <h3>Contact</h3>
+    <p>
+      For technical enquiries, standards collaboration, or demonstration requests:
+    </p>
+    <p>
+      <a href="mailto:admin@violetshores.com">admin@violetshores.com</a>
+    </p>
+    <p style="margin-top: 1.5rem; font-size: 13px; color: #6b7280;">
+      Responding to NIST CAISI RFI on AI Agent Security (NIST-2025-0035) and NCCoE concept paper on Software and AI Agent Identity and Authorization.
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>&copy; 2026 Violet Shores Pty Ltd. All rights reserved.</p>
+  <p><a href="mailto:admin@violetshores.com">admin@violetshores.com</a></p>
+</footer>
+
+<script>
+  // Nav scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
