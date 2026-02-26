@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Interactive Simulation</title>
-<meta name="description" content="Interactive demonstration of the VAC Protocol's biometric human-to-agent attribution across healthcare, compliance, coalition, and Indigenous governance scenarios.">
+<meta name="description" content="Interactive demonstration of the VAC Protocol's biometric human-to-agent attribution across healthcare, compliance, coalition, Indigenous governance, and cultural learning scenarios.">
 <style>
   body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
@@ -231,6 +231,39 @@ const SCENARIOS = {
       { time: 8600, type: "action", node: "sw_c", message: "✓ Sector C survey in progress — all 10 units operational" },
       { time: 9000, type: "action", node: "sw_d", message: "✓ Sector D survey in progress — all 10 units operational" },
       { time: 9800, type: "action", node: "coord", message: "📊 Mission: 47 minutes elapsed — 40 drones operational — CHOOSE WHAT HAPPENS NEXT ↓" },
+    ],
+  },
+  wananga: {
+    title: "Wānanga — Cultural Learning",
+    subtitle: "Te Reo & Kapa Haka Practice with Soul Engine",
+    claims: "Claims 1-15, 39-55, 208-241",
+    audience: "Māori Education / Iwi Funding",
+    color: "#2D5A27",
+    oneSentence: "The rangatahi practised kapa haka on video. The soul engine reflected their growth. The iwi controlled who could see it.",
+    nodes: [
+      { id: "kaumatua", label: "Mere (Kaumātua) 👤", type: "kaumatua", trust: 0.95, scope: "Full cultural authority", jurisdiction: "NZ-BOP", role: "Kaumātua — Cultural Guardian", x: 400, y: 40 },
+      { id: "kaiako", label: "Hemi (Kaiako) 👤", type: "governance", trust: 0.90, scope: "Teaching authority", jurisdiction: "NZ-BOP", role: "Kaiako — Teacher", x: 250, y: 130 },
+      { id: "whanau", label: "Whānau Rep 👤", type: "governance", trust: 0.90, scope: "Whānau oversight", jurisdiction: "NZ-BOP", role: "Whānau Representative", x: 550, y: 130 },
+      { id: "rangatahi", label: "Aroha (Rangatahi) 📹", type: "human", trust: 0.88, scope: "Own recordings, practice data", jurisdiction: "NZ-BOP", role: "Rangatahi — Learner", x: 400, y: 220 },
+      { id: "soul", label: "Soul Engine 🌿", type: "agent", trust: 0.84, scope: "Observe, reflect, encourage", jurisdiction: "NZ-BOP", x: 250, y: 340 },
+      { id: "progress", label: "Progress Tracker", type: "agent", trust: 0.80, scope: "Anonymised progress only", jurisdiction: "NZ-BOP", x: 550, y: 340 },
+      { id: "funder", label: "Funding Report Agent", type: "agent", trust: 0.72, scope: "Aggregate stats ONLY", jurisdiction: "NZ-WGN", x: 550, y: 460 },
+      { id: "blocked", label: "⛔ Raw Video Export", type: "blocked", trust: 0, scope: "BLOCKED — Cultural content stays within whānau", jurisdiction: "NZ-BOP", x: 250, y: 460 },
+    ],
+    edges: [["kaumatua","rangatahi"],["kaiako","rangatahi"],["whanau","rangatahi"],["rangatahi","soul"],["rangatahi","progress"],["progress","funder"],["soul","blocked"]],
+    events: [
+      { time: 0, type: "verify", node: "kaumatua", message: "Mere (Kaumātua) verified ✓ — Cultural authority established" },
+      { time: 800, type: "verify", node: "kaiako", message: "Hemi (Kaiako) verified ✓ — Teaching authority confirmed" },
+      { time: 1600, type: "verify", node: "whanau", message: "Whānau representative verified ✓ — Oversight role active" },
+      { time: 2400, type: "verify", node: "rangatahi", message: "📹 Aroha begins kapa haka practice — Video IS biometric verification" },
+      { time: 3200, type: "create", node: "rangatahi", message: "VAT created — Recording anchored to Aroha's identity. Cultural content scope: whānau only" },
+      { time: 4200, type: "delegate", node: "soul", message: "🌿 Soul Engine activated — Observing movement, expression, wairua" },
+      { time: 5400, type: "action", node: "soul", message: "🌿 Soul reflection: 'Your pūkana is getting stronger — the mana is showing through'" },
+      { time: 6400, type: "action", node: "soul", message: "🌿 Soul reflection: 'Notice how your feet connect to the whenua now — that wasn't there last week'" },
+      { time: 7200, type: "delegate", node: "progress", message: "Progress tracked — Session 14 of 20, confidence +12%, posture +8%" },
+      { time: 8000, type: "delegate", node: "funder", message: "Funding report: Aggregate only — '14 rangatahi active, 73% improvement in cultural competency metrics'" },
+      { time: 9000, type: "blocked", node: "blocked", message: "🛑 External request for raw practice video — BLOCKED. Kaumātua scope: cultural content stays within whānau" },
+      { time: 10000, type: "provenance", node: "rangatahi", message: "📋 Complete provenance: Every reflection traceable to Aroha's session. Every scope decision traceable to kaumātua authority." },
     ],
   },
 };
@@ -845,7 +878,6 @@ function VACSimulation() {
   );
 }
 
-// Render with top padding for nav
 function App() {
   return React.createElement('div', { style: { paddingTop: '48px' } },
     React.createElement(VACSimulation)
