@@ -338,24 +338,29 @@ const SCENARIOS = {
   openclaw: {
     title: "OpenClaw — Agent Team",
     subtitle: "PDOS deploys a 5-agent team for a startup founder",
-    claims: "Claims 99-112, 168-241",
+    claims: "Claims 99-112, 168-271",
     audience: "Developers / Enterprise / OpenClaw",
     color: "#FF6F00",
-    oneSentence: "The founder described a problem. PDOS built a team of 5 agents. Each agent had scoped authority. A collaborator joined mid-mission. One agent tried to exceed its scope. The protocol caught it.",
+    oneSentence: "The founder described a problem. PDOS built a team of 5 agents. Each agent had scoped authority. A collaborator joined mid-mission. Agents finished tasks and lost access automatically. One agent requested more access — the founder bio-approved it. The protocol enforced every boundary.",
     story: {
-      intro: "Jake is a startup founder. He tells PDOS — his AI operating system — 'I need to prepare for our Series A.' PDOS recommends a team of 5 AI agents: a financial analyst, a market researcher, a pitch deck writer, a legal reviewer, and a data room organiser. Each agent needs access to sensitive company data. Jake's co-founder Lisa needs to collaborate. How do you give 5 AI agents and 2 humans scoped access to everything — without anyone exceeding their authority?",
-      whyVAC: "Today on platforms like OpenClaw, anyone can deploy agent skills with zero identity verification. 512 vulnerabilities have been found. Malicious plugins exfiltrate data. Nobody can answer 'who authorised this agent?' VAC solves this: every agent traces back to a verified human, every action is scoped, and collaborators join with their own biometrically-anchored authority.",
+      intro: "Jake is a startup founder. He tells PDOS — his AI operating system — 'I need to prepare for our Series A.' PDOS recommends a team of 5 AI agents: a financial analyst, a market researcher, a pitch deck writer, a legal reviewer, and a data room organiser. Each agent needs access to sensitive company data. Jake's co-founder Lisa needs to collaborate. How do you give 5 AI agents and 2 humans scoped access to everything — without anyone exceeding their authority — and ensure access disappears the moment each job is done?",
+      whyVAC: "Today on platforms like OpenClaw, anyone can deploy agent skills with zero identity verification. 512 vulnerabilities have been found. Malicious plugins exfiltrate data. Nobody can answer 'who authorised this agent?' VAC solves this: every agent traces back to a verified human, every action is scoped, access auto-revokes when the task is complete, and if an agent needs more access mid-task, a real human must bio-verify the decision.",
       beats: [
         { at: 0, text: "Jake opens the PDOS app and records a short video: 'I'm Jake, CEO of Nexus Labs, authorising Series A preparation.' The VAC SDK captures his 5 biometric signals. His identity is now the root of every agent action that follows." },
-        { at: 1, text: "PDOS analyses Jake's request and recommends 5 agents from the OpenClaw skill repository. But before any agent is deployed, each one needs a VAC-scoped delegation token from Jake — specifying exactly what it can access and do." },
-        { at: 2, text: "The Financial Analyst agent gets a narrow scope: read-only access to revenue data and financial models. It cannot modify, delete, or share outside the team. Jake's biometric proof is cryptographically attached to this delegation." },
-        { at: 3, text: "Market Researcher gets access to competitive intelligence — but NOT to financial data. Pitch Deck Writer can read everything but cannot access the cap table. Each agent's scope narrows from Jake's root authority." },
+        { at: 1, text: "PDOS analyses Jake's request and recommends 5 agents from the OpenClaw skill repository. But before any agent is deployed, each one needs a VAC-scoped delegation token from Jake — specifying exactly what it can access, what it must deliver, and when its access ends." },
+        { at: 2, text: "The Financial Analyst agent gets a narrow scope: read-only access to revenue data and financial models. Its purpose: deliver a revenue projection model. The moment that model is delivered, access to the source data will automatically evaporate. No timer needed — task completion IS the trigger." },
+        { at: 3, text: "Market Researcher gets access to competitive intelligence — but NOT to financial data. Pitch Deck Writer can read everything but cannot access the cap table. Each agent's scope narrows from Jake's root authority, and each has a defined deliverable that triggers auto-revocation." },
         { at: 4, text: "Jake invites Lisa, his co-founder. Lisa opens the app, records her own verification video. The VAC SDK creates her identity token. PDOS adds her as a collaborator with co-founder authority — she can see everything Jake authorised, and add her own agent delegations." },
         { at: 5, text: "Lisa deploys a sixth agent — an Investor Relations bot — with her own scoped delegation. Both founders' biometric proofs now anchor different branches of the agent team. Two humans, six agents, one governed system." },
-        { at: 6, text: "The agents are working: financial models updated, market analysis complete, pitch deck drafted. Every action carries a provenance chain back to either Jake or Lisa's face and voice." },
-        { at: 7, text: "The Legal Reviewer agent tries to access the cap table — but its scope only covers legal compliance documents. BLOCKED. The VAC protocol enforces the scope boundary. The agent can't escalate its own permissions." },
-        { at: 8, text: "An alert is logged: attempted scope violation by Legal Reviewer. Jake and Lisa both see it. The provenance record shows exactly what was attempted, when, and which delegation chain was involved. Full accountability." },
-        { at: 9, text: "Series A prep is complete. Jake revokes the team authorisation. All 6 agents lose access simultaneously — cascade revocation in under a second. No orphaned permissions. No agents still running with yesterday's access. Clean shutdown." },
+        { at: 6, text: "Financial Analyst delivers its revenue projection model. Task complete. The completion verification module — independent of the agent — confirms the deliverable. Instantly, the agent's read access to source revenue data is automatically revoked. The model output remains; the source data access is gone. The team's aggregate data footprint just shrank." },
+        { at: 7, text: "Market Researcher delivers its competitive analysis. Purpose fulfilled. Access auto-revokes. Two agents down, four still active. The team's data exposure is monotonically shrinking — every completed task removes another access path." },
+        { at: 8, text: "Pitch Deck Writer has drafted 18 slides. It's working. Meanwhile, Legal Reviewer is scanning compliance documents and discovers it needs to add redline markup to the term sheet — but it only has READ access. It can't just escalate itself. It sends a scope escalation request to Jake: 'I need WRITE access to term-sheet-v3.docx to add redline comments. Purpose: legal markup. Access will auto-revoke when markup is saved.'" },
+        { at: 9, text: "Jake gets a notification. He sees exactly what the Legal Reviewer wants: write access to one document, for one purpose, auto-revoking on completion. Jake records a fresh biometric — face and voice, right now, not a cached session — approving the escalation. A supplementary token is issued. The original read-only token is unchanged. The write access is purpose-bound." },
+        { at: 10, text: "Legal Reviewer adds redline comments to the term sheet. Markup saved. Purpose fulfilled. The supplementary write-access token auto-revokes instantly. The agent still has its original read-only access to legal docs, but the write access is gone. No privilege creep. The escalation, approval, and revocation are all recorded in the provenance chain." },
+        { at: 11, text: "Legal Reviewer now tries to access the cap table — but its scope only covers legal compliance documents. BLOCKED. The VAC protocol enforces the boundary. Even with the recently-approved escalation, the agent cannot parlay one approval into broader access." },
+        { at: 12, text: "An alert is logged: attempted scope violation by Legal Reviewer. Jake and Lisa both see it. The provenance record shows exactly what was attempted, when, and which delegation chain was involved. Full accountability." },
+        { at: 13, text: "Pitch deck complete. Data room organised. Investor outreach underway. As each agent finishes, its access auto-revokes. The team's footprint has shrunk from 6 agents with broad access to just 2 still active — and even those have narrower scope than they started with." },
+        { at: 14, text: "Series A prep is complete. Jake revokes the remaining team authorisation. The last active agents lose access in under a second — cascade revocation. No orphaned permissions. No agents still running with yesterday's access. Every action, every escalation, every completion, every revocation — all cryptographically recorded. Clean shutdown." },
       ],
     },
     nodes: [
@@ -374,19 +379,24 @@ const SCENARIOS = {
     events: [
       { time: 0, type: "verify", node: "jake", message: "📹 Jake verified — 5-modal biometric: face, voice, behaviour, location, timestamp ✓" },
       { time: 1200, type: "create", node: "pdos", message: "PDOS recommends 5-agent team for Series A preparation" },
-      { time: 2200, type: "delegate", node: "financial", message: "Financial Analyst deployed — Scope: revenue + models, READ ONLY" },
-      { time: 3000, type: "delegate", node: "market", message: "Market Researcher deployed — Scope: competitive intel ONLY (no financials)" },
-      { time: 3400, type: "delegate", node: "pitch", message: "Pitch Deck Writer deployed — Scope: all data EXCEPT cap table" },
-      { time: 3800, type: "delegate", node: "dataroom", message: "Data Room Agent deployed — Scope: organise and format only" },
+      { time: 2200, type: "delegate", node: "financial", message: "Financial Analyst deployed — Scope: revenue + models, READ ONLY | Purpose: deliver revenue projection model" },
+      { time: 3000, type: "delegate", node: "market", message: "Market Researcher deployed — Scope: competitive intel ONLY | Purpose: deliver competitive analysis" },
+      { time: 3400, type: "delegate", node: "pitch", message: "Pitch Deck Writer deployed — Scope: all data EXCEPT cap table | Purpose: deliver pitch deck" },
+      { time: 3800, type: "delegate", node: "dataroom", message: "Data Room Agent deployed — Scope: organise and format only | Purpose: prepare data room" },
       { time: 4400, type: "verify", node: "lisa", message: "📹 Lisa joins — 5-modal biometric verified ✓ — Co-founder authority established" },
       { time: 5200, type: "delegate", node: "ir", message: "Lisa deploys Investor Relations agent — her delegation, her scope, her provenance" },
-      { time: 6000, type: "action", node: "financial", message: "✓ Financial models updated — revenue projections complete" },
-      { time: 6500, type: "action", node: "market", message: "✓ Market analysis: 12 competitors mapped, TAM/SAM/SOM calculated" },
-      { time: 7000, type: "action", node: "pitch", message: "✓ Pitch deck v1 drafted — 18 slides, all data sourced within scope" },
-      { time: 7500, type: "delegate", node: "legal", message: "Legal Reviewer scanning compliance documents..." },
-      { time: 8200, type: "blocked", node: "blocked", message: "🛑 Legal Reviewer attempted cap table access — BLOCKED. Scope: legal docs only." },
-      { time: 8800, type: "provenance", node: "legal", message: "⚠ Scope violation logged. Provenance: Legal Reviewer → PDOS → Jake. Full audit trail recorded." },
-      { time: 9500, type: "revoke", node: "jake", message: "⚠ Jake revokes team — CASCADE: all 6 agents lose authority in 340ms. No orphaned access." },
+      { time: 6000, type: "action", node: "financial", message: "✅ TASK COMPLETE: Revenue projection model delivered → source data access AUTO-REVOKED" },
+      { time: 6500, type: "action", node: "market", message: "✅ TASK COMPLETE: Competitive analysis delivered → intel access AUTO-REVOKED" },
+      { time: 7000, type: "action", node: "pitch", message: "✓ Pitch deck v1 drafted — 18 slides, working on revisions..." },
+      { time: 7300, type: "action", node: "legal", message: "📝 Legal Reviewer requests WRITE access to term-sheet-v3.docx — Reason: redline markup needed" },
+      { time: 7600, type: "verify", node: "jake", message: "📹 Jake bio-verifies escalation approval — fresh 5-modal capture bound to this specific request ✓" },
+      { time: 7900, type: "delegate", node: "legal", message: "✓ Supplementary token issued: WRITE to term-sheet-v3.docx only, purpose-bound to markup completion" },
+      { time: 8200, type: "action", node: "legal", message: "✅ Redline markup saved → supplementary WRITE access AUTO-REVOKED. Original READ access unchanged." },
+      { time: 8600, type: "blocked", node: "blocked", message: "🛑 Legal Reviewer attempted cap table access — BLOCKED. Scope: legal docs only." },
+      { time: 9000, type: "provenance", node: "legal", message: "⚠ Scope violation logged. Provenance: Legal Reviewer → PDOS → Jake. Full audit trail recorded." },
+      { time: 9500, type: "action", node: "pitch", message: "✅ TASK COMPLETE: Pitch deck finalised → data access AUTO-REVOKED" },
+      { time: 9800, type: "action", node: "dataroom", message: "✅ TASK COMPLETE: Data room organised → access AUTO-REVOKED" },
+      { time: 10200, type: "revoke", node: "jake", message: "⚠ Jake revokes remaining agents — CASCADE: IR + Legal lose authority in 340ms. Clean shutdown." },
     ],
   },
 };
@@ -781,11 +791,18 @@ function VACSimulation() {
     }
     if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
       setActiveNodes(prev => new Set([...prev, evt.node]));
+      // Handle task-complete auto-revocation: agent finishes and loses access
+      if (evt.message && evt.message.includes("AUTO-REVOKED")) {
+        setSafeStateNodes(prev => new Set([...prev, evt.node]));
+      }
       setMetrics(prev => ({
         ...prev,
         VERIFIED: (evt.type === "verify") ? { value: `${(prev.VERIFIED?.value ? parseInt(prev.VERIFIED.value) : 0) + 1}`, label: "People Verified", color: "#4CAF50" } : prev.VERIFIED,
         NODES: { value: `${Math.min(idx + 1, sc.nodes.length)}`, label: "Active Agents", color: "#2E75B6" },
-        SCOPE: { value: "✓", label: "All Within Scope", color: "#4CAF50" },
+        SCOPE: (evt.message && evt.message.includes("AUTO-REVOKED")) ? { value: "✓ COMPLETED", label: "Task Done → Access Revoked", color: "#66BB6A" } :
+               (evt.message && evt.message.includes("Supplementary token")) ? { value: "↑ ESCALATED", label: "Scope Escalation Approved", color: "#FFB74D" } :
+               (evt.message && evt.message.includes("escalation approval")) ? { value: "📹 BIO-VERIFY", label: "Escalation Bio-Verification", color: "#CE93D8" } :
+               { value: "✓", label: "All Within Scope", color: "#4CAF50" },
       }));
     }
     if (evt.type === "revoke") {
