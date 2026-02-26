@@ -1120,11 +1120,22 @@ function VACSimulation() {
                 When you onboard to a VAC-powered app, a real person who knows you — a colleague, a teacher, a family member — records a short video vouching for your identity. Their vouch is cryptographically linked to both their biometric proof and yours. This creates a <strong style={{ color: "#fff" }}>social trust graph</strong>: a web of human relationships where every connection is biometrically anchored.
               </div>
 
-              {/* Visual Trust Graph */}
+              {/* Visual Trust Graph - Scenario-specific */}
               <div style={{ marginTop: 16, padding: "20px", background: "#111", borderRadius: 8, border: "1px solid #222" }}>
-                <div style={{ fontSize: 10, color: "#666", letterSpacing: 2, marginBottom: 12 }}>TRUST GRAPH — WĀNANGA EXAMPLE</div>
+                <div style={{ fontSize: 10, color: "#666", letterSpacing: 2, marginBottom: 12 }}>
+                  {scenario === "wananga" ? "TRUST GRAPH — WĀNANGA" :
+                   scenario === "openclaw" ? "TRUST GRAPH — AGENT TEAM" :
+                   scenario === "healthcare" ? "TRUST GRAPH — CLINICAL CHAIN" :
+                   scenario === "compliance" ? "TRUST GRAPH — CROSS-BORDER" :
+                   scenario === "coalition" ? "TRUST GRAPH — COALITION" :
+                   scenario === "iwi" ? "TRUST GRAPH — IWI GOVERNANCE" :
+                   scenario === "rahui" ? "TRUST GRAPH — RĀHUI TEMPORAL" :
+                   scenario === "consortium" ? "TRUST GRAPH — CONSORTIUM" :
+                   "TRUST GRAPH"}
+                </div>
+
+                {scenario === "wananga" && (
                 <svg viewBox="0 0 700 320" style={{ width: "100%", maxWidth: 700 }}>
-                  {/* Connection lines */}
                   <line x1="350" y1="45" x2="200" y2="130" stroke="#CE93D866" strokeWidth="2" />
                   <line x1="350" y1="45" x2="500" y2="130" stroke="#CE93D866" strokeWidth="2" />
                   <line x1="200" y1="130" x2="500" y2="130" stroke="#CE93D844" strokeWidth="1" strokeDasharray="4" />
@@ -1133,66 +1144,182 @@ function VACSimulation() {
                   <line x1="500" y1="130" x2="420" y2="230" stroke="#5DADE266" strokeWidth="2" />
                   <line x1="500" y1="130" x2="550" y2="230" stroke="#5DADE266" strokeWidth="2" />
                   <line x1="350" y1="45" x2="350" y2="230" stroke="#4CAF5066" strokeWidth="2" />
-                  {/* External vouches coming in */}
                   <line x1="50" y1="80" x2="200" y2="130" stroke="#FFB74D44" strokeWidth="1" strokeDasharray="6" />
                   <line x1="650" y1="80" x2="500" y2="130" stroke="#FFB74D44" strokeWidth="1" strokeDasharray="6" />
-
-                  {/* Kaumātua - top */}
                   <circle cx="350" cy="45" r="24" fill="#4A0E4E" stroke="#CE93D8" strokeWidth="2" />
                   <text x="350" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
                   <text x="350" y="82" textAnchor="middle" fill="#CE93D8" fontSize="10" fontWeight="700">Mere (Kaumātua)</text>
                   <text x="350" y="94" textAnchor="middle" fill="#888" fontSize="8">⭐ ANCHOR · 12 vouches · Trust: 0.95</text>
-
-                  {/* Kaiako - left */}
                   <circle cx="200" cy="130" r="20" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
                   <text x="200" y="134" textAnchor="middle" fill="#fff" fontSize="12">👤</text>
                   <text x="200" y="163" textAnchor="middle" fill="#66BB6A" fontSize="10" fontWeight="700">Hemi (Kaiako)</text>
-                  <text x="200" y="175" textAnchor="middle" fill="#888" fontSize="8">⭐ TRUSTED · 7 vouches · Trust: 0.90</text>
-
-                  {/* Whānau rep - right */}
+                  <text x="200" y="175" textAnchor="middle" fill="#888" fontSize="8">🌳 TRUSTED · 7 vouches</text>
                   <circle cx="500" cy="130" r="20" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
                   <text x="500" y="134" textAnchor="middle" fill="#fff" fontSize="12">👤</text>
                   <text x="500" y="163" textAnchor="middle" fill="#66BB6A" fontSize="10" fontWeight="700">Whānau Rep</text>
-                  <text x="500" y="175" textAnchor="middle" fill="#888" fontSize="8">ESTABLISHED · 4 vouches · Trust: 0.88</text>
-
-                  {/* Rangatahi */}
+                  <text x="500" y="175" textAnchor="middle" fill="#888" fontSize="8">🌿 ESTABLISHED · 4 vouches</text>
                   <circle cx="150" cy="230" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
                   <text x="150" y="234" textAnchor="middle" fill="#fff" fontSize="10">📹</text>
                   <text x="150" y="258" textAnchor="middle" fill="#5DADE2" fontSize="9">Aroha</text>
-                  <text x="150" y="268" textAnchor="middle" fill="#888" fontSize="7">EMERGING · 1 vouch</text>
-
+                  <text x="150" y="268" textAnchor="middle" fill="#888" fontSize="7">🌱 EMERGING · 1 vouch</text>
                   <circle cx="280" cy="230" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
                   <text x="280" y="234" textAnchor="middle" fill="#fff" fontSize="10">📹</text>
                   <text x="280" y="258" textAnchor="middle" fill="#5DADE2" fontSize="9">Tama</text>
-                  <text x="280" y="268" textAnchor="middle" fill="#888" fontSize="7">EMERGING · 1 vouch</text>
-
+                  <text x="280" y="268" textAnchor="middle" fill="#888" fontSize="7">🌱 EMERGING · 1 vouch</text>
                   <circle cx="350" cy="230" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
                   <text x="350" y="234" textAnchor="middle" fill="#fff" fontSize="10">📹</text>
                   <text x="350" y="258" textAnchor="middle" fill="#5DADE2" fontSize="9">Maia</text>
-                  <text x="350" y="268" textAnchor="middle" fill="#888" fontSize="7">EMERGING · 1 vouch</text>
-
+                  <text x="350" y="268" textAnchor="middle" fill="#888" fontSize="7">🌱 EMERGING · 1 vouch</text>
                   <circle cx="420" cy="230" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
                   <text x="420" y="234" textAnchor="middle" fill="#fff" fontSize="10">📹</text>
                   <text x="420" y="258" textAnchor="middle" fill="#5DADE2" fontSize="9">Wiremu</text>
-                  <text x="420" y="268" textAnchor="middle" fill="#888" fontSize="7">EMERGING · 1 vouch</text>
-
+                  <text x="420" y="268" textAnchor="middle" fill="#888" fontSize="7">🌱 EMERGING · 1 vouch</text>
                   <circle cx="550" cy="230" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
                   <text x="550" y="234" textAnchor="middle" fill="#fff" fontSize="10">📹</text>
                   <text x="550" y="258" textAnchor="middle" fill="#5DADE2" fontSize="9">Hine</text>
-                  <text x="550" y="268" textAnchor="middle" fill="#888" fontSize="7">EMERGING · 1 vouch</text>
-
-                  {/* External vouchers */}
+                  <text x="550" y="268" textAnchor="middle" fill="#888" fontSize="7">🌱 EMERGING · 1 vouch</text>
                   <circle cx="50" cy="80" r="12" fill="#333" stroke="#FFB74D" strokeWidth="1" strokeDasharray="3" />
                   <text x="50" y="84" textAnchor="middle" fill="#FFB74D" fontSize="8">👤</text>
                   <text x="50" y="102" textAnchor="middle" fill="#666" fontSize="7">External vouch</text>
-
                   <circle cx="650" cy="80" r="12" fill="#333" stroke="#FFB74D" strokeWidth="1" strokeDasharray="3" />
                   <text x="650" y="84" textAnchor="middle" fill="#FFB74D" fontSize="8">👤</text>
                   <text x="650" y="102" textAnchor="middle" fill="#666" fontSize="7">External vouch</text>
-
-                  {/* Badge labels */}
-                  <text x="350" y="310" textAnchor="middle" fill="#555" fontSize="9">Each line = a biometrically verified vouch. Each vouch strengthens the graph. The graph IS the moat.</text>
+                  <text x="350" y="310" textAnchor="middle" fill="#555" fontSize="9">Each line = a biometrically verified vouch. Kaumātua authority flows through the graph.</text>
                 </svg>
+                )}
+
+                {scenario === "openclaw" && (
+                <svg viewBox="0 0 700 320" style={{ width: "100%", maxWidth: 700 }}>
+                  {/* Jake and Lisa at top */}
+                  <line x1="220" y1="45" x2="350" y2="130" stroke="#2E75B666" strokeWidth="2" />
+                  <line x1="480" y1="45" x2="350" y2="130" stroke="#2E75B666" strokeWidth="2" />
+                  {/* PDOS to agents */}
+                  <line x1="350" y1="130" x2="120" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="130" x2="250" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="130" x2="380" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="130" x2="500" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  {/* Lisa to her agent */}
+                  <line x1="480" y1="45" x2="580" y2="230" stroke="#CE93D866" strokeWidth="2" />
+                  {/* Blocked access */}
+                  <line x1="500" y1="230" x2="620" y2="290" stroke="#FF444466" strokeWidth="2" strokeDasharray="6" />
+
+                  {/* Jake */}
+                  <circle cx="220" cy="45" r="24" fill="#1B3A5C" stroke="#2E75B6" strokeWidth="2" />
+                  <text x="220" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
+                  <text x="220" y="82" textAnchor="middle" fill="#2E75B6" fontSize="10" fontWeight="700">Jake (CEO)</text>
+                  <text x="220" y="94" textAnchor="middle" fill="#888" fontSize="8">⭐ ANCHOR · 5-modal verified</text>
+
+                  {/* Lisa */}
+                  <circle cx="480" cy="45" r="24" fill="#4A0E4E" stroke="#CE93D8" strokeWidth="2" />
+                  <text x="480" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
+                  <text x="480" y="82" textAnchor="middle" fill="#CE93D8" fontSize="10" fontWeight="700">Lisa (Co-founder)</text>
+                  <text x="480" y="94" textAnchor="middle" fill="#888" fontSize="8">🌳 TRUSTED · 5-modal verified</text>
+
+                  {/* PDOS Orchestrator */}
+                  <circle cx="350" cy="130" r="22" fill="#1a1a1a" stroke="#FFB74D" strokeWidth="2" />
+                  <text x="350" y="134" textAnchor="middle" fill="#FFB74D" fontSize="12">✦</text>
+                  <text x="350" y="163" textAnchor="middle" fill="#FFB74D" fontSize="10" fontWeight="700">PDOS Orchestrator</text>
+                  <text x="350" y="175" textAnchor="middle" fill="#888" fontSize="8">Delegated by Jake · Scoped</text>
+
+                  {/* Agents */}
+                  <circle cx="120" cy="230" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="120" y="234" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="120" y="258" textAnchor="middle" fill="#66BB6A" fontSize="8">Financial</text>
+                  <text x="120" y="268" textAnchor="middle" fill="#888" fontSize="7">READ ONLY</text>
+
+                  <circle cx="250" cy="230" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="250" y="234" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="250" y="258" textAnchor="middle" fill="#66BB6A" fontSize="8">Market</text>
+                  <text x="250" y="268" textAnchor="middle" fill="#888" fontSize="7">INTEL ONLY</text>
+
+                  <circle cx="380" cy="230" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="380" y="234" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="380" y="258" textAnchor="middle" fill="#66BB6A" fontSize="8">Pitch Deck</text>
+                  <text x="380" y="268" textAnchor="middle" fill="#888" fontSize="7">NO CAP TABLE</text>
+
+                  <circle cx="500" cy="230" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="500" y="234" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="500" y="258" textAnchor="middle" fill="#66BB6A" fontSize="8">Legal</text>
+                  <text x="500" y="268" textAnchor="middle" fill="#888" fontSize="7">DOCS ONLY</text>
+
+                  {/* Lisa's agent */}
+                  <circle cx="580" cy="230" r="16" fill="#3E1A47" stroke="#CE93D8" strokeWidth="2" />
+                  <text x="580" y="234" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="580" y="258" textAnchor="middle" fill="#CE93D8" fontSize="8">Investor Rel.</text>
+                  <text x="580" y="268" textAnchor="middle" fill="#888" fontSize="7">LISA'S SCOPE</text>
+
+                  {/* Blocked cap table */}
+                  <circle cx="620" cy="290" r="14" fill="#3a0000" stroke="#FF4444" strokeWidth="2" />
+                  <text x="620" y="294" textAnchor="middle" fill="#FF4444" fontSize="10">🚫</text>
+                  <text x="620" y="314" textAnchor="middle" fill="#FF4444" fontSize="8">Cap Table</text>
+
+                  <text x="350" y="310" textAnchor="middle" fill="#555" fontSize="9">Two human roots. Scoped delegation. Every agent traces back to a verified person.</text>
+                </svg>
+                )}
+
+                {scenario === "healthcare" && (
+                <svg viewBox="0 0 700 280" style={{ width: "100%", maxWidth: 700 }}>
+                  <line x1="350" y1="45" x2="150" y2="140" stroke="#E5737366" strokeWidth="2" />
+                  <line x1="350" y1="45" x2="350" y2="140" stroke="#E5737366" strokeWidth="2" />
+                  <line x1="350" y1="45" x2="550" y2="140" stroke="#E5737366" strokeWidth="2" />
+                  <line x1="150" y1="140" x2="150" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="350" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="550" y1="140" x2="550" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <circle cx="350" cy="45" r="24" fill="#5C1A1A" stroke="#E57373" strokeWidth="2" />
+                  <text x="350" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
+                  <text x="350" y="82" textAnchor="middle" fill="#E57373" fontSize="10" fontWeight="700">Dr. Chen</text>
+                  <text x="350" y="94" textAnchor="middle" fill="#888" fontSize="8">⭐ ANCHOR · Chief of Medicine</text>
+                  <circle cx="150" cy="140" r="18" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="150" y="144" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="150" y="170" textAnchor="middle" fill="#66BB6A" fontSize="9">Diagnostic Agent</text>
+                  <text x="150" y="182" textAnchor="middle" fill="#888" fontSize="7">PATIENT DATA · READ</text>
+                  <circle cx="350" cy="140" r="18" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="350" y="144" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="350" y="170" textAnchor="middle" fill="#66BB6A" fontSize="9">Treatment Agent</text>
+                  <text x="350" y="182" textAnchor="middle" fill="#888" fontSize="7">RECOMMENDATIONS</text>
+                  <circle cx="550" cy="140" r="18" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="550" y="144" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="550" y="170" textAnchor="middle" fill="#66BB6A" fontSize="9">Records Agent</text>
+                  <text x="550" y="182" textAnchor="middle" fill="#888" fontSize="7">AUDIT · NO MODIFY</text>
+                  <circle cx="150" cy="230" r="14" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="150" y="234" textAnchor="middle" fill="#5DADE2" fontSize="8">Patient A</text>
+                  <circle cx="350" cy="230" r="14" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="350" y="234" textAnchor="middle" fill="#5DADE2" fontSize="8">Patient B</text>
+                  <circle cx="550" cy="230" r="14" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="550" y="234" textAnchor="middle" fill="#5DADE2" fontSize="8">Patient C</text>
+                  <text x="350" y="270" textAnchor="middle" fill="#555" fontSize="9">Every agent action traces back to Dr. Chen's verified identity. Patients never exposed.</text>
+                </svg>
+                )}
+
+                {(scenario === "compliance" || scenario === "coalition" || scenario === "iwi" || scenario === "rahui" || scenario === "consortium") && (
+                <svg viewBox="0 0 700 200" style={{ width: "100%", maxWidth: 700 }}>
+                  {/* Generic authority chain for other scenarios */}
+                  <line x1="100" y1="60" x2="350" y2="60" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="60" x2="600" y2="60" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="60" x2="200" y2="150" stroke="#5DADE266" strokeWidth="2" />
+                  <line x1="350" y1="60" x2="350" y2="150" stroke="#5DADE266" strokeWidth="2" />
+                  <line x1="350" y1="60" x2="500" y2="150" stroke="#5DADE266" strokeWidth="2" />
+                  <circle cx="100" cy="60" r="20" fill="#4A0E4E" stroke="#CE93D8" strokeWidth="2" />
+                  <text x="100" y="64" textAnchor="middle" fill="#fff" fontSize="12">👤</text>
+                  <text x="100" y="92" textAnchor="middle" fill="#CE93D8" fontSize="9">Root Authority</text>
+                  <circle cx="350" cy="60" r="22" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="350" y="64" textAnchor="middle" fill="#fff" fontSize="12">👤</text>
+                  <text x="350" y="92" textAnchor="middle" fill="#66BB6A" fontSize="9">Delegator</text>
+                  <circle cx="600" cy="60" r="20" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="600" y="64" textAnchor="middle" fill="#fff" fontSize="12">👤</text>
+                  <text x="600" y="92" textAnchor="middle" fill="#66BB6A" fontSize="9">Co-authority</text>
+                  <circle cx="200" cy="150" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="200" y="154" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="200" y="178" textAnchor="middle" fill="#5DADE2" fontSize="8">Agent 1</text>
+                  <circle cx="350" cy="150" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="350" y="154" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="350" y="178" textAnchor="middle" fill="#5DADE2" fontSize="8">Agent 2</text>
+                  <circle cx="500" cy="150" r="16" fill="#1B3A5C" stroke="#5DADE2" strokeWidth="2" />
+                  <text x="500" y="154" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="500" y="178" textAnchor="middle" fill="#5DADE2" fontSize="8">Agent 3</text>
+                  <text x="350" y="195" textAnchor="middle" fill="#555" fontSize="9">Every agent's authority traces back to a verified human. Run the scenario to see this graph in action.</text>
+                </svg>
+                )}
               </div>
 
               {/* Badge progression */}
@@ -1262,7 +1389,10 @@ function VACSimulation() {
                 </div>
 
                 <div style={{ marginTop: 10, fontSize: 11, color: "#666" }}>
-                  In the Wānanga example: when Mere vouches for Hemi, both mine a token. When Hemi's rangatahi complete the programme with verified progress, the programme's aggregate trust score rises — making every future vouch from this wānanga carry more weight.
+                  {scenario === "wananga" ? "In this scenario: when Mere vouches for Hemi, both mine a token. When Hemi's rangatahi complete the programme with verified progress, the programme's aggregate trust score rises — making every future vouch from this wānanga carry more weight." :
+                   scenario === "openclaw" ? "In this scenario: when Jake verifies and deploys agents through PDOS, his trust score anchors the entire team. When Lisa joins and is independently verified, the team's aggregate reputation strengthens — two verified founders carry more weight than one." :
+                   scenario === "healthcare" ? "In this scenario: Dr. Chen's anchor status means every clinical agent inherits verified provenance. Each successful delegation without scope violation strengthens the trust chain — the hospital's reputation grows with every compliant interaction." :
+                   "In every scenario: vouches between verified humans create tokens. The harder trust is to earn, the more valuable the token. The graph grows stronger with every verified interaction."}
                 </div>
               </div>
             </div>
