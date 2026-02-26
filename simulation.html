@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — Interactive Simulation</title>
+<meta name="description" content="Interactive demonstration of the VAC Protocol's biometric human-to-agent attribution across healthcare, compliance, coalition, and Indigenous governance scenarios.">
+<style>
+  body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
+  #root { min-height: 100vh; }
+  .sim-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(0,0,0,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #222; padding: 0 2rem; height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sim-nav a { color: #888; text-decoration: none; font-size: 13px; font-family: 'Courier New', monospace; }
+  .sim-nav a:hover { color: #fff; }
+  .sim-nav .back { color: #666; }
+  .sim-loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; color: #555; font-family: 'Courier New', monospace; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="sim-nav">
+  <a href="/" class="back">← vacprotocol.org</a>
+  <a href="/">VAC PROTOCOL</a>
+</div>
+<div id="root"><div class="sim-loading">Loading VAC Simulation...</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+
+const SCENARIOS = {
+  healthcare: {
+    title: "Healthcare Chain",
+    subtitle: "Dr. Sarah Chen → 4-agent clinical delegation",
+    claims: "Claims 1-15, 39-55, 168-176",
+    audience: "NIST CAISI / NCCoE",
+    color: "#2E75B6",
+    oneSentence: "The doctor's face unlock propagated through 4 agents and revoked them all when she locked her phone.",
+    nodes: [
+      { id: "human", label: "Dr. Sarah Chen", type: "human", trust: 0.95, scope: "Clinical, Patient #4721", jurisdiction: "US-CA", role: "Attending Physician", x: 400, y: 60 },
+      { id: "a1", label: "Clinical Assistant AI", type: "agent", trust: 0.88, scope: "Patient #4721, Read/Analyse", jurisdiction: "US-CA", x: 400, y: 180 },
+      { id: "a2", label: "Records Retrieval Agent", type: "agent", trust: 0.82, scope: "Patient #4721, Read-Only", jurisdiction: "US-CA", x: 250, y: 300 },
+      { id: "a3", label: "Lab Results Agent", type: "agent", trust: 0.82, scope: "Lab Results Only", jurisdiction: "US-CA", x: 550, y: 300 },
+      { id: "a4", label: "Hospital-A Connector", type: "agent", trust: 0.76, scope: "Hospital-A, Read-Only", jurisdiction: "US-CA", x: 250, y: 420 },
+    ],
+    edges: [["human","a1"],["a1","a2"],["a1","a3"],["a2","a4"]],
+    events: [
+      { time: 0, type: "verify", node: "human", message: "Biometric verification: Face ID + Liveness ✓" },
+      { time: 1200, type: "create", node: "human", message: "Root VAT created — Trust: 0.95, Scope: Clinical" },
+      { time: 2200, type: "delegate", node: "a1", message: "Delegation → Clinical Assistant (Trust: 0.88)" },
+      { time: 3200, type: "delegate", node: "a2", message: "Delegation → Records Retrieval (Trust: 0.82, Read-Only)" },
+      { time: 3800, type: "delegate", node: "a3", message: "Delegation → Lab Results (Trust: 0.82, Labs Only)" },
+      { time: 4800, type: "delegate", node: "a4", message: "Delegation → Hospital-A Connector (Trust: 0.76)" },
+      { time: 6500, type: "action", node: "a4", message: "✓ Patient #4721 records retrieved from Hospital-A" },
+      { time: 7500, type: "action", node: "a3", message: "✓ Lab results retrieved — CBC, Metabolic Panel" },
+      { time: 9000, type: "revoke", node: "human", message: "⚠ Dr. Chen locked phone — REVOCATION CASCADE" },
+    ],
+  },
+  compliance: {
+    title: "Cross-Border Compliance",
+    subtitle: "New York → Frankfurt → São Paulo",
+    claims: "Claims 168-207",
+    audience: "DHS / Matthew Toplak",
+    color: "#D4AF37",
+    oneSentence: "The AI tried to process EU data in Brazil without transfer mechanism — blocked at protocol level.",
+    nodes: [
+      { id: "human", label: "CFO — Maria Santos", type: "human", trust: 0.95, scope: "Financial Compliance, Global", jurisdiction: "US-NY", role: "Chief Financial Officer", x: 400, y: 60 },
+      { id: "a1", label: "Compliance Coordinator", type: "agent", trust: 0.88, scope: "Compliance Review, All Regions", jurisdiction: "US-NY", x: 400, y: 180 },
+      { id: "a2", label: "EU Compliance Agent", type: "agent", trust: 0.82, scope: "EU Data, GDPR Scope", jurisdiction: "DE-HE", x: 250, y: 300 },
+      { id: "a3", label: "LATAM Compliance Agent", type: "agent", trust: 0.82, scope: "LATAM Data, LGPD Scope", jurisdiction: "BR-SP", x: 550, y: 300 },
+      { id: "a4", label: "Cross-Border Processor", type: "agent", trust: 0.76, scope: "⛔ BLOCKED — No EU→BR transfer basis", jurisdiction: "BR-SP", x: 400, y: 440 },
+    ],
+    edges: [["human","a1"],["a1","a2"],["a1","a3"],["a3","a4"]],
+    events: [
+      { time: 0, type: "verify", node: "human", message: "Biometric verification: Face + Voice ✓" },
+      { time: 1200, type: "create", node: "human", message: "Root VAT — Jurisdiction: US-NY, CCPA applies" },
+      { time: 2400, type: "delegate", node: "a1", message: "Delegation → Compliance Coordinator" },
+      { time: 3400, type: "delegate", node: "a2", message: "Delegation → EU Agent (Frankfurt) — GDPR detected" },
+      { time: 4200, type: "provenance", node: "a2", message: "📋 Provenance: US→DE transfer via SCCs recorded" },
+      { time: 5200, type: "delegate", node: "a3", message: "Delegation → LATAM Agent (São Paulo) — LGPD detected" },
+      { time: 6200, type: "provenance", node: "a3", message: "📋 Provenance: US→BR transfer via LGPD Art 33 recorded" },
+      { time: 7500, type: "blocked", node: "a4", message: "🛑 BLOCKED: EU citizen data → Brazil without adequate transfer mechanism" },
+      { time: 8500, type: "alert", node: "a4", message: "⚠ Regulatory divergence: GDPR Art 46 requires SCCs for EU→BR — none configured" },
+    ],
+  },
+  coalition: {
+    title: "Coalition Drone Swarm",
+    subtitle: "US + UK + Germany — National Caveat Enforcement",
+    claims: "Claims 218-228",
+    audience: "Pentagon DAWG / Defense",
+    color: "#8B0000",
+    oneSentence: "The German drone refused the offensive order because its national caveat said no.",
+    nodes: [
+      { id: "human", label: "Coalition Commander", type: "human", trust: 0.95, scope: "Coalition Operations, Full", jurisdiction: "NATO-HQ", role: "SACEUR Designate", x: 400, y: 40 },
+      { id: "us", label: "US National Command", type: "governance", trust: 0.92, scope: "US Forces, Full Authority", jurisdiction: "US-DOD", x: 200, y: 150 },
+      { id: "uk", label: "UK National Command", type: "governance", trust: 0.92, scope: "UK Forces, Full Authority", jurisdiction: "UK-MOD", x: 400, y: 150 },
+      { id: "de", label: "DE National Command", type: "governance", trust: 0.92, scope: "DE Forces, OBSERVE ONLY ⚠", jurisdiction: "DE-BMVG", x: 600, y: 150 },
+      { id: "us_sw", label: "US Swarm (20 units)", type: "physical", trust: 0.85, scope: "Surveillance + Strike", jurisdiction: "US-DOD", x: 200, y: 280 },
+      { id: "uk_sw", label: "UK Swarm (10 units)", type: "physical", trust: 0.85, scope: "Surveillance + Strike", jurisdiction: "UK-MOD", x: 400, y: 280 },
+      { id: "de_sw", label: "DE Swarm (10 units)", type: "physical", trust: 0.85, scope: "Surveillance ONLY", jurisdiction: "DE-BMVG", x: 600, y: 280 },
+    ],
+    edges: [["human","us"],["human","uk"],["human","de"],["us","us_sw"],["uk","uk_sw"],["de","de_sw"]],
+    events: [
+      { time: 0, type: "verify", node: "human", message: "Biometric verification: Multi-factor, NATO clearance ✓" },
+      { time: 1200, type: "create", node: "human", message: "Coalition VAT — 3 nations, 40 units authorised" },
+      { time: 2200, type: "delegate", node: "us", message: "US Command: 20 drones — full authority" },
+      { time: 2800, type: "delegate", node: "uk", message: "UK Command: 10 drones — full authority" },
+      { time: 3400, type: "delegate", node: "de", message: "DE Command: 10 drones — ⚠ CAVEAT: Observe only" },
+      { time: 4400, type: "delegate", node: "us_sw", message: "US Swarm deployed — surveillance + strike capable" },
+      { time: 5000, type: "delegate", node: "uk_sw", message: "UK Swarm deployed — surveillance + strike capable" },
+      { time: 5600, type: "delegate", node: "de_sw", message: "DE Swarm deployed — surveillance only (caveat enforced)" },
+      { time: 7000, type: "blocked", node: "de_sw", message: "🛑 COALITION ORDER: Engage target — DE Swarm REFUSES: National caveat prohibits offensive operations" },
+      { time: 8500, type: "action", node: "us_sw", message: "✓ US Swarm engages — authority chain verified to US operator" },
+      { time: 9000, type: "action", node: "uk_sw", message: "✓ UK Swarm engages — authority chain verified to UK operator" },
+      { time: 10000, type: "action", node: "de_sw", message: "✓ DE Swarm continues surveillance — within authorised scope" },
+    ],
+  },
+  iwi: {
+    title: "Iwi Data Governance",
+    subtitle: "Te Whānau-a-Apanui Collective Governance",
+    claims: "Claims 208-217",
+    audience: "Indigenous Data Sovereignty",
+    color: "#2D5A27",
+    oneSentence: "The AI tried to access tapu data and was blocked by the iwi's cultural governance.",
+    nodes: [
+      { id: "g1", label: "Mere (Kaumātua) 👤", type: "kaumatua", trust: 0.95, scope: "All data categories inc. tapu", jurisdiction: "NZ-BOP", role: "Kaumātua — Elder Authority", x: 400, y: 50 },
+      { id: "g2", label: "Tane 👤", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-BOP", x: 200, y: 130 },
+      { id: "g3", label: "Aroha 👤", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-BOP", x: 320, y: 130 },
+      { id: "g4", label: "Wiremu 👤", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-BOP", x: 480, y: 130 },
+      { id: "g5", label: "Hine 👤", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-BOP", x: 600, y: 130 },
+      { id: "collective", label: "Collective VAT ✦", type: "collective", trust: 0.92, scope: "Health data — tapu excluded", jurisdiction: "NZ-BOP", x: 400, y: 240 },
+      { id: "research", label: "University Research Agent", type: "agent", trust: 0.84, scope: "Health data, anonymised, read-only", jurisdiction: "NZ-AKL", x: 400, y: 360 },
+      { id: "blocked", label: "⛔ Whakapapa Access", type: "blocked", trust: 0, scope: "TAPU — Access denied", jurisdiction: "NZ-BOP", x: 400, y: 470 },
+    ],
+    edges: [["g1","collective"],["g2","collective"],["g3","collective"],["g4","collective"],["g5","collective"],["collective","research"],["research","blocked"]],
+    events: [
+      { time: 0, type: "verify", node: "g2", message: "Tane verified biometrically ✓ (1 of 5)" },
+      { time: 800, type: "verify", node: "g3", message: "Aroha verified ✓ (2 of 5)" },
+      { time: 1600, type: "verify", node: "g4", message: "Wiremu verified ✓ (3 of 5)" },
+      { time: 2400, type: "verify", node: "g5", message: "Hine verified ✓ (4 of 5)" },
+      { time: 3200, type: "waiting", node: "g1", message: "⏳ Awaiting kaumātua verification (4 of 5 — consensus requires all)" },
+      { time: 5000, type: "verify", node: "g1", message: "Mere (Kaumātua) verified ✓ — Consensus reached (5 of 5)" },
+      { time: 5800, type: "create", node: "collective", message: "✦ Collective VAT issued — Tapu data EXCLUDED from scope" },
+      { time: 6800, type: "delegate", node: "research", message: "Research agent authorised — health data, anonymised, read-only" },
+      { time: 8000, type: "action", node: "research", message: "✓ Anonymised health data accessed within scope" },
+      { time: 9500, type: "blocked", node: "blocked", message: "🛑 Agent attempted whakapapa (tapu) — BLOCKED. Iwi governance notified." },
+    ],
+  },
+  rahui: {
+    title: "Rāhui — Temporal Governance",
+    subtitle: "Tautira, Tahiti — Ari'i declares lagoon rāhui",
+    claims: "Claims 208-217 (Mā'ohi context)",
+    audience: "Pan-Polynesian / Cultural",
+    color: "#0077B6",
+    oneSentence: "Rāhui lifts after 6 months, fishing allowed — but tapu reef stays permanently restricted.",
+    nodes: [
+      { id: "human", label: "Ari'i Rahi — Chief Tevarai", type: "kaumatua", trust: 0.95, scope: "Tautira territory, full authority", jurisdiction: "PF-TAH", role: "Ari'i Rahi (High Chief)", x: 400, y: 50 },
+      { id: "rahui", label: "Rāhui Zone 🌊", type: "rahui", trust: 0, scope: "6-month fishing prohibition", jurisdiction: "PF-TAH", x: 250, y: 190 },
+      { id: "tapu", label: "Tapu Reef 🔴", type: "tapu", trust: 0, scope: "PERMANENT — Sacred restriction", jurisdiction: "PF-TAH", x: 550, y: 190 },
+      { id: "agent1", label: "Marine Research Agent", type: "agent", trust: 0.82, scope: "Lagoon survey, non-extractive", jurisdiction: "PF-TAH", x: 250, y: 320 },
+      { id: "agent2", label: "Fishing Coordinator", type: "agent", trust: 0.82, scope: "⛔ BLOCKED by rāhui", jurisdiction: "PF-TAH", x: 250, y: 440 },
+      { id: "agent3", label: "Reef Survey Agent", type: "agent", trust: 0.82, scope: "⛔ BLOCKED by tapu", jurisdiction: "PF-TAH", x: 550, y: 320 },
+    ],
+    edges: [["human","rahui"],["human","tapu"],["rahui","agent1"],["agent1","agent2"],["tapu","agent3"]],
+    events: [
+      { time: 0, type: "verify", node: "human", message: "Ari'i Rahi verified — Mana authority confirmed via genealogy" },
+      { time: 1200, type: "create", node: "rahui", message: "🌊 Rāhui declared: Tautira lagoon, 6 months, no extraction" },
+      { time: 2200, type: "create", node: "tapu", message: "🔴 Tapu reef: permanent sacred restriction (divine, not human)" },
+      { time: 3500, type: "delegate", node: "agent1", message: "Marine research agent — non-extractive survey permitted during rāhui" },
+      { time: 4500, type: "blocked", node: "agent2", message: "🛑 Fishing coordinator BLOCKED — Rāhui active until [date]" },
+      { time: 6000, type: "action", node: "rahui", message: "⏰ TIME ADVANCE: 6 months pass..." },
+      { time: 7500, type: "action", node: "rahui", message: "🌊→✅ Rāhui LIFTED — Lagoon open for extraction" },
+      { time: 8500, type: "action", node: "agent2", message: "✓ Fishing coordinator now authorised — rāhui expired" },
+      { time: 9500, type: "blocked", node: "agent3", message: "🛑 Reef survey agent STILL BLOCKED — Tapu is PERMANENT. No human can lift it." },
+    ],
+  },
+  consortium: {
+    title: "Consortium Crisis",
+    subtitle: "7-member consortium — Mid-mission authority loss",
+    claims: "Claims 233-237",
+    audience: "NIST / DHS / Defense / All",
+    color: "#FF6F00",
+    oneSentence: "The third member got fired. The system checked quorum. 40 drones stopped in 800ms. Then the consortium reconvened.",
+    interactive: true,
+    nodes: [
+      { id: "m1", label: "Member 1 (Chair)", type: "governance", trust: 0.92, scope: "Full governance", jurisdiction: "AU-NSW", role: "Chairperson", x: 110, y: 40 },
+      { id: "m2", label: "Member 2", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "AU-NSW", x: 230, y: 40 },
+      { id: "m3", label: "Member 3", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "AU-VIC", x: 350, y: 40 },
+      { id: "m4", label: "Member 4", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "AU-QLD", x: 470, y: 40 },
+      { id: "m5", label: "Member 5", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "AU-WA", x: 590, y: 40 },
+      { id: "m6", label: "Member 6", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-AKL", x: 230, y: 110 },
+      { id: "m7", label: "Member 7 (Kaumātua)", type: "kaumatua", trust: 0.95, scope: "Cultural authority, mandatory", jurisdiction: "NZ-BOP", role: "Kaumātua — Mandatory", x: 590, y: 110 },
+      { id: "cvat", label: "Collective VAT ✦", type: "collective", trust: 0.93, scope: "Drone survey mission", jurisdiction: "AU/NZ", x: 400, y: 190 },
+      { id: "coord", label: "Swarm Coordinator", type: "agent", trust: 0.87, scope: "Survey area, all units", jurisdiction: "AU-NSW", x: 400, y: 280 },
+      { id: "sw_a", label: "Drones 1-10", type: "physical", trust: 0.82, scope: "Sector A survey", jurisdiction: "AU-NSW", x: 200, y: 380 },
+      { id: "sw_b", label: "Drones 11-20", type: "physical", trust: 0.82, scope: "Sector B survey", jurisdiction: "AU-NSW", x: 400, y: 380 },
+      { id: "sw_c", label: "Drones 21-30", type: "physical", trust: 0.82, scope: "Sector C survey", jurisdiction: "AU-VIC", x: 600, y: 380 },
+      { id: "sw_d", label: "Drones 31-40", type: "physical", trust: 0.82, scope: "Sector D survey", jurisdiction: "NZ-AKL", x: 400, y: 460 },
+    ],
+    edges: [
+      ["m1","cvat"],["m2","cvat"],["m3","cvat"],["m4","cvat"],["m5","cvat"],["m6","cvat"],["m7","cvat"],
+      ["cvat","coord"],["coord","sw_a"],["coord","sw_b"],["coord","sw_c"],["coord","sw_d"]
+    ],
+    events: [
+      { time: 0, type: "verify", node: "m1", message: "Member 1 (Chair) verified ✓ — Quorum: 1/7" },
+      { time: 600, type: "verify", node: "m2", message: "Member 2 verified ✓ — Quorum: 2/7" },
+      { time: 1200, type: "verify", node: "m3", message: "Member 3 verified ✓ — Quorum: 3/7" },
+      { time: 1800, type: "verify", node: "m4", message: "Member 4 verified ✓ — Quorum: 4/7" },
+      { time: 2400, type: "verify", node: "m5", message: "Member 5 verified ✓ — Quorum: 5/7 — THRESHOLD MET" },
+      { time: 3000, type: "verify", node: "m6", message: "Member 6 verified ✓ — Quorum: 6/7" },
+      { time: 3600, type: "verify", node: "m7", message: "Member 7 (Kaumātua) verified ✓ — Quorum: 7/7 — Mandatory role present" },
+      { time: 4400, type: "create", node: "cvat", message: "✦ Collective VAT issued — 7/7 members, threshold 5/7, kaumātua mandatory" },
+      { time: 5200, type: "delegate", node: "coord", message: "Swarm Coordinator authorised — 40 drones, 4 sectors" },
+      { time: 5800, type: "delegate", node: "sw_a", message: "Drones 1-10 deployed → Sector A" },
+      { time: 6200, type: "delegate", node: "sw_b", message: "Drones 11-20 deployed → Sector B" },
+      { time: 6600, type: "delegate", node: "sw_c", message: "Drones 21-30 deployed → Sector C" },
+      { time: 7000, type: "delegate", node: "sw_d", message: "Drones 31-40 deployed → Sector D" },
+      { time: 7800, type: "action", node: "sw_a", message: "✓ Sector A survey in progress — all 10 units operational" },
+      { time: 8200, type: "action", node: "sw_b", message: "✓ Sector B survey in progress — all 10 units operational" },
+      { time: 8600, type: "action", node: "sw_c", message: "✓ Sector C survey in progress — all 10 units operational" },
+      { time: 9000, type: "action", node: "sw_d", message: "✓ Sector D survey in progress — all 10 units operational" },
+      { time: 9800, type: "action", node: "coord", message: "📊 Mission: 47 minutes elapsed — 40 drones operational — CHOOSE WHAT HAPPENS NEXT ↓" },
+    ],
+  },
+};
+
+// Interactive decision trees for consortium scenario
+const CONSORTIUM_BRANCHES = {
+  resign: {
+    label: "Member Resigns",
+    desc: "Voluntary withdrawal",
+    color: "#FFC107",
+    icon: "🚪",
+    events: [
+      { type: "warning", node: "m3", message: "⚠ Member 3 voluntarily withdrawing consent..." },
+      { type: "revoke_one", node: "m3", message: "🚪 Member 3 WITHDRAWN — biometric consent revoked" },
+      { type: "quorum", node: "cvat", message: "📊 Quorum re-evaluation: 6/7 remaining — Threshold 5/7 — STILL VALID ✓" },
+      { type: "action", node: "coord", message: "✓ Operation CONTINUES with reduced consortium (6/7)" },
+      { type: "provenance", node: "cvat", message: "📋 Provenance: Voluntary withdrawal recorded. Classification: CLEAN." },
+    ],
+  },
+  fired: {
+    label: "Member Fired",
+    desc: "Organisational revocation",
+    color: "#FF9800",
+    icon: "🔨",
+    events: [
+      { type: "warning", node: "m3", message: "⚠ Member 3's organisation revoking authority — TERMINATION" },
+      { type: "alert", node: "m3", message: "🔍 Dual check: Biometric ✓ (still active) | Org Role ✗ (TERMINATED)" },
+      { type: "revoke_one", node: "m3", message: "🔨 Member 3 REMOVED — biometric valid but role revoked" },
+      { type: "quorum", node: "cvat", message: "📊 Quorum re-evaluation: 6/7 remaining — Threshold 5/7 — STILL VALID ✓" },
+      { type: "action", node: "coord", message: "✓ Operation CONTINUES — org revocation does not affect other members" },
+      { type: "provenance", node: "cvat", message: "📋 Provenance: Org revocation recorded. Biometric session orphaned." },
+    ],
+  },
+  compromised: {
+    label: "Member Compromised",
+    desc: "Security incident",
+    color: "#F44336",
+    icon: "🔴",
+    events: [
+      { type: "alert", node: "m3", message: "🚨 SECURITY ALERT: Member 3 session suspected compromised!" },
+      { type: "revoke_one", node: "m3", message: "🔴 Member 3 EMERGENCY REVOKED — zero grace period" },
+      { type: "alert", node: "cvat", message: "🔍 FORENSIC FLAG: All actions via Member 3's contribution under review" },
+      { type: "quorum", node: "cvat", message: "📊 Quorum re-evaluation: 6/7 remaining — Threshold 5/7 — STILL VALID ✓" },
+      { type: "action", node: "coord", message: "✓ Operation CONTINUES — enhanced monitoring activated" },
+      { type: "provenance", node: "cvat", message: "📋 Provenance: Security compromise. Forensic flags on all dependent actions." },
+    ],
+  },
+  timeout: {
+    label: "Member Lost",
+    desc: "Connection/incapacitation",
+    color: "#9E9E9E",
+    icon: "📡",
+    events: [
+      { type: "warning", node: "m3", message: "📡 Member 3 re-verification pending... connection lost" },
+      { type: "waiting", node: "m3", message: "⏳ Trust decay: 0.90 → 0.72 → 0.54 → threshold..." },
+      { type: "alert", node: "m3", message: "⏰ Grace period expired (120s) — Member 3 contribution LAPSED" },
+      { type: "revoke_one", node: "m3", message: "📡 Member 3 TIMED OUT — gradual trust decay, not sudden revocation" },
+      { type: "quorum", node: "cvat", message: "📊 Quorum re-evaluation: 6/7 remaining — Threshold 5/7 — STILL VALID ✓" },
+      { type: "action", node: "coord", message: "✓ Operation CONTINUES — timeout recorded, not compromised" },
+    ],
+  },
+};
+
+const CASCADE_EVENTS = [
+  { type: "warning", node: "m5", message: "⚠ Member 5 also losing authority..." },
+  { type: "revoke_one", node: "m5", message: "❌ Member 5 REVOKED — Quorum dropping..." },
+  { type: "cascade", node: "cvat", message: "🔴 QUORUM CHECK: 5/7 remaining — Threshold 5/7 — CRITICAL" },
+  { type: "warning", node: "m4", message: "⚠ Member 4 withdrawing..." },
+  { type: "revoke_one", node: "m4", message: "❌ Member 4 REVOKED" },
+  { type: "cascade", node: "cvat", message: "💥 QUORUM LOST: 4/7 remaining — Threshold 5/7 — BELOW MINIMUM" },
+  { type: "cascade", node: "cvat", message: "🛑 COLLECTIVE VAT INVALIDATED — CASCADE TO ALL AGENTS" },
+  { type: "cascade", node: "coord", message: "🛑 Swarm Coordinator → SUSPENDED" },
+  { type: "cascade", node: "sw_a", message: "🛑 Drones 1-10 → SAFE STATE (hover at current position)" },
+  { type: "cascade", node: "sw_b", message: "🛑 Drones 11-20 → SAFE STATE (hover at current position)" },
+  { type: "cascade", node: "sw_c", message: "🛑 Drones 21-30 → SAFE STATE (hover at current position)" },
+  { type: "cascade", node: "sw_d", message: "🛑 Drones 31-40 → SAFE STATE (hover at current position)" },
+  { type: "provenance", node: "cvat", message: "📸 Forensic snapshot: 40 drones — position, altitude, speed, heading, fuel captured" },
+  { type: "provenance", node: "cvat", message: "📋 Provenance gap opened: Operation suspended — awaiting reconstitution" },
+];
+
+const KAUMATUA_CASCADE_EVENTS = [
+  { type: "warning", node: "m7", message: "⚠ Kaumātua (Member 7) withdrawing authority..." },
+  { type: "revoke_one", node: "m7", message: "❌ Kaumātua WITHDRAWN" },
+  { type: "cascade", node: "cvat", message: "📊 Quorum check: 5/7 remaining — Threshold 5/7 — ABOVE QUORUM..." },
+  { type: "cascade", node: "cvat", message: "🔴 BUT: MANDATORY ROLE ABSENT — Kaumātua verification REQUIRED" },
+  { type: "cascade", node: "cvat", message: "💥 COLLECTIVE VAT INVALIDATED — Mandatory role overrides quorum numbers" },
+  { type: "cascade", node: "coord", message: "🛑 Swarm Coordinator → SUSPENDED" },
+  { type: "cascade", node: "sw_a", message: "🛑 Drones 1-10 → SAFE STATE" },
+  { type: "cascade", node: "sw_b", message: "🛑 Drones 11-20 → SAFE STATE" },
+  { type: "cascade", node: "sw_c", message: "🛑 Drones 21-30 → SAFE STATE" },
+  { type: "cascade", node: "sw_d", message: "🛑 Drones 31-40 → SAFE STATE" },
+  { type: "provenance", node: "cvat", message: "📸 Forensic snapshot: 40 drones state captured" },
+  { type: "provenance", node: "cvat", message: "📋 Cascade cause: MANDATORY ROLE LOSS (not quorum). Numbers don't override governance." },
+];
+
+const RECONSTITUTE_EVENTS = [
+  { type: "action", node: "cvat", message: "🔄 Reconstitution initiated — remaining members reconvening..." },
+  { type: "verify", node: "m1", message: "Member 1 (Chair) re-verified ✓" },
+  { type: "verify", node: "m2", message: "Member 2 re-verified ✓" },
+  { type: "verify", node: "m6", message: "Member 6 re-verified ✓" },
+  { type: "verify", node: "m7", message: "Kaumātua re-verified ✓ — Mandatory role present" },
+  { type: "action", node: "cvat", message: "👤 NEW: Member 8 appointed to replace — biometric verification..." },
+  { type: "verify", node: "m3", message: "Member 8 (replacement) verified ✓ — Quorum: 5/5 of reconstituted body" },
+  { type: "create", node: "cvat", message: "✦ NEW Collective VAT issued — Reconstituted consortium (5 members)" },
+  { type: "delegate", node: "coord", message: "Swarm Coordinator RE-AUTHORISED" },
+  { type: "action", node: "sw_a", message: "✈ Drones 1-10 RESUMING from safe state positions" },
+  { type: "action", node: "sw_b", message: "✈ Drones 11-20 RESUMING" },
+  { type: "action", node: "sw_c", message: "✈ Drones 21-30 RESUMING" },
+  { type: "action", node: "sw_d", message: "✈ Drones 31-40 RESUMING" },
+  { type: "provenance", node: "cvat", message: "📋 Provenance gap CLOSED: Suspended → Reconstituted. Gap is permanent record." },
+  { type: "action", node: "coord", message: "✅ Survey mission resumed — 40 drones operational under new authority chain" },
+];
+
+const NODE_STYLES = {
+  human: { fill: "#1B3A5C", stroke: "#2E75B6", icon: "👤", radius: 32 },
+  agent: { fill: "#2C3E50", stroke: "#5DADE2", icon: "🤖", radius: 24 },
+  governance: { fill: "#1B5E20", stroke: "#66BB6A", icon: "👤", radius: 22 },
+  kaumatua: { fill: "#4A0E4E", stroke: "#CE93D8", icon: "👤", radius: 26 },
+  collective: { fill: "#E65100", stroke: "#FFB74D", icon: "✦", radius: 28 },
+  physical: { fill: "#37474F", stroke: "#78909C", icon: "✈", radius: 22 },
+  blocked: { fill: "#B71C1C", stroke: "#EF5350", icon: "⛔", radius: 22 },
+  rahui: { fill: "#0077B6", stroke: "#48CAE4", icon: "🌊", radius: 28 },
+  tapu: { fill: "#7B0000", stroke: "#FF4444", icon: "🔴", radius: 28 },
+};
+
+function TrustGraph({ scenario, activeNodes, revokedNodes, blockedNodes, safeStateNodes, quorumText }) {
+  const canvasRef = useRef(null);
+  const sc = SCENARIOS[scenario];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 800 * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, 800, 500);
+
+    // Draw edges
+    sc.edges.forEach(([from, to]) => {
+      const fn = sc.nodes.find(n => n.id === from);
+      const tn = sc.nodes.find(n => n.id === to);
+      if (!fn || !tn) return;
+      const isActive = activeNodes.has(from) && activeNodes.has(to);
+      const isRevoked = revokedNodes.has(from) || revokedNodes.has(to);
+      const isSafe = safeStateNodes.has(to);
+      ctx.beginPath();
+      ctx.moveTo(fn.x, fn.y);
+      ctx.lineTo(tn.x, tn.y);
+      ctx.strokeStyle = isSafe ? "#2196F388" : isRevoked ? "#EF535088" : isActive ? `${sc.color}88` : "#333333";
+      ctx.lineWidth = isRevoked ? 3 : isActive ? 2.5 : 1;
+      if (isRevoked || isSafe) ctx.setLineDash([6, 4]);
+      else ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const angle = Math.atan2(tn.y - fn.y, tn.x - fn.x);
+      const tr = NODE_STYLES[tn.type]?.radius || 24;
+      const ax = tn.x - Math.cos(angle) * (tr + 6);
+      const ay = tn.y - Math.sin(angle) * (tr + 6);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - 10 * Math.cos(angle - 0.3), ay - 10 * Math.sin(angle - 0.3));
+      ctx.lineTo(ax - 10 * Math.cos(angle + 0.3), ay - 10 * Math.sin(angle + 0.3));
+      ctx.closePath();
+      ctx.fillStyle = isSafe ? "#2196F3" : isRevoked ? "#EF5350" : isActive ? sc.color : "#555";
+      ctx.fill();
+    });
+
+    // Draw nodes
+    sc.nodes.forEach(node => {
+      const style = NODE_STYLES[node.type] || NODE_STYLES.agent;
+      const isActive = activeNodes.has(node.id);
+      const isRevoked = revokedNodes.has(node.id);
+      const isBlocked = blockedNodes.has(node.id);
+      const isSafe = safeStateNodes.has(node.id);
+
+      if (isActive && !isRevoked && !isBlocked && !isSafe) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, style.radius + 8, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(node.x, node.y, style.radius, node.x, node.y, style.radius + 12);
+        grad.addColorStop(0, `${style.stroke}44`);
+        grad.addColorStop(1, "transparent");
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      if (isRevoked) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, style.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = "#EF535066";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      if (isSafe) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, style.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = "#2196F366";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, style.radius, 0, Math.PI * 2);
+      ctx.fillStyle = isSafe ? "#0D47A1" : isRevoked ? "#B71C1C" : isBlocked ? "#4A0000" : isActive ? style.fill : "#1a1a1a";
+      ctx.fill();
+      ctx.strokeStyle = isSafe ? "#2196F3" : isRevoked ? "#EF5350" : isBlocked ? "#FF4444" : isActive ? style.stroke : "#444";
+      ctx.lineWidth = isActive ? 2.5 : 1.5;
+      ctx.stroke();
+
+      ctx.font = `${style.radius * 0.65}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "white";
+      ctx.fillText(isSafe ? "🔵" : style.icon, node.x, node.y);
+
+      ctx.font = "bold 10px 'SF Mono', 'Fira Code', monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = isSafe ? "#2196F3" : isRevoked ? "#EF5350" : isActive ? "#E0E0E0" : "#666";
+      ctx.fillText(node.label, node.x, node.y + style.radius + 14);
+
+      if (node.trust > 0 && isActive) {
+        ctx.font = "bold 9px monospace";
+        ctx.fillStyle = isSafe ? "#2196F3" : isRevoked ? "#EF5350" : "#4CAF50";
+        const badge = isSafe ? "SAFE STATE" : isRevoked ? "REVOKED" : `T:${node.trust.toFixed(2)}`;
+        ctx.fillText(badge, node.x, node.y + style.radius + 26);
+      }
+    });
+
+    // Quorum display for consortium
+    if (quorumText && scenario === "consortium") {
+      ctx.font = "bold 13px monospace";
+      ctx.textAlign = "center";
+      const isLost = quorumText.includes("LOST") || quorumText.includes("ABSENT");
+      ctx.fillStyle = isLost ? "#EF5350" : "#4CAF50";
+      ctx.fillText(quorumText, 400, 155);
+    }
+  }, [scenario, activeNodes, revokedNodes, blockedNodes, safeStateNodes, quorumText]);
+
+  return <canvas ref={canvasRef} style={{ width: 800, height: 500, borderRadius: 8 }} />;
+}
+
+function MetricsPanel({ metrics }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 12 }}>
+      {Object.entries(metrics).map(([key, val]) => (
+        <div key={key} style={{ background: "#111", borderRadius: 6, padding: "8px 12px", borderLeft: `3px solid ${val.color || "#555"}` }}>
+          <div style={{ fontSize: 10, color: "#888", fontFamily: "monospace", letterSpacing: 1 }}>{key}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: val.color || "#ccc", fontFamily: "monospace" }}>{val.value}</div>
+          <div style={{ fontSize: 9, color: "#666" }}>{val.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VACSimulation() {
+  const [scenario, setScenario] = useState("healthcare");
+  const [running, setRunning] = useState(false);
+  const [activeNodes, setActiveNodes] = useState(new Set());
+  const [revokedNodes, setRevokedNodes] = useState(new Set());
+  const [blockedNodes, setBlockedNodes] = useState(new Set());
+  const [safeStateNodes, setSafeStateNodes] = useState(new Set());
+  const [log, setLog] = useState([]);
+  const [metrics, setMetrics] = useState({});
+  const [phase, setPhase] = useState("idle"); // idle, running, choose_crisis, crisis_playing, choose_escalate, escalating, cascaded, reconstituting, complete
+  const [quorumText, setQuorumText] = useState("");
+  const timerRef = useRef(null);
+  const logEndRef = useRef(null);
+
+  const sc = SCENARIOS[scenario];
+
+  const reset = useCallback(() => {
+    clearTimeout(timerRef.current);
+    setRunning(false);
+    setPhase("idle");
+    setActiveNodes(new Set());
+    setRevokedNodes(new Set());
+    setBlockedNodes(new Set());
+    setSafeStateNodes(new Set());
+    setLog([]);
+    setQuorumText("");
+    setMetrics({
+      VATV: { value: "—", label: "Verification Time", color: "#555" },
+      RPL: { value: "—", label: "Revocation Propagation", color: "#555" },
+      SNER: { value: "100%", label: "Scope Narrowing Rate", color: "#4CAF50" },
+      QUORUM: { value: "—", label: "Quorum Status", color: "#555" },
+      DRONES: { value: "0", label: "Active Drones", color: "#555" },
+      NODES: { value: "0", label: "Active Agents", color: "#555" },
+    });
+  }, []);
+
+  useEffect(() => { reset(); }, [scenario, reset]);
+  useEffect(() => {
+    if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [log]);
+
+  const playEvents = (events, onComplete, delay = 800) => {
+    let idx = 0;
+    const processNext = () => {
+      if (idx >= events.length) { if (onComplete) onComplete(); return; }
+      const evt = events[idx];
+      setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
+
+      if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
+        setActiveNodes(prev => new Set([...prev, evt.node]));
+      }
+      if (evt.type === "revoke_one") {
+        setRevokedNodes(prev => new Set([...prev, evt.node]));
+      }
+      if (evt.type === "cascade") {
+        if (["sw_a","sw_b","sw_c","sw_d"].includes(evt.node)) {
+          setSafeStateNodes(prev => new Set([...prev, evt.node]));
+        }
+        if (["coord","cvat"].includes(evt.node)) {
+          setRevokedNodes(prev => new Set([...prev, evt.node]));
+        }
+      }
+      if (evt.type === "revoke") {
+        setRevokedNodes(new Set(sc.nodes.map(n => n.id)));
+      }
+      if (evt.type === "blocked" || evt.type === "alert") {
+        setBlockedNodes(prev => new Set([...prev, evt.node]));
+        setActiveNodes(prev => new Set([...prev, evt.node]));
+      }
+      if (evt.type === "quorum") {
+        const match = evt.message.match(/(\d+\/\d+)/);
+        if (match) {
+          setQuorumText(`Quorum: ${match[1]} (threshold: 5/7)`);
+          const [num] = match[1].split("/").map(Number);
+          setMetrics(prev => ({
+            ...prev,
+            QUORUM: { value: match[1], label: num >= 5 ? "Quorum VALID" : "QUORUM LOST", color: num >= 5 ? "#4CAF50" : "#EF5350" },
+          }));
+        }
+      }
+
+      // Metrics updates
+      const activeCount = idx + 1;
+      setMetrics(prev => ({
+        ...prev,
+        VATV: { value: `${(Math.random() * 3 + 1).toFixed(1)}ms`, label: "Verification Time", color: "#4CAF50" },
+        NODES: { value: `${Math.min(activeCount, sc.nodes.length)}`, label: "Active Agents", color: "#2E75B6" },
+      }));
+
+      idx++;
+      timerRef.current = setTimeout(processNext, delay);
+    };
+    processNext();
+  };
+
+  const runScenario = () => {
+    reset();
+    setRunning(true);
+    setPhase("running");
+
+    if (sc.interactive) {
+      playEvents(sc.events, () => {
+        setPhase("choose_crisis");
+        setQuorumText("Quorum: 7/7 (threshold: 5/7)");
+        setMetrics(prev => ({
+          ...prev,
+          QUORUM: { value: "7/7", label: "Quorum VALID", color: "#4CAF50" },
+          DRONES: { value: "40", label: "Active Drones", color: "#4CAF50" },
+        }));
+      });
+    } else {
+      const events = sc.events;
+      let idx = 0;
+      const processNext = () => {
+        if (idx >= events.length) { setRunning(false); setPhase("complete"); return; }
+        const evt = events[idx];
+        setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
+        if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
+          setActiveNodes(prev => new Set([...prev, evt.node]));
+          setMetrics(prev => ({
+            ...prev,
+            VATV: { value: `${(Math.random() * 3 + 1).toFixed(1)}ms`, label: "Verification Time", color: "#4CAF50" },
+            NODES: { value: `${Math.min(idx + 1, sc.nodes.length)}`, label: "Active Agents", color: "#2E75B6" },
+            SNER: { value: "100%", label: "Scope Narrowing Rate", color: "#4CAF50" },
+          }));
+        }
+        if (evt.type === "revoke") {
+          setRevokedNodes(new Set(sc.nodes.map(n => n.id)));
+          setMetrics(prev => ({
+            ...prev,
+            RPL: { value: `${(Math.random() * 400 + 200).toFixed(0)}ms`, label: "Revocation Propagation", color: "#EF5350" },
+            NODES: { value: "0", label: "Active Agents (REVOKED)", color: "#EF5350" },
+          }));
+        }
+        if (evt.type === "blocked" || evt.type === "alert") {
+          setBlockedNodes(prev => new Set([...prev, evt.node]));
+          setActiveNodes(prev => new Set([...prev, evt.node]));
+        }
+        idx++;
+        const nextDelay = idx < events.length ? events[idx].time - evt.time : 0;
+        timerRef.current = setTimeout(processNext, Math.max(nextDelay, 800));
+      };
+      processNext();
+    }
+  };
+
+  const handleCrisisChoice = (choice) => {
+    setPhase("crisis_playing");
+    const branch = CONSORTIUM_BRANCHES[choice];
+    setLog(prev => [...prev, { time: "———", type: "action", message: `${branch.icon} CRISIS: ${branch.label} — ${branch.desc}` }]);
+    playEvents(branch.events, () => {
+      setQuorumText("Quorum: 6/7 (threshold: 5/7)");
+      setMetrics(prev => ({
+        ...prev,
+        QUORUM: { value: "6/7", label: "Quorum VALID (reduced)", color: "#FFC107" },
+      }));
+      setPhase("choose_escalate");
+    });
+  };
+
+  const handleEscalate = (type) => {
+    setPhase("escalating");
+    const events = type === "kaumatua" ? KAUMATUA_CASCADE_EVENTS : CASCADE_EVENTS;
+    setLog(prev => [...prev, { time: "———", type: "cascade", message: type === "kaumatua" ? "🏛 MANDATORY ROLE TEST: What if the kaumātua withdraws?" : "💥 ESCALATION: More members lose authority..." }]);
+    playEvents(events, () => {
+      setQuorumText(type === "kaumatua" ? "MANDATORY ROLE ABSENT — CASCADE" : "QUORUM LOST: 4/7 < 5/7 — CASCADE");
+      setMetrics(prev => ({
+        ...prev,
+        QUORUM: { value: type === "kaumatua" ? "5/7*" : "4/7", label: type === "kaumatua" ? "MANDATORY ROLE ABSENT" : "QUORUM LOST", color: "#EF5350" },
+        RPL: { value: `${(Math.random() * 400 + 400).toFixed(0)}ms`, label: "Cascade-to-Safe-State", color: "#EF5350" },
+        DRONES: { value: "0 (safe)", label: "Drones in SAFE STATE", color: "#2196F3" },
+      }));
+      setPhase("cascaded");
+    }, 600);
+  };
+
+  const handleReconstitute = () => {
+    setPhase("reconstituting");
+    // Reset some visual state
+    setRevokedNodes(prev => {
+      const n = new Set(prev);
+      n.delete("cvat"); n.delete("coord");
+      return n;
+    });
+    setSafeStateNodes(new Set());
+    setLog(prev => [...prev, { time: "———", type: "action", message: "🔄 RECONSTITUTION: Remaining members reconvening..." }]);
+    playEvents(RECONSTITUTE_EVENTS, () => {
+      setQuorumText("Quorum: 5/5 RECONSTITUTED ✓");
+      setMetrics(prev => ({
+        ...prev,
+        QUORUM: { value: "5/5 ✓", label: "Reconstituted", color: "#4CAF50" },
+        DRONES: { value: "40", label: "Drones RESUMED", color: "#4CAF50" },
+        RPL: { value: prev.RPL.value, label: "Cascade-to-Safe-State", color: "#4CAF50" },
+      }));
+      setPhase("complete");
+    });
+  };
+
+  const eventColors = {
+    verify: "#4CAF50", create: "#2E75B6", delegate: "#5DADE2", action: "#66BB6A",
+    revoke: "#EF5350", revoke_one: "#FF9800", blocked: "#FF4444", alert: "#FFB74D",
+    provenance: "#CE93D8", waiting: "#FFC107", cascade: "#EF5350", warning: "#FF9800",
+    quorum: "#2196F3",
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#e0e0e0", fontFamily: "'SF Mono', 'Fira Code', 'JetBrains Mono', monospace", padding: 0 }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #1B3A5C 100%)", padding: "20px 24px 16px", borderBottom: "1px solid #222" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 1200, margin: "0 auto" }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: 3, color: "#888", marginBottom: 4 }}>VAC PROTOCOL</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: -0.5 }}>Trust Chain Simulation</div>
+            <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>241 Claims · 38 Sections · 4 Filings · vacprotocol.org</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: "#888" }}>PATENT: AU 2026901425</div>
+            <div style={{ fontSize: 10, color: "#666" }}>Violet Shores Pty Ltd</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px" }}>
+        {/* Scenario Tabs */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+          {Object.entries(SCENARIOS).map(([key, s]) => (
+            <button key={key} onClick={() => setScenario(key)}
+              style={{ padding: "8px 14px", border: scenario === key ? `2px solid ${s.color}` : "1px solid #333", borderRadius: 6, background: scenario === key ? `${s.color}22` : "#111", color: scenario === key ? s.color : "#888", cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: scenario === key ? 700 : 400, transition: "all 0.2s" }}>
+              {s.title}
+            </button>
+          ))}
+        </div>
+
+        {/* Scenario Info */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, padding: "12px 16px", background: "#111", borderRadius: 8, borderLeft: `4px solid ${sc.color}` }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: sc.color }}>{sc.title}</div>
+            <div style={{ fontSize: 12, color: "#888" }}>{sc.subtitle}</div>
+            <div style={{ fontSize: 10, color: "#666", marginTop: 4 }}>{sc.claims} | Audience: {sc.audience}</div>
+            {sc.oneSentence && <div style={{ fontSize: 10, color: "#999", marginTop: 4, fontStyle: "italic" }}>"{sc.oneSentence}"</div>}
+          </div>
+          <button onClick={running ? reset : runScenario}
+            style={{ padding: "10px 28px", background: running ? "#B71C1C" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, minWidth: 160 }}>
+            {running ? "■ RESET" : "▶ RUN SCENARIO"}
+          </button>
+        </div>
+
+        {/* Interactive Decision Buttons */}
+        {phase === "choose_crisis" && (
+          <div style={{ marginBottom: 12, padding: 16, background: "#1a1200", borderRadius: 8, border: "2px solid #FF6F00" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6F00", marginBottom: 10 }}>⚡ CHOOSE WHAT HAPPENS TO MEMBER 3:</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {Object.entries(CONSORTIUM_BRANCHES).map(([key, b]) => (
+                <button key={key} onClick={() => handleCrisisChoice(key)}
+                  style={{ padding: "10px 18px", background: `${b.color}22`, border: `1px solid ${b.color}`, borderRadius: 6, color: b.color, cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 600, flex: 1, minWidth: 140 }}>
+                  {b.icon} {b.label}<br /><span style={{ fontSize: 9, fontWeight: 400, opacity: 0.8 }}>{b.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {phase === "choose_escalate" && (
+          <div style={{ marginBottom: 12, padding: 16, background: "#1a0000", borderRadius: 8, border: "2px solid #EF5350" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#EF5350", marginBottom: 10 }}>💥 ESCALATE — WHAT HAPPENS NEXT?</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button onClick={() => handleEscalate("quorum")}
+                style={{ padding: "12px 18px", background: "#EF535022", border: "1px solid #EF5350", borderRadius: 6, color: "#EF5350", cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 600, flex: 1 }}>
+                💥 Drop Below Quorum<br /><span style={{ fontSize: 9, fontWeight: 400 }}>Two more members lost → 4/7 → CASCADE</span>
+              </button>
+              <button onClick={() => handleEscalate("kaumatua")}
+                style={{ padding: "12px 18px", background: "#CE93D822", border: "1px solid #CE93D8", borderRadius: 6, color: "#CE93D8", cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 600, flex: 1 }}>
+                🏛 Kaumātua Withdraws<br /><span style={{ fontSize: 9, fontWeight: 400 }}>Mandatory role lost → CASCADE despite 5/7 quorum</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {phase === "cascaded" && (
+          <div style={{ marginBottom: 12, padding: 16, background: "#001a0a", borderRadius: 8, border: "2px solid #4CAF50" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#4CAF50", marginBottom: 10 }}>🔄 RECOVERY — RECONSTITUTE THE CONSORTIUM?</div>
+            <button onClick={handleReconstitute}
+              style={{ padding: "12px 28px", background: "#4CAF5022", border: "1px solid #4CAF50", borderRadius: 6, color: "#4CAF50", cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 700 }}>
+              🔄 Reconstitute Consortium — Appoint replacement, re-verify, resume mission
+            </button>
+          </div>
+        )}
+
+        {/* Main Layout */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
+          {/* Left: Graph + Metrics */}
+          <div>
+            <div style={{ background: "#0d0d0d", borderRadius: 8, border: "1px solid #222", overflow: "hidden" }}>
+              <div style={{ padding: "8px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 10, color: "#666", letterSpacing: 2 }}>TRUST GRAPH — LIVE</span>
+                <span style={{ fontSize: 10, color: sc.color }}>{activeNodes.size} nodes · {safeStateNodes.size > 0 ? `${safeStateNodes.size} safe state` : `${revokedNodes.size} revoked`}</span>
+              </div>
+              <TrustGraph scenario={scenario} activeNodes={activeNodes} revokedNodes={revokedNodes} blockedNodes={blockedNodes} safeStateNodes={safeStateNodes} quorumText={quorumText} />
+            </div>
+            <MetricsPanel metrics={metrics} />
+          </div>
+
+          {/* Right: Event Log + Scope */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ background: "#0d0d0d", borderRadius: 8, border: "1px solid #222", flex: 1, minHeight: 300, maxHeight: 420, display: "flex", flexDirection: "column" }}>
+              <div style={{ padding: "8px 12px", borderBottom: "1px solid #1a1a1a" }}>
+                <span style={{ fontSize: 10, color: "#666", letterSpacing: 2 }}>EVENT LOG</span>
+              </div>
+              <div style={{ flex: 1, overflow: "auto", padding: "8px 12px" }}>
+                {log.length === 0 && (
+                  <div style={{ color: "#444", fontSize: 11, textAlign: "center", marginTop: 40 }}>
+                    Press RUN SCENARIO to begin
+                  </div>
+                )}
+                {log.map((entry, i) => (
+                  <div key={i} style={{ fontSize: 10, marginBottom: 5, lineHeight: 1.4, opacity: i === log.length - 1 ? 1 : 0.7 }}>
+                    <span style={{ color: "#444" }}>{entry.time}</span>{" "}
+                    <span style={{ color: eventColors[entry.type] || "#888", fontWeight: 600 }}>
+                      [{entry.type.toUpperCase().replace("_"," ")}]
+                    </span>{" "}
+                    <span style={{ color: "#ccc" }}>{entry.message}</span>
+                  </div>
+                ))}
+                <div ref={logEndRef} />
+              </div>
+            </div>
+
+            <div style={{ background: "#0d0d0d", borderRadius: 8, border: "1px solid #222", padding: 12 }}>
+              <div style={{ fontSize: 10, color: "#666", letterSpacing: 2, marginBottom: 8 }}>SCOPE INSPECTOR</div>
+              {sc.nodes.filter(n => activeNodes.has(n.id)).slice(-4).reverse().map(node => (
+                <div key={node.id} style={{ marginBottom: 6, padding: "5px 8px", background: "#111", borderRadius: 4, borderLeft: `3px solid ${safeStateNodes.has(node.id) ? "#2196F3" : revokedNodes.has(node.id) ? "#EF5350" : blockedNodes.has(node.id) ? "#FF4444" : NODE_STYLES[node.type]?.stroke || "#555"}` }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: safeStateNodes.has(node.id) ? "#2196F3" : revokedNodes.has(node.id) ? "#EF5350" : "#ccc" }}>{node.label}</div>
+                  <div style={{ fontSize: 9, color: "#888" }}>Scope: {node.scope}</div>
+                  <div style={{ fontSize: 9, color: "#666" }}>Jurisdiction: {node.jurisdiction}</div>
+                  {node.role && <div style={{ fontSize: 9, color: "#888" }}>Role: {node.role}</div>}
+                </div>
+              ))}
+              {activeNodes.size === 0 && <div style={{ fontSize: 10, color: "#444" }}>No active nodes</div>}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 16, padding: "12px 16px", background: "#0d0d0d", borderRadius: 8, border: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 10, color: "#444" }}>
+            VAC Protocol Simulation v2.0 — For demonstration purposes. Real implementation uses Ed25519 cryptographic signatures.
+          </div>
+          <div style={{ fontSize: 10, color: "#555" }}>
+            © 2026 Violet Shores Pty Ltd | vacprotocol.org
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Render with top padding for nav
+function App() {
+  return React.createElement('div', { style: { paddingTop: '48px' } },
+    React.createElement(VACSimulation)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
