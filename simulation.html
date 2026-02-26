@@ -4,23 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Interactive Simulation</title>
-<meta name="description" content="Interactive demonstration of the VAC Protocol across healthcare, compliance, coalition, Indigenous governance, and Māori cultural learning scenarios.">
+<meta name="description" content="Interactive demonstration of the VAC Protocol — the world's only 4-modal biometric human key for AI agent authorization.">
 <style>
   body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
-  .sim-nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(0,0,0,0.9); backdrop-filter: blur(12px);
-    border-bottom: 1px solid #222; padding: 0 2rem; height: 48px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  .sim-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid #222; padding: 0 2rem; height: 48px; display: flex; align-items: center; justify-content: space-between; }
   .sim-nav a { color: #888; text-decoration: none; font-size: 13px; font-family: 'Courier New', monospace; }
   .sim-nav a:hover { color: #fff; }
   .sim-nav .back { color: #666; }
-  .sim-loading {
-    display: flex; align-items: center; justify-content: center;
-    height: 100vh; color: #555; font-family: 'Courier New', monospace; font-size: 14px;
-  }
+  .sim-loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #555; font-family: 'Courier New', monospace; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -29,11 +21,9 @@
   <a href="/">VAC PROTOCOL</a>
 </div>
 <div id="root"><div class="sim-loading">Loading VAC Simulation...</div></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
@@ -927,26 +917,54 @@ function VACSimulation() {
           {/* VAT Token Explainer (toggle) */}
           {showVATExplainer && (
             <div style={{ padding: "16px 20px", background: "#0a1628", borderBottom: "1px solid #1a3050", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#2E75B6", marginBottom: 10 }}>What is a VAT Token?</div>
-              <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.7, maxWidth: 800 }}>
-                A <strong style={{ color: "#5DADE2" }}>Verified Authority Token (VAT)</strong> is like a digital permission slip — but one that can't be forged, can't be copied, and always traces back to a real person's face or voice.
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#2E75B6", marginBottom: 12 }}>The VAT Token — The World's Only 4-Modal Biometric Human Key</div>
+              <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.8, maxWidth: 800 }}>
+                A <strong style={{ color: "#5DADE2" }}>Verified Authority Token (VAT)</strong> is a cryptographic proof that a real, specific human authorised a specific action. Not a password. Not a code from your phone. A proof anchored to <em>who you physically are</em> — across four biometric modalities simultaneously.
               </div>
-              <div style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7, marginTop: 10, maxWidth: 800 }}>
-                When you verify your identity (through video, face scan, or voice), the system creates a VAT that says <em>"this specific person authorised these specific actions."</em> That token travels with every AI agent in the chain. If anyone asks "who approved this?" — the answer is always traceable back to you.
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16, maxWidth: 800 }}>
+                <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #4CAF50" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#4CAF50" }}>📹 Video — Your Face</div>
+                  <div style={{ fontSize: 12, color: "#aaa", marginTop: 4, lineHeight: 1.6 }}>Live facial recognition with liveness detection. Not a photo — a proof you're present, right now. Deepfake-resistant.</div>
+                </div>
+                <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #5DADE2" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#5DADE2" }}>🎙 Voice — Your Voiceprint</div>
+                  <div style={{ fontSize: 12, color: "#aaa", marginTop: 4, lineHeight: 1.6 }}>Unique voiceprint matching. Cross-checked against your face — your lip movements must match your voice. Clone-resistant.</div>
+                </div>
+                <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #FFB74D" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#FFB74D" }}>⌨️ Behavioural — How You Act</div>
+                  <div style={{ fontSize: 12, color: "#aaa", marginTop: 4, lineHeight: 1.6 }}>Typing patterns, interaction rhythms, device signals. A behavioural fingerprint that's unique to you and nearly impossible to replicate.</div>
+                </div>
+                <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #CE93D8" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#CE93D8" }}>📍 Location — Where You Are</div>
+                  <div style={{ fontSize: 12, color: "#aaa", marginTop: 4, lineHeight: 1.6 }}>Geolocation verification. If you're meant to be in Auckland, a login from Moscow gets flagged — before anything happens.</div>
+                </div>
               </div>
+
+              <div style={{ marginTop: 16, padding: "14px 16px", background: "#0d1a0d", borderRadius: 6, border: "1px solid #2D5A27" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#4CAF50", marginBottom: 6 }}>Why This Is Unique — And Patented</div>
+                <div style={{ fontSize: 12, color: "#bbb", lineHeight: 1.7 }}>
+                  Every existing identity system uses one or two of these. Auth0 uses passwords. iProov uses face only. Nuance uses voice only. <strong style={{ color: "#fff" }}>Nobody combines all four into a single composite trust score.</strong> VAC's patented innovation is the combination — four signals that are exponentially harder to fake together than any one alone. A deepfake might fool a camera. It won't fool a camera + voiceprint + behavioural pattern + location check simultaneously.
+                </div>
+              </div>
+
               <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
                 <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #4CAF50" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4CAF50" }}>Creates</div>
-                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>A human verifies → token is born</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>4 biometric signals → one trust score → token is born</div>
                 </div>
                 <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #5DADE2" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#5DADE2" }}>Delegates</div>
-                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Each agent gets a narrower copy</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Each agent gets a narrower copy — scope always narrows</div>
                 </div>
                 <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #EF5350" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#EF5350" }}>Revokes</div>
-                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Human leaves → ALL agents stop</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Human leaves → ALL agents stop. Instantly. No orphaned access.</div>
                 </div>
+              </div>
+
+              <div style={{ marginTop: 12, fontSize: 10, color: "#555", fontFamily: "'Courier New', monospace" }}>
+                Protected by 241 claims across 4 Australian patent filings · Violet Shores Pty Ltd · vacprotocol.org
               </div>
             </div>
           )}
@@ -1096,7 +1114,6 @@ function App() {
     React.createElement(VACSimulation)
   );
 }
-
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 </script>
 </body>
