@@ -609,6 +609,8 @@ function VACSimulation() {
   const [quorumText, setQuorumText] = useState("");
   const [currentBeat, setCurrentBeat] = useState(-1);
   const [showVATExplainer, setShowVATExplainer] = useState(false);
+  const [playMode, setPlayMode] = useState("auto"); // "auto" or "step"
+  const [stepIdx, setStepIdx] = useState(-1);
   const timerRef = useRef(null);
   const logEndRef = useRef(null);
 
@@ -625,6 +627,7 @@ function VACSimulation() {
     setLog([]);
     setQuorumText("");
     setCurrentBeat(-1);
+    setStepIdx(-1);
     setMetrics({
       VATV: { value: "—", label: "Verification Time", color: "#555" },
       RPL: { value: "—", label: "Revocation Propagation", color: "#555" },
@@ -698,10 +701,67 @@ function VACSimulation() {
     processNext();
   };
 
+  // Process a single event at a given index
+  const processEventAtIndex = useCallback((idx) => {
+    const events = sc.events;
+    if (idx >= events.length) return;
+    const evt = events[idx];
+    setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
+    // Advance narrative beat
+    if (sc.story && sc.story.beats) {
+      const matchingBeat = sc.story.beats.filter(b => b.at <= idx);
+      if (matchingBeat.length > 0) setCurrentBeat(matchingBeat.length - 1);
+    }
+    if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
+      setActiveNodes(prev => new Set([...prev, evt.node]));
+      setMetrics(prev => ({
+        ...prev,
+        VATV: { value: `${(Math.random() * 3 + 1).toFixed(1)}ms`, label: "Verification Time", color: "#4CAF50" },
+        NODES: { value: `${Math.min(idx + 1, sc.nodes.length)}`, label: "Active Agents", color: "#2E75B6" },
+        SNER: { value: "100%", label: "Scope Narrowing Rate", color: "#4CAF50" },
+      }));
+    }
+    if (evt.type === "revoke") {
+      setRevokedNodes(new Set(sc.nodes.map(n => n.id)));
+      setMetrics(prev => ({
+        ...prev,
+        RPL: { value: `${(Math.random() * 400 + 200).toFixed(0)}ms`, label: "Revocation Propagation", color: "#EF5350" },
+        NODES: { value: "0", label: "Active Agents (REVOKED)", color: "#EF5350" },
+      }));
+    }
+    if (evt.type === "blocked" || evt.type === "alert") {
+      setBlockedNodes(prev => new Set([...prev, evt.node]));
+      setActiveNodes(prev => new Set([...prev, evt.node]));
+    }
+  }, [sc]);
+
+  const stepForward = () => {
+    const nextIdx = stepIdx + 1;
+    if (nextIdx >= sc.events.length) {
+      setPhase("complete");
+      setRunning(false);
+      return;
+    }
+    if (nextIdx === 0) {
+      reset();
+      setRunning(true);
+      setPhase("running");
+    }
+    setStepIdx(nextIdx);
+    processEventAtIndex(nextIdx);
+  };
+
   const runScenario = () => {
     reset();
     setRunning(true);
     setPhase("running");
+
+    if (playMode === "step") {
+      // Step mode: process first event, then wait for user
+      setStepIdx(0);
+      processEventAtIndex(0);
+      return;
+    }
 
     if (sc.interactive) {
       playEvents(sc.events, () => {
@@ -718,36 +778,11 @@ function VACSimulation() {
       let idx = 0;
       const processNext = () => {
         if (idx >= events.length) { setRunning(false); setPhase("complete"); return; }
-        const evt = events[idx];
-        setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
-        // Advance narrative beat
-        if (sc.story && sc.story.beats) {
-          const matchingBeat = sc.story.beats.filter(b => b.at <= idx);
-          if (matchingBeat.length > 0) setCurrentBeat(matchingBeat.length - 1);
-        }
-        if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
-          setActiveNodes(prev => new Set([...prev, evt.node]));
-          setMetrics(prev => ({
-            ...prev,
-            VATV: { value: `${(Math.random() * 3 + 1).toFixed(1)}ms`, label: "Verification Time", color: "#4CAF50" },
-            NODES: { value: `${Math.min(idx + 1, sc.nodes.length)}`, label: "Active Agents", color: "#2E75B6" },
-            SNER: { value: "100%", label: "Scope Narrowing Rate", color: "#4CAF50" },
-          }));
-        }
-        if (evt.type === "revoke") {
-          setRevokedNodes(new Set(sc.nodes.map(n => n.id)));
-          setMetrics(prev => ({
-            ...prev,
-            RPL: { value: `${(Math.random() * 400 + 200).toFixed(0)}ms`, label: "Revocation Propagation", color: "#EF5350" },
-            NODES: { value: "0", label: "Active Agents (REVOKED)", color: "#EF5350" },
-          }));
-        }
-        if (evt.type === "blocked" || evt.type === "alert") {
-          setBlockedNodes(prev => new Set([...prev, evt.node]));
-          setActiveNodes(prev => new Set([...prev, evt.node]));
-        }
+        processEventAtIndex(idx);
         idx++;
-        const nextDelay = idx < events.length ? events[idx].time - evt.time : 0;
+        const nextEvt = idx < events.length ? events[idx] : null;
+        const prevEvt = events[idx - 1];
+        const nextDelay = nextEvt ? nextEvt.time - prevEvt.time : 0;
         timerRef.current = setTimeout(processNext, Math.max(nextDelay, 800));
       };
       processNext();
@@ -854,10 +889,38 @@ function VACSimulation() {
                 style={{ padding: "8px 14px", background: showVATExplainer ? "#2E75B622" : "#1a1a1a", border: showVATExplainer ? "1px solid #2E75B6" : "1px solid #333", borderRadius: 6, color: showVATExplainer ? "#2E75B6" : "#888", cursor: "pointer", fontSize: 10, fontFamily: "inherit" }}>
                 {showVATExplainer ? "✕ Close" : "ℹ What is a VAT Token?"}
               </button>
-              <button onClick={running ? reset : runScenario}
-                style={{ padding: "10px 28px", background: running ? "#B71C1C" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, minWidth: 160 }}>
-                {running ? "■ RESET" : "▶ RUN SCENARIO"}
-              </button>
+              {/* Mode toggle */}
+              {!running && (
+                <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid #333" }}>
+                  <button onClick={() => setPlayMode("auto")}
+                    style={{ padding: "8px 12px", background: playMode === "auto" ? `${sc.color}33` : "#111", border: "none", color: playMode === "auto" ? sc.color : "#666", cursor: "pointer", fontSize: 10, fontFamily: "inherit", fontWeight: playMode === "auto" ? 700 : 400 }}>
+                    ▶ Auto
+                  </button>
+                  <button onClick={() => setPlayMode("step")}
+                    style={{ padding: "8px 12px", background: playMode === "step" ? `${sc.color}33` : "#111", border: "none", borderLeft: "1px solid #333", color: playMode === "step" ? sc.color : "#666", cursor: "pointer", fontSize: 10, fontFamily: "inherit", fontWeight: playMode === "step" ? 700 : 400 }}>
+                    ⏭ Step
+                  </button>
+                </div>
+              )}
+              {/* Run / Step / Reset buttons */}
+              {running && playMode === "step" ? (
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={stepForward}
+                    disabled={phase === "complete"}
+                    style={{ padding: "10px 24px", background: phase === "complete" ? "#333" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: phase === "complete" ? "default" : "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, opacity: phase === "complete" ? 0.5 : 1 }}>
+                    {phase === "complete" ? "✓ DONE" : `NEXT → ${stepIdx + 2}/${sc.events.length}`}
+                  </button>
+                  <button onClick={reset}
+                    style={{ padding: "10px 16px", background: "#B71C1C", color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit" }}>
+                    ■
+                  </button>
+                </div>
+              ) : (
+                <button onClick={running ? reset : runScenario}
+                  style={{ padding: "10px 28px", background: running ? "#B71C1C" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, minWidth: 160 }}>
+                  {running ? "■ RESET" : "▶ RUN SCENARIO"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -983,7 +1046,7 @@ function VACSimulation() {
               <div style={{ flex: 1, overflow: "auto", padding: "8px 12px" }}>
                 {log.length === 0 && (
                   <div style={{ color: "#444", fontSize: 11, textAlign: "center", marginTop: 40 }}>
-                    Press RUN SCENARIO to begin
+                    {playMode === "step" ? "Press RUN SCENARIO to begin stepping through" : "Press RUN SCENARIO to begin"}
                   </div>
                 )}
                 {log.map((entry, i) => (
