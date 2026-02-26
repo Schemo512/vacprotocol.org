@@ -604,6 +604,7 @@ function VACSimulation() {
   const [quorumText, setQuorumText] = useState("");
   const [currentBeat, setCurrentBeat] = useState(-1);
   const [showVATExplainer, setShowVATExplainer] = useState(false);
+  const [showSDKExplainer, setShowSDKExplainer] = useState(false);
   const [playMode, setPlayMode] = useState("auto"); // "auto" or "step"
   const stepIdxRef = useRef(-1);
   const [stepDisplay, setStepDisplay] = useState(-1);
@@ -863,11 +864,58 @@ function VACSimulation() {
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 10, color: "#888" }}>PATENT: AU 2026901425</div>
             <div style={{ fontSize: 10, color: "#666" }}>Violet Shores Pty Ltd</div>
+            <button onClick={() => setShowSDKExplainer(!showSDKExplainer)}
+              style={{ marginTop: 6, padding: "4px 10px", background: showSDKExplainer ? "#4CAF5022" : "transparent", border: showSDKExplainer ? "1px solid #4CAF50" : "1px solid #444", borderRadius: 4, color: showSDKExplainer ? "#4CAF50" : "#888", cursor: "pointer", fontSize: 9, fontFamily: "inherit", letterSpacing: 1 }}>
+              ⚡ POWERED BY VAC SDK
+            </button>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px" }}>
+
+        {/* VAC SDK Explainer */}
+        {showSDKExplainer && (
+          <div style={{ marginBottom: 16, padding: "20px 24px", background: "#0a1a0a", borderRadius: 8, border: "1px solid #2D5A27", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#4CAF50", marginBottom: 4 }}>VAC SDK — The Identity Engine Inside Your App</div>
+                <div style={{ fontSize: 11, color: "#666", fontFamily: "'Courier New', monospace" }}>@vac-auth/sdk · npm package · one line of code to integrate</div>
+              </div>
+              <button onClick={() => setShowSDKExplainer(false)} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 16 }}>✕</button>
+            </div>
+
+            <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.8, marginTop: 14, maxWidth: 800 }}>
+              VAC is not an app. It's an <strong style={{ color: "#4CAF50" }}>SDK</strong> — a software development kit that any app can embed. FolioAI uses it. Any education platform, healthcare app, or enterprise tool can use it. The app provides the user experience; the VAC SDK provides the identity layer underneath.
+            </div>
+
+            <div style={{ fontSize: 13, color: "#aaa", lineHeight: 1.8, marginTop: 10, maxWidth: 800 }}>
+              When a user records a video in FolioAI, they don't see VAC. They don't know it's there. But the SDK is capturing five biometric signals from that single recording — face, voice, behavioural patterns, location, and timing — and fusing them into a composite trust score that's exponentially harder to fake than any single factor.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 16 }}>
+              <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderTop: "3px solid #4CAF50" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#4CAF50", marginBottom: 6 }}>What It Does</div>
+                <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.6 }}>Captures 5 biometric modalities from a single video recording. Creates a Verified Authority Token (VAT) anchored to that person's unique biometric signature. No passwords. No OTPs. Just the person.</div>
+              </div>
+              <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderTop: "3px solid #5DADE2" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#5DADE2", marginBottom: 6 }}>Why It's Unique</div>
+                <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.6 }}>No other SDK combines face + voice + behaviour + location + temporal signals into one trust score. Auth0 does passwords. iProov does face only. Nuance does voice only. VAC does all five — and the combination is patented.</div>
+              </div>
+              <div style={{ padding: "12px 14px", background: "#111", borderRadius: 6, borderTop: "3px solid #FFB74D" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#FFB74D", marginBottom: 6 }}>How Apps Use It</div>
+                <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.6 }}>One SDK import. The app calls VAC when it needs identity — during onboarding, before sensitive actions, or continuously in the background. The user just uses the app normally. VAC is invisible.</div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14, padding: "10px 14px", background: "#111", borderRadius: 6, display: "flex", gap: 20, alignItems: "center" }}>
+              <div style={{ fontSize: 11, color: "#888" }}>
+                <strong style={{ color: "#ccc" }}>FolioAI</strong> is the first app powered by the VAC SDK. The practice recording that helps you grow IS the biometric verification that proves it's you. One action, two outcomes. That's the design principle: security embedded in the experience, not bolted on.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Scenario Tabs */}
         <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
           {Object.entries(SCENARIOS).map(([key, s]) => (
