@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Interactive Simulation</title>
-<meta name="description" content="Interactive demonstration of the VAC Protocol's biometric human-to-agent attribution across healthcare, compliance, coalition, Indigenous governance, and cultural learning scenarios.">
+<meta name="description" content="Interactive demonstration of the VAC Protocol across healthcare, compliance, coalition, Indigenous governance, and Māori cultural learning scenarios.">
 <style>
   body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
@@ -47,6 +47,17 @@ const SCENARIOS = {
     audience: "NIST CAISI / NCCoE",
     color: "#2E75B6",
     oneSentence: "The doctor's face unlock propagated through 4 agents and revoked them all when she locked her phone.",
+    story: {
+      intro: "Dr. Sarah Chen is an attending physician in California. She unlocks her phone with Face ID and asks her AI assistant to pull up a patient's records across two hospitals. Four AI agents spring into action — but who authorised them? If something goes wrong, who's responsible?",
+      whyVAC: "Today, when an AI agent accesses your medical records, there's no way to trace that action back to the specific doctor who authorised it. VAC creates an unbreakable chain: every agent action traces back to Dr. Chen's face.",
+      beats: [
+        { at: 0, text: "Dr. Chen's face scan isn't just unlocking her phone — it's creating a cryptographic proof that SHE is authorising everything that follows." },
+        { at: 2, text: "Her clinical assistant AI now has permission to act on her behalf — but ONLY for this specific patient, ONLY for reading and analysis." },
+        { at: 4, text: "Each agent in the chain gets narrower permission. The hospital connector can only read — it cannot modify, delete, or share." },
+        { at: 7, text: "Results flow back through the chain. Every step is recorded. If audited, there's a clear trail from data access to Dr. Chen's face." },
+        { at: 8, text: "Dr. Chen locks her phone. Instantly, EVERY agent in the chain loses authority. Four agents shut down in under a second. No orphaned access." },
+      ],
+    },
     nodes: [
       { id: "human", label: "Dr. Sarah Chen", type: "human", trust: 0.95, scope: "Clinical, Patient #4721", jurisdiction: "US-CA", role: "Attending Physician", x: 400, y: 60 },
       { id: "a1", label: "Clinical Assistant AI", type: "agent", trust: 0.88, scope: "Patient #4721, Read/Analyse", jurisdiction: "US-CA", x: 400, y: 180 },
@@ -74,6 +85,16 @@ const SCENARIOS = {
     audience: "DHS / Matthew Toplak",
     color: "#D4AF37",
     oneSentence: "The AI tried to process EU data in Brazil without transfer mechanism — blocked at protocol level.",
+    story: {
+      intro: "Maria Santos is CFO of a global firm. She needs a compliance review across New York, Frankfurt, and São Paulo. Three different privacy laws. Three different jurisdictions. One AI system trying to move data between them. What could go wrong?",
+      whyVAC: "Companies get fined millions when AI systems move data across borders without proper legal basis. VAC doesn't just log the transfer — it BLOCKS transfers that violate jurisdictional rules, automatically, before the data moves.",
+      beats: [
+        { at: 0, text: "Maria verifies her identity. The system knows she's in New York — US privacy law (CCPA) applies to her." },
+        { at: 3, text: "The EU agent is deployed in Frankfurt. The system automatically detects: GDPR now applies. Different rules." },
+        { at: 5, text: "LATAM agent in São Paulo — Brazilian LGPD detected. Every jurisdiction gets its own compliance scope." },
+        { at: 7, text: "Now the critical moment: an agent tries to send EU citizen data to Brazil without the right legal mechanism. VAC doesn't warn — it BLOCKS." },
+      ],
+    },
     nodes: [
       { id: "human", label: "CFO — Maria Santos", type: "human", trust: 0.95, scope: "Financial Compliance, Global", jurisdiction: "US-NY", role: "Chief Financial Officer", x: 400, y: 60 },
       { id: "a1", label: "Compliance Coordinator", type: "agent", trust: 0.88, scope: "Compliance Review, All Regions", jurisdiction: "US-NY", x: 400, y: 180 },
@@ -101,6 +122,16 @@ const SCENARIOS = {
     audience: "Pentagon DAWG / Defense",
     color: "#8B0000",
     oneSentence: "The German drone refused the offensive order because its national caveat said no.",
+    story: {
+      intro: "A NATO coalition deploys 40 drones across three nations: US, UK, and Germany. The coalition commander gives an order to engage a target. US and UK drones respond. German drones refuse. Not because of a malfunction — because Germany's parliament said no.",
+      whyVAC: "In coalition operations, different nations have different rules of engagement. Today, enforcing those rules depends on human operators remembering the restrictions. VAC enforces them cryptographically — a German drone physically CANNOT execute an offensive order.",
+      beats: [
+        { at: 0, text: "The coalition commander verifies via multi-factor biometric. NATO clearance confirmed — this is really them." },
+        { at: 3, text: "Each nation sets its own rules. US and UK: full authority. Germany: OBSERVE ONLY. These aren't suggestions — they're cryptographic constraints." },
+        { at: 7, text: "The order comes: engage the target. US and UK drones comply — their authority chain permits it. German drones refuse — their national caveat prohibits offensive operations. The protocol enforces political will." },
+        { at: 10, text: "German drones continue their surveillance mission — operating within their authorised scope. No override possible." },
+      ],
+    },
     nodes: [
       { id: "human", label: "Coalition Commander", type: "human", trust: 0.95, scope: "Coalition Operations, Full", jurisdiction: "NATO-HQ", role: "SACEUR Designate", x: 400, y: 40 },
       { id: "us", label: "US National Command", type: "governance", trust: 0.92, scope: "US Forces, Full Authority", jurisdiction: "US-DOD", x: 200, y: 150 },
@@ -133,6 +164,17 @@ const SCENARIOS = {
     audience: "Indigenous Data Sovereignty",
     color: "#2D5A27",
     oneSentence: "The AI tried to access tapu data and was blocked by the iwi's cultural governance.",
+    story: {
+      intro: "Te Whānau-a-Apanui — an iwi (tribe) in New Zealand's Bay of Plenty — holds health data about their community. A university in Auckland wants access for research. The iwi will share health data, but whakapapa (genealogy) is tapu (sacred). No exceptions.",
+      whyVAC: "Indigenous communities worldwide face a dilemma: share data to benefit from research, or lock it away to protect sovereignty. VAC lets them do both — share what they choose while making cultural restrictions technically unbreakable.",
+      beats: [
+        { at: 0, text: "Five governance members must ALL verify. Not a majority vote — consensus. Every person matters." },
+        { at: 4, text: "The kaumātua (elder) verifies last. Without her, nothing proceeds. Her role isn't optional — it's mandatory. Numbers don't override cultural authority." },
+        { at: 6, text: "The collective VAT is issued with a clear exclusion: tapu data is OUT OF SCOPE. This isn't a preference — it's a cryptographic boundary." },
+        { at: 8, text: "The research agent accesses anonymised health data within scope. The research benefits the community." },
+        { at: 9, text: "Then the agent reaches for whakapapa data. BLOCKED. The iwi is notified. The boundary held — not because someone was watching, but because the protocol enforced it." },
+      ],
+    },
     nodes: [
       { id: "g1", label: "Mere (Kaumātua) 👤", type: "kaumatua", trust: 0.95, scope: "All data categories inc. tapu", jurisdiction: "NZ-BOP", role: "Kaumātua — Elder Authority", x: 400, y: 50 },
       { id: "g2", label: "Tane 👤", type: "governance", trust: 0.90, scope: "General governance", jurisdiction: "NZ-BOP", x: 200, y: 130 },
@@ -164,6 +206,17 @@ const SCENARIOS = {
     audience: "Pan-Polynesian / Cultural",
     color: "#0077B6",
     oneSentence: "Rāhui lifts after 6 months, fishing allowed — but tapu reef stays permanently restricted.",
+    story: {
+      intro: "In Tautira, Tahiti, the Ari'i Rahi (high chief) Tevarai declares a rāhui — a traditional prohibition — on fishing in the lagoon. The reef stocks need six months to recover. But the sacred reef is different: that restriction is permanent. Not because of ecology — because of the divine.",
+      whyVAC: "VAC can encode TWO kinds of authority: temporal (the rāhui lifts after 6 months) and permanent (the tapu reef is forever). This distinction — time-bound human authority vs. permanent sacred authority — is something no other identity system can express.",
+      beats: [
+        { at: 0, text: "The Ari'i Rahi's authority comes from genealogy — mana passed down through generations. The system recognises this as the highest authority." },
+        { at: 1, text: "Two restrictions are set: the lagoon rāhui (6 months, human-declared) and the tapu reef (permanent, divine authority)." },
+        { at: 4, text: "A fishing coordinator asks to operate in the lagoon. Blocked — the rāhui is active. But marine research is allowed — observation doesn't violate the prohibition." },
+        { at: 6, text: "Six months pass. The rāhui lifts automatically. Fishing resumes. Human-set restrictions have expiry dates." },
+        { at: 8, text: "But the tapu reef? Still blocked. PERMANENTLY. No human — not even the Ari'i Rahi — can lift divine authority. The system respects what humans cannot override." },
+      ],
+    },
     nodes: [
       { id: "human", label: "Ari'i Rahi — Chief Tevarai", type: "kaumatua", trust: 0.95, scope: "Tautira territory, full authority", jurisdiction: "PF-TAH", role: "Ari'i Rahi (High Chief)", x: 400, y: 50 },
       { id: "rahui", label: "Rāhui Zone 🌊", type: "rahui", trust: 0, scope: "6-month fishing prohibition", jurisdiction: "PF-TAH", x: 250, y: 190 },
@@ -192,6 +245,15 @@ const SCENARIOS = {
     audience: "NIST / DHS / Defense / All",
     color: "#FF6F00",
     oneSentence: "The third member got fired. The system checked quorum. 40 drones stopped in 800ms. Then the consortium reconvened.",
+    story: {
+      intro: "Seven organisations form a consortium to conduct a drone survey across Australia and New Zealand. 40 drones, 4 sectors. Everything is running smoothly until — 47 minutes in — something happens to Member 3. What happens next depends on what went wrong.",
+      whyVAC: "When humans lose authority mid-operation, what happens to the machines they authorised? Today: nothing — they keep running with orphaned permissions. With VAC: the system checks quorum, evaluates the impact, and either continues safely or cascades a shutdown. In under a second.",
+      beats: [
+        { at: 0, text: "Seven members verify one by one. The threshold is 5 of 7 — but the kaumātua (Member 7) is mandatory regardless of numbers." },
+        { at: 7, text: "Collective authority established. 40 drones launch across four sectors. Everything traces back to seven verified humans." },
+        { at: 9, text: "47 minutes in. All 40 drones operational. Now — choose what happens to Member 3. Each scenario shows a different kind of authority loss." },
+      ],
+    },
     interactive: true,
     nodes: [
       { id: "m1", label: "Member 1 (Chair)", type: "governance", trust: 0.92, scope: "Full governance", jurisdiction: "AU-NSW", role: "Chairperson", x: 110, y: 40 },
@@ -240,6 +302,18 @@ const SCENARIOS = {
     audience: "Māori Education / Iwi Funding",
     color: "#2D5A27",
     oneSentence: "The rangatahi practised kapa haka on video. The soul engine reflected their growth. The iwi controlled who could see it.",
+    story: {
+      intro: "Aroha is 15. She's learning kapa haka at her local wānanga — the traditional Māori house of learning. Her kaumātua (elder), Mere, has one rule: what happens in practice stays in the whānau (family). But funders want proof the programme works. How do you give them numbers without giving them Aroha's video?",
+      whyVAC: "Without VAC, there's no way to prove who authorised what. Did the kaumātua approve that data sharing? Can the funder access the raw video? Who's responsible if cultural content leaks? VAC makes every permission traceable to a real person — and makes cultural authority as enforceable as a password.",
+      beats: [
+        { at: 0, text: "First, the people who matter must be present. Not IT admins — the kaumātua, the teacher, the whānau." },
+        { at: 3, text: "Aroha opens the app and starts practising her haka. The camera is recording — and that recording IS her identity. No separate login. No password. Just her." },
+        { at: 5, text: "The Soul Engine watches. Not to score. Not to grade. To reflect — the way a good teacher would notice growth." },
+        { at: 8, text: "Now the clever part: funders get what they need — aggregate numbers — without ever seeing Aroha's face or her practice." },
+        { at: 10, text: "Someone outside the whānau asks for the raw video. The answer is no. Not because of a setting someone forgot to check — because the kaumātua's authority is built into the system." },
+        { at: 11, text: "Every decision has a trail. The kaumātua can prove she set the rules. Aroha can prove it's her session. The funder can prove they only saw aggregate data. Trust, verified." },
+      ],
+    },
     nodes: [
       { id: "kaumatua", label: "Mere (Kaumātua) 👤", type: "kaumatua", trust: 0.95, scope: "Full cultural authority", jurisdiction: "NZ-BOP", role: "Kaumātua — Cultural Guardian", x: 400, y: 40 },
       { id: "kaiako", label: "Hemi (Kaiako) 👤", type: "governance", trust: 0.90, scope: "Teaching authority", jurisdiction: "NZ-BOP", role: "Kaiako — Teacher", x: 250, y: 130 },
@@ -531,8 +605,10 @@ function VACSimulation() {
   const [safeStateNodes, setSafeStateNodes] = useState(new Set());
   const [log, setLog] = useState([]);
   const [metrics, setMetrics] = useState({});
-  const [phase, setPhase] = useState("idle"); // idle, running, choose_crisis, crisis_playing, choose_escalate, escalating, cascaded, reconstituting, complete
+  const [phase, setPhase] = useState("idle");
   const [quorumText, setQuorumText] = useState("");
+  const [currentBeat, setCurrentBeat] = useState(-1);
+  const [showVATExplainer, setShowVATExplainer] = useState(false);
   const timerRef = useRef(null);
   const logEndRef = useRef(null);
 
@@ -548,6 +624,7 @@ function VACSimulation() {
     setSafeStateNodes(new Set());
     setLog([]);
     setQuorumText("");
+    setCurrentBeat(-1);
     setMetrics({
       VATV: { value: "—", label: "Verification Time", color: "#555" },
       RPL: { value: "—", label: "Revocation Propagation", color: "#555" },
@@ -569,6 +646,10 @@ function VACSimulation() {
       if (idx >= events.length) { if (onComplete) onComplete(); return; }
       const evt = events[idx];
       setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
+      if (sc.story && sc.story.beats) {
+        const matchingBeat = sc.story.beats.filter(b => b.at <= idx);
+        if (matchingBeat.length > 0) setCurrentBeat(matchingBeat.length - 1);
+      }
 
       if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
         setActiveNodes(prev => new Set([...prev, evt.node]));
@@ -639,6 +720,11 @@ function VACSimulation() {
         if (idx >= events.length) { setRunning(false); setPhase("complete"); return; }
         const evt = events[idx];
         setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
+        // Advance narrative beat
+        if (sc.story && sc.story.beats) {
+          const matchingBeat = sc.story.beats.filter(b => b.at <= idx);
+          if (matchingBeat.length > 0) setCurrentBeat(matchingBeat.length - 1);
+        }
         if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
           setActiveNodes(prev => new Set([...prev, evt.node]));
           setMetrics(prev => ({
@@ -755,18 +841,82 @@ function VACSimulation() {
           ))}
         </div>
 
-        {/* Scenario Info */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, padding: "12px 16px", background: "#111", borderRadius: 8, borderLeft: `4px solid ${sc.color}` }}>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: sc.color }}>{sc.title}</div>
-            <div style={{ fontSize: 12, color: "#888" }}>{sc.subtitle}</div>
-            <div style={{ fontSize: 10, color: "#666", marginTop: 4 }}>{sc.claims} | Audience: {sc.audience}</div>
-            {sc.oneSentence && <div style={{ fontSize: 10, color: "#999", marginTop: 4, fontStyle: "italic" }}>"{sc.oneSentence}"</div>}
+        {/* Story Panel */}
+        <div style={{ marginBottom: 12, borderRadius: 8, overflow: "hidden", border: `1px solid ${sc.color}33` }}>
+          {/* Title bar with Run button */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#111", borderBottom: `1px solid ${sc.color}22` }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: sc.color, fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>{sc.title}</div>
+              <div style={{ fontSize: 12, color: "#888", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>{sc.subtitle}</div>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button onClick={() => setShowVATExplainer(!showVATExplainer)}
+                style={{ padding: "8px 14px", background: showVATExplainer ? "#2E75B622" : "#1a1a1a", border: showVATExplainer ? "1px solid #2E75B6" : "1px solid #333", borderRadius: 6, color: showVATExplainer ? "#2E75B6" : "#888", cursor: "pointer", fontSize: 10, fontFamily: "inherit" }}>
+                {showVATExplainer ? "✕ Close" : "ℹ What is a VAT Token?"}
+              </button>
+              <button onClick={running ? reset : runScenario}
+                style={{ padding: "10px 28px", background: running ? "#B71C1C" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, minWidth: 160 }}>
+                {running ? "■ RESET" : "▶ RUN SCENARIO"}
+              </button>
+            </div>
           </div>
-          <button onClick={running ? reset : runScenario}
-            style={{ padding: "10px 28px", background: running ? "#B71C1C" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, minWidth: 160 }}>
-            {running ? "■ RESET" : "▶ RUN SCENARIO"}
-          </button>
+
+          {/* VAT Token Explainer (toggle) */}
+          {showVATExplainer && (
+            <div style={{ padding: "16px 20px", background: "#0a1628", borderBottom: "1px solid #1a3050", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#2E75B6", marginBottom: 10 }}>What is a VAT Token?</div>
+              <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.7, maxWidth: 800 }}>
+                A <strong style={{ color: "#5DADE2" }}>Verified Authority Token (VAT)</strong> is like a digital permission slip — but one that can't be forged, can't be copied, and always traces back to a real person's face or voice.
+              </div>
+              <div style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7, marginTop: 10, maxWidth: 800 }}>
+                When you verify your identity (through video, face scan, or voice), the system creates a VAT that says <em>"this specific person authorised these specific actions."</em> That token travels with every AI agent in the chain. If anyone asks "who approved this?" — the answer is always traceable back to you.
+              </div>
+              <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
+                <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #4CAF50" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#4CAF50" }}>Creates</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>A human verifies → token is born</div>
+                </div>
+                <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #5DADE2" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#5DADE2" }}>Delegates</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Each agent gets a narrower copy</div>
+                </div>
+                <div style={{ flex: 1, padding: "10px 14px", background: "#111", borderRadius: 6, borderLeft: "3px solid #EF5350" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#EF5350" }}>Revokes</div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Human leaves → ALL agents stop</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Story Content */}
+          {sc.story && (
+            <div style={{ padding: "16px 20px", background: "#0d0d0d", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
+              {/* Intro - always shown */}
+              <div style={{ fontSize: 14, color: "#ddd", lineHeight: 1.8, maxWidth: 800 }}>
+                {sc.story.intro}
+              </div>
+
+              {/* Why VAC - shown when idle */}
+              {phase === "idle" && (
+                <div style={{ marginTop: 14, padding: "12px 16px", background: `${sc.color}0a`, borderRadius: 6, borderLeft: `3px solid ${sc.color}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: sc.color, marginBottom: 4, letterSpacing: 1 }}>WHY VAC?</div>
+                  <div style={{ fontSize: 13, color: "#bbb", lineHeight: 1.7 }}>{sc.story.whyVAC}</div>
+                </div>
+              )}
+
+              {/* Narrative beat - shown during/after run */}
+              {currentBeat >= 0 && sc.story.beats && sc.story.beats[currentBeat] && (
+                <div style={{ marginTop: 14, padding: "14px 16px", background: "#111", borderRadius: 6, borderLeft: `3px solid ${sc.color}`, transition: "all 0.3s ease" }}>
+                  <div style={{ fontSize: 10, color: sc.color, marginBottom: 6, letterSpacing: 1, fontWeight: 700 }}>
+                    WHAT'S HAPPENING — Step {currentBeat + 1} of {sc.story.beats.length}
+                  </div>
+                  <div style={{ fontSize: 14, color: "#eee", lineHeight: 1.7 }}>
+                    {sc.story.beats[currentBeat].text}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Interactive Decision Buttons */}
@@ -867,7 +1017,7 @@ function VACSimulation() {
         {/* Footer */}
         <div style={{ marginTop: 16, padding: "12px 16px", background: "#0d0d0d", borderRadius: 8, border: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 10, color: "#444" }}>
-            VAC Protocol Simulation v2.0 — For demonstration purposes. Real implementation uses Ed25519 cryptographic signatures.
+            VAC Protocol Simulation v3.0 — For demonstration purposes. Real implementation uses Ed25519 cryptographic signatures.
           </div>
           <div style={{ fontSize: 10, color: "#555" }}>
             © 2026 Violet Shores Pty Ltd | vacprotocol.org
