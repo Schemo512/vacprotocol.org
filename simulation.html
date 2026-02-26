@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Interactive Simulation</title>
-<meta name="description" content="Interactive demonstration of the VAC Protocol — the world's only 5-modal biometric human key for AI agent authorization.">
 <style>
   body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
@@ -296,12 +295,18 @@ const SCENARIOS = {
       intro: "Aroha is 15. She's learning kapa haka at her local wānanga — a traditional Māori house of learning — funded by a government grant to strengthen cultural competency among rangatahi (young people). The grant requires progress reports to keep the funding. But Mere, the kaumātua (elder), has one rule: practice videos of our young people performing cultural taonga (treasures) do not leave the whānau (family). So how does the wānanga prove the programme is working without handing over Aroha's videos?",
       whyVAC: "This is a real problem: Māori organisations are asked to report outcomes to keep funding, but sharing practice videos of rangatahi performing cultural taonga raises serious data sovereignty concerns. Without VAC, there's no technical way to separate 'aggregate progress data the funder needs' from 'raw cultural content that must stay in the whānau.' VAC enforces that boundary — the kaumātua's authority over what leaves the whānau is as binding as a firewall rule.",
       beats: [
-        { at: 0, text: "First, the people who matter must be present. Not IT admins — the kaumātua, the teacher, the whānau." },
-        { at: 3, text: "Aroha opens the app and starts practising her haka. The camera is recording — and that recording IS her identity. No separate login. No password. Just her." },
-        { at: 5, text: "The Soul Engine watches. Not to score. Not to grade. To reflect — the way a good teacher would notice growth." },
-        { at: 8, text: "The grant requires a progress report. The Funding Report Agent produces exactly what's needed — '14 rangatahi active, 73% improvement in cultural competency' — without ever seeing a single video. The funder gets proof. The whānau keeps their taonga." },
-        { at: 10, text: "Someone outside the whānau asks for the raw video. The answer is no. Not because of a setting someone forgot to check — because the kaumātua's authority is built into the system." },
-        { at: 11, text: "Every decision has a trail. The kaumātua can prove she set the rules. Aroha can prove it's her session. The funder can prove they only saw aggregate data. Trust, verified." },
+        { at: 0, text: "First, the people who matter must be present. Not IT admins — the kaumātua (elder), the kaiako (teacher), and the whānau (family) representative. Cultural authority comes before technical access." },
+        { at: 1, text: "The kaiako — Hemi — verifies next. He has teaching authority within the wānanga but cannot override the kaumātua's decisions about what leaves the whānau." },
+        { at: 2, text: "The whānau representative verifies. Three layers of governance are now active: cultural authority, teaching authority, and family oversight. This is how tikanga (protocol) works — not top-down, but relational." },
+        { at: 3, text: "Aroha opens the app and starts practising her haka. The camera is recording — and that recording IS her identity. No separate login. No password. Just her, practising. The system knows it's Aroha from her face and voice." },
+        { at: 4, text: "A VAT token is created, anchored to Aroha's biometrics. The scope is set by the kaumātua: cultural content stays within whānau. This isn't a setting — it's a cryptographic boundary." },
+        { at: 5, text: "The Soul Engine activates. It watches Aroha's movement, expression, and energy — not to score or grade, but to reflect. Like a good kaiako noticing growth." },
+        { at: 6, text: "The Soul Engine reflects back: 'Your pūkana is getting stronger — the mana is showing through.' This is warm, culturally grounded feedback — not a score out of 10." },
+        { at: 7, text: "Another reflection: 'Notice how your feet connect to the whenua now — that wasn't there last week.' The soul engine tracks growth over time, session by session." },
+        { at: 8, text: "Progress data is generated — but only as numbers: session count, confidence scores, posture metrics. No video. No identity. Just aggregate data." },
+        { at: 9, text: "The grant requires a progress report. The Funding Report Agent produces exactly what's needed — '14 rangatahi active, 73% improvement in cultural competency' — without ever seeing a single video. The funder gets proof. The whānau keeps their taonga." },
+        { at: 10, text: "Someone outside the whānau asks for the raw practice video. The answer is no — not because someone remembered to check a box, but because the kaumātua's authority is built into the protocol. It cannot be overridden." },
+        { at: 11, text: "Every decision has a complete trail. The kaumātua can prove she set the rules. Aroha can prove it's her session. The funder can prove they only saw aggregate data. Trust — verified, traceable, culturally governed." },
       ],
     },
     nodes: [
@@ -600,7 +605,8 @@ function VACSimulation() {
   const [currentBeat, setCurrentBeat] = useState(-1);
   const [showVATExplainer, setShowVATExplainer] = useState(false);
   const [playMode, setPlayMode] = useState("auto"); // "auto" or "step"
-  const [stepIdx, setStepIdx] = useState(-1);
+  const stepIdxRef = useRef(-1);
+  const [stepDisplay, setStepDisplay] = useState(-1);
   const timerRef = useRef(null);
   const logEndRef = useRef(null);
 
@@ -617,7 +623,8 @@ function VACSimulation() {
     setLog([]);
     setQuorumText("");
     setCurrentBeat(-1);
-    setStepIdx(-1);
+    stepIdxRef.current = -1;
+    setStepDisplay(-1);
     setMetrics({
       VATV: { value: "—", label: "Verification Time", color: "#555" },
       RPL: { value: "—", label: "Revocation Propagation", color: "#555" },
@@ -697,10 +704,13 @@ function VACSimulation() {
     if (idx >= events.length) return;
     const evt = events[idx];
     setLog(prev => [...prev, { time: new Date().toLocaleTimeString(), type: evt.type, message: evt.message }]);
-    // Advance narrative beat
+    // Advance narrative beat - find the latest beat at or before this event index
     if (sc.story && sc.story.beats) {
-      const matchingBeat = sc.story.beats.filter(b => b.at <= idx);
-      if (matchingBeat.length > 0) setCurrentBeat(matchingBeat.length - 1);
+      let bestBeat = -1;
+      for (let b = 0; b < sc.story.beats.length; b++) {
+        if (sc.story.beats[b].at <= idx) bestBeat = b;
+      }
+      if (bestBeat >= 0) setCurrentBeat(bestBeat);
     }
     if (evt.type === "verify" || evt.type === "create" || evt.type === "delegate" || evt.type === "action" || evt.type === "provenance" || evt.type === "waiting") {
       setActiveNodes(prev => new Set([...prev, evt.node]));
@@ -726,7 +736,7 @@ function VACSimulation() {
   }, [sc]);
 
   const stepForward = () => {
-    const nextIdx = stepIdx + 1;
+    const nextIdx = stepIdxRef.current + 1;
     if (nextIdx >= sc.events.length) {
       setPhase("complete");
       setRunning(false);
@@ -737,7 +747,8 @@ function VACSimulation() {
       setRunning(true);
       setPhase("running");
     }
-    setStepIdx(nextIdx);
+    stepIdxRef.current = nextIdx;
+    setStepDisplay(nextIdx);
     processEventAtIndex(nextIdx);
   };
 
@@ -748,7 +759,8 @@ function VACSimulation() {
 
     if (playMode === "step") {
       // Step mode: process first event, then wait for user
-      setStepIdx(0);
+      stepIdxRef.current = 0;
+      setStepDisplay(0);
       processEventAtIndex(0);
       return;
     }
@@ -898,7 +910,7 @@ function VACSimulation() {
                   <button onClick={stepForward}
                     disabled={phase === "complete"}
                     style={{ padding: "10px 24px", background: phase === "complete" ? "#333" : sc.color, color: "white", border: "none", borderRadius: 6, cursor: phase === "complete" ? "default" : "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", letterSpacing: 1, opacity: phase === "complete" ? 0.5 : 1 }}>
-                    {phase === "complete" ? "✓ DONE" : `NEXT → ${stepIdx + 2}/${sc.events.length}`}
+                    {phase === "complete" ? "✓ DONE" : `NEXT → ${stepDisplay + 2}/${sc.events.length}`}
                   </button>
                   <button onClick={reset}
                     style={{ padding: "10px 16px", background: "#B71C1C", color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit" }}>
@@ -993,7 +1005,7 @@ function VACSimulation() {
               {currentBeat >= 0 && sc.story.beats && sc.story.beats[currentBeat] && (
                 <div style={{ marginTop: 14, padding: "14px 16px", background: "#111", borderRadius: 6, borderLeft: `3px solid ${sc.color}`, transition: "all 0.3s ease" }}>
                   <div style={{ fontSize: 10, color: sc.color, marginBottom: 6, letterSpacing: 1, fontWeight: 700 }}>
-                    WHAT'S HAPPENING — Step {currentBeat + 1} of {sc.story.beats.length}
+                    WHAT'S HAPPENING{stepDisplay >= 0 ? ` — Event ${stepDisplay + 1} of ${sc.events.length}` : ""}
                   </div>
                   <div style={{ fontSize: 14, color: "#eee", lineHeight: 1.7 }}>
                     {sc.story.beats[currentBeat].text}
