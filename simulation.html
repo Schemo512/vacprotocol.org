@@ -106,19 +106,19 @@ const SCENARIOS = {
   },
   coalition: {
     title: "Coalition Drone Swarm",
-    subtitle: "US + UK + Germany — National Caveat Enforcement",
-    claims: "Claims 218-228",
+    subtitle: "When Guardrails Are Contractual, They Can Be Negotiated Away",
+    claims: "Claims 218-228, 242-271",
     audience: "Pentagon DAWG / Defense",
     color: "#8B0000",
-    oneSentence: "The German drone refused the offensive order because its national caveat said no.",
+    oneSentence: "The German drone refused the offensive order — not because of a contract, but because the cryptographic authority chain made it physically impossible.",
     story: {
-      intro: "A NATO coalition deploys 40 drones across three nations: US, UK, and Germany. The coalition commander gives an order to engage a target. US and UK drones respond. German drones refuse. Not because of a malfunction — because Germany's parliament said no.",
-      whyVAC: "In coalition operations, different nations have different rules of engagement. Today, enforcing those rules depends on human operators remembering the restrictions. VAC enforces them cryptographically — a German drone physically CANNOT execute an offensive order.",
+      intro: "When AI guardrails are contractual, they can be renegotiated, waived, or overridden under pressure. A NATO coalition deploys 40 drones across three nations. The coalition commander gives an order to engage. US and UK drones respond. German drones refuse. Not because of a policy document. Not because of an API agreement. Because Germany's parliamentary restriction is encoded as a cryptographic constraint in the delegation chain — and no commander, no contractor, and no software update can override it.",
+      whyVAC: "Today's AI safety relies on contracts between vendors and governments — terms of service that can be amended, waived under national security exceptions, or simply ignored. VAC replaces contractual guardrails with cryptographic ones. A German drone with an OBSERVE ONLY caveat cannot execute an offensive order because the authority to do so was never delegated. The constraint lives in the math, not in the contract.",
       beats: [
-        { at: 0, text: "The coalition commander verifies via multi-factor biometric. NATO clearance confirmed — this is really them." },
-        { at: 3, text: "Each nation sets its own rules. US and UK: full authority. Germany: OBSERVE ONLY. These aren't suggestions — they're cryptographic constraints." },
-        { at: 7, text: "The order comes: engage the target. US and UK drones comply — their authority chain permits it. German drones refuse — their national caveat prohibits offensive operations. The protocol enforces political will." },
-        { at: 10, text: "German drones continue their surveillance mission — operating within their authorised scope. No override possible." },
+        { at: 0, text: "The coalition commander verifies via multi-factor biometric. NATO clearance confirmed — this is really them. Not a password. Not a shared credential. A cryptographic proof anchored to a verified human." },
+        { at: 3, text: "Each nation sets its own scope constraints. US and UK: full authority. Germany: OBSERVE ONLY. These aren't contractual terms — they're cryptographic boundaries baked into the Verified Authority Token. No override exists." },
+        { at: 7, text: "The order comes: engage the target. US and UK drones comply — their authority chain permits it. German drones refuse — their token literally cannot authorise offensive operations. The protocol enforces political will, not a vendor's promise." },
+        { at: 10, text: "German drones continue their surveillance mission — operating within their authorised scope. No commander can override this. No emergency exception exists. No contract renegotiation can change it mid-mission. The constraint is in the delegation chain." },
       ],
     },
     nodes: [
