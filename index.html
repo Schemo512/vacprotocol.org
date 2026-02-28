@@ -67,9 +67,7 @@
   .nav-mark {
     font-family: var(--mono); font-weight: 500; font-size: 15px;
     color: var(--accent); text-decoration: none; letter-spacing: 0.5px;
-    display: flex; align-items: center; gap: 0.5rem;
   }
-  .nav-mark img { height: 28px; width: auto; }
   .nav-mark span { color: var(--muted); font-weight: 400; }
   .nav-links { display: flex; gap: 1.6rem; }
   .nav-links a {
@@ -404,7 +402,7 @@
 <!-- NAV -->
 <nav id="nav">
   <div class="nav-inner">
-    <a href="#" class="nav-mark"><img src="/branding/vac-profile-pic.png" alt="VAC Protocol">VAC <span>PROTOCOL</span></a>
+    <a href="#" class="nav-mark">VAC <span>PROTOCOL</span></a>
     <div class="nav-links">
       <a href="#problem">Problem</a>
       <a href="#how">How It Works</a>
@@ -419,9 +417,9 @@
 
 <!-- HERO -->
 <header class="hero">
-  <div style="background: #1a1a2e; color: #e0e0e0; padding: 12px 24px; border-radius: 6px; margin-bottom: 2rem; font-size: 14px; line-height: 1.6; text-align: center; max-width: 720px; margin-left: auto; margin-right: auto;">
-    <span style="color: #ff6b6b; font-weight: 600;">When AI guardrails are contractual, they can be negotiated away.</span><br>
-    VAC enforces human oversight, scope constraints, and purpose-bound authority <em>cryptographically</em> — in the delegation chain, not in the contract.
+  <div style="background: var(--surface); color: var(--ink); padding: 14px 28px; border-radius: 6px; margin-bottom: 2rem; font-size: 14.5px; line-height: 1.65; text-align: center; max-width: 720px; margin-left: auto; margin-right: auto; border: 1px solid var(--border);">
+    <span style="color: var(--accent); font-weight: 600;">Contracts can be renegotiated. Cryptographic constraints cannot.</span><br>
+    VAC enforces human oversight, scope constraints, and purpose-bound authority <em>mathematically</em> &mdash; in the delegation chain, not in the contract.
   </div>
   <div class="hero-eyebrow">Verified Authority Chain</div>
   <h1>Securing the link between human intent and agent action</h1>
