@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/vat/verify/:jti",
+      "destination": "/vat-verify.html?jti=:jti"
+    }
+  ]
+}
