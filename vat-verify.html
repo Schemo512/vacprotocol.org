@@ -438,6 +438,7 @@ function showUseCase() {
 // ---- Vouch Flow ----
 let _vouchEmail = '';
 let _vouchOtpId = '';
+let _currentJTI = '';
 
 function startVouch() {
     document.getElementById('vouchBtn').style.display = 'none';
@@ -476,10 +477,10 @@ async function submitEmail() {
     _vouchEmail = email;
 
     try {
-        const resp = await fetch(API_BASE + '/v1/request-otp', {
+        const resp = await fetch(API_BASE + '/v1/vat/request-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, sender_name: 'VAC Protocol', video_id: 'vouch' })
+            body: JSON.stringify({ email: email, jti: _currentJTI })
         });
         if (!resp.ok) throw new Error('Failed to send');
         showOtpStep();
@@ -548,10 +549,10 @@ async function verifyOtp() {
     err.textContent = '';
 
     try {
-        const resp = await fetch(API_BASE + '/v1/verify-otp', {
+        const resp = await fetch(API_BASE + '/v1/vat/verify-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: _vouchEmail, code: code, video_id: 'vouch' })
+            body: JSON.stringify({ email: _vouchEmail, code: code, jti: _currentJTI })
         });
         const data = await resp.json();
         if (data.verified || data.authorized) {
@@ -569,10 +570,10 @@ async function verifyOtp() {
 
 async function resendOtp() {
     try {
-        await fetch(API_BASE + '/v1/request-otp', {
+        await fetch(API_BASE + '/v1/vat/request-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: _vouchEmail, sender_name: 'VAC Protocol', video_id: 'vouch' })
+            body: JSON.stringify({ email: _vouchEmail, jti: _currentJTI })
         });
         document.getElementById('otpErr').innerHTML = '<span style="color:var(--success)">Code resent.</span>';
     } catch (e) {
@@ -623,6 +624,7 @@ function demoData() {
 
 async function init() {
     const jti = getJTI();
+    _currentJTI = jti || '';
     if (jti) { const [c,v] = await Promise.all([fetchChain(jti), fetchVerif(jti)]); render(c, v); }
     else { const d = demoData(); render(d, d.verification); }
 }
