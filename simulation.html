@@ -734,7 +734,7 @@ function MetricsPanel({ metrics, scenario }) {
 }
 
 function VACSimulation() {
-  const [scenario, setScenario] = useState("coalition");
+  const [scenario, setScenario] = useState("tokencost");
   const [running, setRunning] = useState(false);
   const [activeNodes, setActiveNodes] = useState(new Set());
   const [revokedNodes, setRevokedNodes] = useState(new Set());
@@ -1068,14 +1068,48 @@ function VACSimulation() {
           </div>
         )}
 
-        {/* Scenario Tabs */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-          {Object.entries(SCENARIOS).map(([key, s]) => (
-            <button key={key} onClick={() => setScenario(key)}
-              style={{ padding: "8px 14px", border: scenario === key ? `2px solid ${s.color}` : "1px solid #333", borderRadius: 6, background: scenario === key ? `${s.color}22` : "#111", color: scenario === key ? s.color : "#888", cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: scenario === key ? 700 : 400, transition: "all 0.2s" }}>
-              {s.title}
-            </button>
-          ))}
+        {/* Scenario Selector */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
+            <select
+              value={scenario}
+              onChange={(e) => setScenario(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 40px 12px 14px",
+                background: "#111",
+                border: `1px solid ${sc.color}44`,
+                borderRadius: 8,
+                color: sc.color,
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                appearance: "none",
+                WebkitAppearance: "none",
+                outline: "none",
+              }}
+            >
+              <optgroup label="⚡ Enterprise & Cost Control" style={{ color: "#888", background: "#0a0a0a" }}>
+                <option value="tokencost" style={{ color: "#D29922", background: "#111" }}>💰 Token Cost Control — Jason's $100/day budget</option>
+                <option value="openclaw" style={{ color: "#FF6F00", background: "#111" }}>🤖 OpenClaw — Agent Team Deployment</option>
+              </optgroup>
+              <optgroup label="🛡 Defense & Government" style={{ color: "#888", background: "#0a0a0a" }}>
+                <option value="consortium" style={{ color: "#00BCD4", background: "#111" }}>🎯 Coalition Crisis — 7-Member Drone Consortium</option>
+                <option value="coalition" style={{ color: "#E57373", background: "#111" }}>🛡 Coalition Drone Swarm — Multi-Nation</option>
+                <option value="compliance" style={{ color: "#FFB74D", background: "#111" }}>🌐 Cross-Border Compliance</option>
+              </optgroup>
+              <optgroup label="🏥 Healthcare & Education" style={{ color: "#888", background: "#0a0a0a" }}>
+                <option value="healthcare" style={{ color: "#E57373", background: "#111" }}>🏥 Healthcare Chain — Clinical Delegation</option>
+                <option value="wananga" style={{ color: "#CE93D8", background: "#111" }}>🎓 Wānanga — Cultural Learning</option>
+              </optgroup>
+              <optgroup label="🌿 Indigenous Data Sovereignty" style={{ color: "#888", background: "#0a0a0a" }}>
+                <option value="iwi" style={{ color: "#66BB6A", background: "#111" }}>🌿 Iwi Data Governance — Te Whānau-a-Apanui</option>
+                <option value="rahui" style={{ color: "#48CAE4", background: "#111" }}>🌊 Rāhui — Temporal Governance</option>
+              </optgroup>
+            </select>
+            <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: sc.color, fontSize: 12 }}>▼</div>
+          </div>
         </div>
 
         {/* Story Panel */}
