@@ -627,6 +627,23 @@ async function init() {
     _currentJTI = jti || '';
     if (jti) { const [c,v] = await Promise.all([fetchChain(jti), fetchVerif(jti)]); render(c, v); }
     else { const d = demoData(); render(d, d.verification); }
+
+    // If ?vouch=email is present, user came from OTP email — skip straight to code entry
+    const vouchEmail = new URLSearchParams(window.location.search).get('vouch');
+    if (vouchEmail && jti) {
+        _vouchEmail = vouchEmail;
+        setTimeout(() => {
+            const btn = document.getElementById('vouchBtn');
+            const help = document.getElementById('vouchHelp');
+            if (btn) btn.style.display = 'none';
+            if (help) help.style.display = 'none';
+            showOtpStep();
+            setTimeout(() => {
+                const step = document.querySelector('.vouch-step');
+                if (step) step.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }, 400);
+    }
 }
 init();
 </script>
