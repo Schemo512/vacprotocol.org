@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol — Interactive Simulation</title>
-<meta name="description" content="Interactive simulation: 10 real-world scenarios showing how VAC Protocol traces every AI agent action to a verified human. 285 patent claims across 6 filings.">
+<meta name="description" content="Interactive simulation: 9 real-world scenarios showing how VAC Protocol traces every AI agent action to a verified human. 285 patent claims across 6 filings.">
 <meta property="og:title" content="VAC Protocol — Interactive Simulation">
-<meta property="og:description" content="10 real-world scenarios: military coalition, healthcare, autonomous vehicles, Wānanga. Every AI agent traces to a verified human. 285 patent claims.">
+<meta property="og:description" content="9 real-world scenarios: military coalition, healthcare, autonomous vehicles, Wānanga. Every AI agent traces to a verified human. 285 patent claims.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vacprotocol.org/simulation.html">
 <meta property="og:image" content="https://vacprotocol.org/og-image.png">
@@ -14,7 +14,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="VAC Protocol — Interactive Simulation">
-<meta name="twitter:description" content="10 real-world scenarios showing cryptographic human-to-agent attribution. 285 patent claims. Try the coalition drone scenario.">
+<meta name="twitter:description" content="9 real-world scenarios showing cryptographic human-to-agent attribution. 285 patent claims. Try the coalition drone scenario.">
 <meta name="twitter:image" content="https://vacprotocol.org/og-image.png">
 <style>
   body { margin: 0; padding: 0; background: #000; font-family: -apple-system, 'Segoe UI', sans-serif; }
@@ -411,6 +411,58 @@ const SCENARIOS = {
       { time: 10200, type: "revoke", node: "jake", message: "⚠ Jake revokes remaining agents — CASCADE: IR + Legal lose authority in 340ms. Clean shutdown." },
     ],
   },
+  tokencost: {
+    title: "Token Cost Control",
+    subtitle: "Jason's $100/day agent budget — enforced by cryptography",
+    claims: "Claims 39-55, 242-271",
+    audience: "Jason Calacanis / OpenClaw / Enterprise",
+    color: "#D29922",
+    oneSentence: "Jason's AI agents were burning $400/day in API tokens with no ceiling. He set a $100/day VAC budget. The coordinator got $100, delegated $40 to research, $30 to writing, $20 to coding, kept $10 reserve. When the researcher hit $40, the chain revoked. The other agents kept working. Jason saw exactly where every dollar went.",
+    story: {
+      intro: "This one is for Jason Calacanis — because he said it on the All-In Podcast and we built the solution. Jason runs a lean operation. He's all-in on AI agents — using OpenClaw to automate research, content, coding, and outreach. The agents are incredible. They're also burning through $400/day in API tokens and nobody knows where the money is going. Claude Opus calls cost $0.075/1K tokens. His researcher agent loves Opus. Jason needs a hard spending ceiling that no agent can override — not a dashboard that shows him the damage after the fact, but a cryptographic constraint that stops the spend before it happens. So here it is, Jason. This is how VAC solves your problem.",
+      whyVAC: "Today, agent platforms have no spend governance. You can set soft limits, get alerts, review logs — but the agent has already spent the money by the time you see the alert. VAC scope constraints treat budget exactly like any other permission: it narrows monotonically down the delegation chain, and exceeding it triggers automatic revocation. The agent doesn't get a warning — it gets revoked. Jason asked for this. We built it.",
+      beats: [
+        { at: 0, text: "Jason opens VAC and records his biometric verification. Face, voice, challenge-response, location. Root VAT issued: trust 0.95. He sets the daily scope: $100 API spend ceiling, models up to $0.03/1K tokens (Sonnet-class, not Opus), and approved providers: Anthropic + OpenAI only." },
+        { at: 1, text: "PDOS recommends a 4-agent team for today's work: a market researcher, a content writer, a code reviewer, and an outreach coordinator. Each needs a VAC delegation token from Jason's root — with a slice of the $100 budget." },
+        { at: 2, text: "The coordinator agent gets the full $100 scope but immediately delegates: $40 to Research, $30 to Content, $20 to Code Review, keeps $10 as reserve for orchestration calls. Each sub-agent's token cryptographically locks its budget ceiling. Monotonic narrowing — they can never spend more than their parent authorised." },
+        { at: 3, text: "Research Agent starts work. It tries to use Claude Opus ($0.075/1K) — Jason's scope says max $0.03/1K. Request blocked. Not rate-limited. BLOCKED. The agent falls back to Sonnet and proceeds. Jason's model cost preference is mathematically enforced, not suggested." },
+        { at: 4, text: "Content Writer is drafting a blog post series. $8 spent of its $30 budget. Code Reviewer is analysing a PR. $3 spent of its $20 budget. Research Agent is deep in competitive analysis — $22 spent of its $40 budget. The coordinator's real-time view shows exactly where every dollar is going." },
+        { at: 5, text: "Research Agent hits a rich vein of competitor data and starts making rapid API calls. $35... $38... $39.50... $40.00. Budget ceiling reached. The VAC protocol doesn't send an alert. It revokes the Research Agent's delegation token instantly. The agent stops mid-call. Not paused — revoked." },
+        { at: 6, text: "The other 3 agents are unaffected. Content Writer continues drafting ($12 of $30 spent). Code Reviewer continues analysing ($7 of $20 spent). The coordinator's $10 reserve is untouched. Only the agent that hit its ceiling was revoked. Surgical, not nuclear." },
+        { at: 7, text: "Jason gets a notification: 'Research Agent revoked — $40.00 budget exhausted. 23 API calls completed. Last call: competitive pricing analysis. Deliverables: 3 research summaries saved to workspace.' He can see exactly what the $40 bought." },
+        { at: 8, text: "Jason decides the research was valuable and wants it to continue. He records a fresh biometric — not a cached session, a live verification right now — and issues a supplementary budget: $20 more for Research, drawn from tomorrow's allocation. New token issued. Research Agent resumes with a fresh $20 ceiling." },
+        { at: 9, text: "End of day. Total spend: $74.50 of $100 budget. Research: $52 (original $40 + supplementary $20, with $8 unused). Content: $18 of $30. Code Review: $4.50 of $20. Coordinator: $0 of $10 reserve. Every dollar traced to a specific agent, a specific API call, a specific human who authorised it." },
+        { at: 10, text: "Jason's weekly view: Monday $74.50, Tuesday $91, Wednesday $63, Thursday $88, Friday $72. Total: $388.50. Last month before VAC: $2,400 with no visibility. Same output. 84% cost reduction. Not because the agents got cheaper — because a human finally had cryptographic control over what they're allowed to spend." },
+      ],
+    },
+    nodes: [
+      { id: "jason", label: "Jason (Founder) 👤", type: "human", trust: 0.95, scope: "$100/day · Sonnet-class max", jurisdiction: "US-CA", role: "Root Authority — Budget Owner", x: 400, y: 40 },
+      { id: "coord", label: "Coordinator (PDOS)", type: "collective", trust: 0.90, scope: "$100 total · $10 reserve", jurisdiction: "US-CA", x: 400, y: 150 },
+      { id: "research", label: "Research Agent 💰", type: "agent", trust: 0.85, scope: "$40 budget · Sonnet only", jurisdiction: "US-CA", x: 150, y: 280 },
+      { id: "content", label: "Content Writer", type: "agent", trust: 0.85, scope: "$30 budget · Sonnet only", jurisdiction: "US-CA", x: 300, y: 280 },
+      { id: "code", label: "Code Reviewer", type: "agent", trust: 0.82, scope: "$20 budget · Sonnet only", jurisdiction: "US-CA", x: 500, y: 280 },
+      { id: "reserve", label: "Reserve ($10)", type: "agent", trust: 0.80, scope: "$10 · orchestration only", jurisdiction: "US-CA", x: 650, y: 280 },
+      { id: "blocked", label: "⛔ Opus ($0.075/1K)", type: "blocked", trust: 0, scope: "BLOCKED — Exceeds $0.03/1K limit", jurisdiction: "US-CA", x: 150, y: 400 },
+    ],
+    edges: [["jason","coord"],["coord","research"],["coord","content"],["coord","code"],["coord","reserve"],["research","blocked"]],
+    events: [
+      { time: 0, type: "verify", node: "jason", message: "📹 Jason verified — 5-modal biometric ✓ — Daily budget: $100, model ceiling: $0.03/1K tokens" },
+      { time: 1200, type: "create", node: "coord", message: "PDOS Coordinator deployed — $100 total budget, delegating to 4 sub-agents" },
+      { time: 2000, type: "delegate", node: "research", message: "Research Agent — Budget: $40 | Model: Sonnet-class max | Provider: Anthropic + OpenAI" },
+      { time: 2600, type: "delegate", node: "content", message: "Content Writer — Budget: $30 | Model: Sonnet-class max" },
+      { time: 3000, type: "delegate", node: "code", message: "Code Reviewer — Budget: $20 | Model: Sonnet-class max" },
+      { time: 3400, type: "blocked", node: "blocked", message: "🛑 Research Agent requested Claude Opus ($0.075/1K) — BLOCKED. Jason's scope max: $0.03/1K. Falling back to Sonnet." },
+      { time: 4500, type: "action", node: "research", message: "💰 Research Agent: $22 of $40 spent — competitive analysis in progress" },
+      { time: 5500, type: "action", node: "content", message: "📝 Content Writer: $8 of $30 spent — blog post series drafted" },
+      { time: 6500, type: "action", node: "research", message: "💰 Research Agent: $38 of $40 spent — approaching ceiling..." },
+      { time: 7200, type: "revoke", node: "research", message: "⚠ Research Agent REVOKED — $40.00 budget exhausted. 23 API calls. 3 deliverables saved. Other agents unaffected." },
+      { time: 7800, type: "action", node: "content", message: "✓ Content Writer unaffected — continues at $12 of $30" },
+      { time: 8200, type: "action", node: "code", message: "✓ Code Reviewer unaffected — continues at $7 of $20" },
+      { time: 8800, type: "verify", node: "jason", message: "📹 Jason bio-verifies supplementary budget — fresh 5-modal capture ✓ — $20 additional for Research" },
+      { time: 9400, type: "delegate", node: "research", message: "✓ Research Agent RESUMED — new $20 ceiling from supplementary token" },
+      { time: 10000, type: "provenance", node: "jason", message: "📋 Daily total: $74.50 of $100 | Research $52 | Content $18 | Code $4.50 | Last month pre-VAC: $2,400. Same output. 84% reduction." },
+    ],
+  },
 };
 
 // Interactive decision trees for consortium scenario
@@ -664,6 +716,7 @@ function MetricsPanel({ metrics, scenario }) {
     rahui: ["VERIFIED", "NODES", "SCOPE"],
     consortium: ["VERIFIED", "NODES", "QUORUM", "DRONES"],
     openclaw: ["VERIFIED", "NODES", "SCOPE"],
+    tokencost: ["VERIFIED", "NODES", "SCOPE"],
   };
   const allowed = SCENARIO_METRICS[scenario] || Object.keys(metrics);
   const filtered = Object.entries(metrics).filter(([key]) => allowed.includes(key));
@@ -1160,6 +1213,7 @@ function VACSimulation() {
                    scenario === "iwi" ? "TRUST GRAPH — IWI GOVERNANCE" :
                    scenario === "rahui" ? "TRUST GRAPH — RĀHUI TEMPORAL" :
                    scenario === "consortium" ? "TRUST GRAPH — CONSORTIUM" :
+                   scenario === "tokencost" ? "TRUST GRAPH — TOKEN BUDGET" :
                    "TRUST GRAPH"}
                 </div>
 
@@ -1283,6 +1337,63 @@ function VACSimulation() {
                   <text x="620" y="314" textAnchor="middle" fill="#FF4444" fontSize="8">Cap Table</text>
 
                   <text x="350" y="310" textAnchor="middle" fill="#555" fontSize="9">Two human roots. Scoped delegation. Every agent traces back to a verified person.</text>
+                </svg>
+                )}
+
+                {scenario === "tokencost" && (
+                <svg viewBox="0 0 700 340" style={{ width: "100%", maxWidth: 700 }}>
+                  {/* Jason to Coordinator */}
+                  <line x1="350" y1="55" x2="350" y2="130" stroke="#D2992266" strokeWidth="2" />
+                  {/* Coordinator to agents */}
+                  <line x1="350" y1="140" x2="130" y2="230" stroke="#D2992244" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="280" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="430" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="580" y2="230" stroke="#66BB6A66" strokeWidth="2" />
+                  {/* Research to blocked */}
+                  <line x1="130" y1="250" x2="130" y2="300" stroke="#FF444466" strokeWidth="2" strokeDasharray="6" />
+
+                  {/* Jason */}
+                  <circle cx="350" cy="45" r="24" fill="#3D2800" stroke="#D29922" strokeWidth="2" />
+                  <text x="350" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
+                  <text x="350" y="82" textAnchor="middle" fill="#D29922" fontSize="10" fontWeight="700">Jason (Founder)</text>
+                  <text x="350" y="94" textAnchor="middle" fill="#888" fontSize="8">⭐ ROOT · $100/day budget</text>
+
+                  {/* Coordinator */}
+                  <circle cx="350" cy="140" r="20" fill="#1a1a1a" stroke="#FFB74D" strokeWidth="2" />
+                  <text x="350" y="144" textAnchor="middle" fill="#FFB74D" fontSize="12">✦</text>
+                  <text x="350" y="170" textAnchor="middle" fill="#FFB74D" fontSize="9" fontWeight="700">PDOS Coordinator</text>
+                  <text x="350" y="182" textAnchor="middle" fill="#888" fontSize="7">$100 → delegates $90 · keeps $10</text>
+
+                  {/* Research - highlighted/warning */}
+                  <circle cx="130" cy="240" r="18" fill="#3D2800" stroke="#D29922" strokeWidth="2.5" />
+                  <text x="130" y="244" textAnchor="middle" fill="#D29922" fontSize="11">💰</text>
+                  <text x="130" y="268" textAnchor="middle" fill="#D29922" fontSize="9" fontWeight="700">Research</text>
+                  <text x="130" y="280" textAnchor="middle" fill="#D29922" fontSize="7">$40 BUDGET · ⚠ REVOKED</text>
+
+                  {/* Content - healthy */}
+                  <circle cx="280" cy="240" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="280" y="244" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="280" y="268" textAnchor="middle" fill="#66BB6A" fontSize="9">Content</text>
+                  <text x="280" y="280" textAnchor="middle" fill="#888" fontSize="7">$18 of $30 · ACTIVE</text>
+
+                  {/* Code - healthy */}
+                  <circle cx="430" cy="240" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="430" y="244" textAnchor="middle" fill="#fff" fontSize="10">🤖</text>
+                  <text x="430" y="268" textAnchor="middle" fill="#66BB6A" fontSize="9">Code Review</text>
+                  <text x="430" y="280" textAnchor="middle" fill="#888" fontSize="7">$4.50 of $20 · ACTIVE</text>
+
+                  {/* Reserve */}
+                  <circle cx="580" cy="240" r="14" fill="#1a1a1a" stroke="#555" strokeWidth="1.5" />
+                  <text x="580" y="244" textAnchor="middle" fill="#888" fontSize="10">$</text>
+                  <text x="580" y="268" textAnchor="middle" fill="#888" fontSize="9">Reserve</text>
+                  <text x="580" y="280" textAnchor="middle" fill="#666" fontSize="7">$10 · UNTOUCHED</text>
+
+                  {/* Blocked Opus */}
+                  <circle cx="130" cy="310" r="12" fill="#3a0000" stroke="#FF4444" strokeWidth="2" />
+                  <text x="130" y="314" textAnchor="middle" fill="#FF4444" fontSize="9">🚫</text>
+                  <text x="130" y="332" textAnchor="middle" fill="#FF4444" fontSize="7">Opus ($0.075/1K)</text>
+
+                  <text x="350" y="335" textAnchor="middle" fill="#555" fontSize="9">Budget narrows monotonically. One agent revoked. Others unaffected. Every dollar traced.</text>
                 </svg>
                 )}
 
@@ -1420,6 +1531,7 @@ function VACSimulation() {
                 <div style={{ marginTop: 10, fontSize: 11, color: "#666" }}>
                   {scenario === "wananga" ? "In this scenario: when Mere vouches for Hemi, both mine a token. When Hemi's rangatahi complete the programme with verified progress, the programme's aggregate trust score rises — making every future vouch from this wānanga carry more weight." :
                    scenario === "openclaw" ? "In this scenario: when Jake verifies and deploys agents through PDOS, his trust score anchors the entire team. When Lisa joins and is independently verified, the team's aggregate reputation strengthens — two verified founders carry more weight than one." :
+                   scenario === "tokencost" ? "In this scenario: Jason's biometric verification anchors a daily budget. Every dollar spent by every agent traces back to his verified identity. When the Research Agent is revoked and reinstated, a fresh biometric is required — not a cached approval. The trust graph isn't just about identity, it's about resource governance." :
                    scenario === "healthcare" ? "In this scenario: Dr. Chen's anchor status means every clinical agent inherits verified provenance. Each successful delegation without scope violation strengthens the trust chain — the hospital's reputation grows with every compliant interaction." :
                    "In every scenario: vouches between verified humans create tokens. The harder trust is to earn, the more valuable the token. The graph grows stronger with every verified interaction."}
                 </div>
