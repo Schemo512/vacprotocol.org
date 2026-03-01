@@ -310,8 +310,10 @@ const MODS = {
 
 function modsForMethod(m) {
     return ({
-        'multi_modal': ['face_liveness','deepfake_detection','voice_biometric','challenge_response','geolocation'],
+        'multi_modal_full': ['face_liveness','deepfake_detection','face_consistency','voice_biometric','challenge_response','geolocation'],
         'multi_modal_plus_behavioural': ['face_liveness','deepfake_detection','face_consistency','voice_biometric','challenge_response','geolocation'],
+        'multi_modal_3': ['face_liveness','deepfake_detection','voice_biometric','challenge_response','geolocation'],
+        'multi_modal': ['face_liveness','deepfake_detection','voice_biometric','challenge_response','geolocation'],
         'facial_geometry': ['face_liveness','deepfake_detection','face_consistency'],
         'voice_pattern': ['voice_biometric'],
         'single_modal': ['face_liveness'],
