@@ -411,6 +411,56 @@ const SCENARIOS = {
       { time: 10200, type: "revoke", node: "jake", message: "⚠ Jake revokes remaining agents — CASCADE: IR + Legal lose authority in 340ms. Clean shutdown." },
     ],
   },
+  personalai: {
+    title: "Personal AI — Video Identity",
+    subtitle: "Sarah shares a coaching reflection — on her terms",
+    claims: "Claims 1-15, 39-55, 135-167, 272-285",
+    audience: "Consumers / Coaches / HR / Education",
+    color: "#CE93D8",
+    oneSentence: "Sarah recorded a coaching reflection in FolioAI. She wanted to share a highlight clip with a potential employer — but not her raw practice footage, not her private reflections, and not her full session history. VAC scope made her preferences cryptographically binding. The employer saw exactly what Sarah chose to share. Nothing more. When the interview process ended, access auto-revoked.",
+    story: {
+      intro: "Sarah is preparing for a career transition. She's been using FolioAI — a video reflection coaching app — to practice her interview responses, record coaching sessions, and track her progress over 3 months. She has 47 recordings: raw practice takes (some terrible), private reflections about her anxiety, and a few polished highlights she's proud of. A recruiter at a company she loves asks for a 'video introduction.' Sarah wants to share her best 90-second clip — verified as authentically her, not AI-generated — without exposing her raw footage or her private coaching journey.",
+      whyVAC: "Today, sharing a video means losing control of it. You send a file or a link — the recipient can download it, forward it, screen-record it. You have no way to prove the video is authentically you (not a deepfake). And you definitely can't share a curated clip while cryptographically preventing access to the raw footage it came from. VAC solves all three: biometric proof of identity, scoped sharing (curated only, no raw access), and time-bound access that auto-revokes.",
+      beats: [
+        { at: 0, text: "Sarah opens FolioAI and records her 90-second highlight. The VAC SDK captures her 5-modal biometric signature — face liveness, deepfake detection, voice biometric, challenge-response, and geolocation. This isn't just a video. It's a cryptographically verified human artifact." },
+        { at: 1, text: "Sarah's VAT (Verified Authority Token) is issued as the root of a delegation chain. Her scope is set: she controls what gets shared and with whom. 47 recordings exist in her FolioAI account. Only the ones she explicitly delegates for sharing will be accessible." },
+        { at: 2, text: "Sarah selects her best 90-second clip and creates a sharing scope: 'Share this clip with [recruiter email]. Access type: view only. Duration: 14 days. Raw footage: BLOCKED. Private reflections: BLOCKED. Session history: BLOCKED.' The scope constraints are locked into a derived VAT token." },
+        { at: 3, text: "The recruiter receives a VAC verification link. They click it and see: Sarah's verified identity (biometric proof across 5 modalities), the curated clip she chose to share, and a trust score showing this is genuinely her — not AI-generated, not a deepfake, not someone else." },
+        { at: 4, text: "The recruiter is impressed by Sarah's presentation. They want to see more — maybe her practice progression or other takes. They request additional access. The request goes to Sarah, not to FolioAI. Sarah is the root authority. Only she can widen the scope." },
+        { at: 5, text: "Sarah decides to share two more clips — her mock interview answer about leadership and her coaching reflection on handling pressure. She records a fresh biometric verification (not a cached session) and issues a supplementary token: these two clips, view only, same 14-day window." },
+        { at: 6, text: "The recruiter now sees 3 clips total. They try to access Sarah's raw practice footage — BLOCKED. They try to see her session history — BLOCKED. They try to download the clips — BLOCKED. Every boundary Sarah set is cryptographically enforced by VAC. FolioAI enforces the scope; VAC makes it unbreakable." },
+        { at: 7, text: "Meanwhile, Sarah also shares a different clip with a friend — a funny blooper from an early practice session. Different scope, different recipient, different derived token. Her friend sees the blooper. The recruiter doesn't. The friend can't see the professional clips. Each sharing relationship has its own scoped chain." },
+        { at: 8, text: "Two weeks pass. The 14-day access window expires. The recruiter's viewing access auto-revokes. Not paused — revoked. The derived token is invalidated. If the recruiter clicks the link again, they see: 'Access expired.' Sarah's clips are hers again. No orphaned permissions." },
+        { at: 9, text: "Sarah gets the job. She revokes all outstanding sharing tokens with one action — cascade revocation. Every clip, every recipient, every derived permission disappears. Her 47 recordings are private again. Her coaching journey stays hers. The only trace: a provenance record showing what was shared, with whom, for how long." },
+        { at: 10, text: "The recruiter's HR system tries to access the clips for onboarding records. BLOCKED. Access was revoked. They have Sarah's name, her verified identity confirmation, and their own notes. But the actual video content? Gone. Sarah's identity was verified. Her content was temporary. That's the difference between sharing and surrendering." },
+      ],
+    },
+    nodes: [
+      { id: "sarah", label: "Sarah 👤", type: "human", trust: 0.95, scope: "Full control — 47 recordings", jurisdiction: "AU-VIC", role: "Root Authority — Content Owner", x: 350, y: 40 },
+      { id: "folioai", label: "FolioAI (VAC-secured)", type: "collective", trust: 0.90, scope: "Enforces Sarah's scope rules", jurisdiction: "AU-VIC", x: 350, y: 140 },
+      { id: "highlight", label: "Curated Clip ✓", type: "agent", trust: 0.85, scope: "90s highlight · view only", jurisdiction: "AU-VIC", x: 150, y: 250 },
+      { id: "extras", label: "2 Extra Clips ✓", type: "agent", trust: 0.82, scope: "Supplementary · view only", jurisdiction: "AU-VIC", x: 350, y: 250 },
+      { id: "blooper", label: "Blooper (Friend)", type: "agent", trust: 0.80, scope: "Casual share · different scope", jurisdiction: "AU-VIC", x: 550, y: 250 },
+      { id: "recruiter", label: "Recruiter 👤", type: "human", trust: 0.70, scope: "View curated clips only · 14 days", jurisdiction: "AU-VIC", x: 150, y: 370 },
+      { id: "friend", label: "Friend 👤", type: "human", trust: 0.75, scope: "View blooper only", jurisdiction: "AU-VIC", x: 550, y: 370 },
+      { id: "blocked", label: "⛔ Raw Footage", type: "blocked", trust: 0, scope: "BLOCKED — 44 private recordings", jurisdiction: "AU-VIC", x: 350, y: 370 },
+    ],
+    edges: [["sarah","folioai"],["folioai","highlight"],["folioai","extras"],["folioai","blooper"],["highlight","recruiter"],["extras","recruiter"],["blooper","friend"],["folioai","blocked"]],
+    events: [
+      { time: 0, type: "verify", node: "sarah", message: "📹 Sarah verified — 5-modal biometric ✓ — Root authority over 47 recordings" },
+      { time: 1200, type: "create", node: "folioai", message: "FolioAI issues VAT — Sarah's scope: full control, sharing requires explicit delegation" },
+      { time: 2200, type: "delegate", node: "highlight", message: "Curated 90s clip scoped for sharing — View only · 14 days · No download" },
+      { time: 3000, type: "delegate", node: "recruiter", message: "Recruiter receives verification link — sees biometric proof + curated clip" },
+      { time: 4000, type: "blocked", node: "blocked", message: "🛑 Recruiter requested raw practice footage — BLOCKED. Sarah's scope: curated clips only." },
+      { time: 5000, type: "verify", node: "sarah", message: "📹 Sarah bio-verifies supplementary sharing — 2 additional clips for recruiter" },
+      { time: 5800, type: "delegate", node: "extras", message: "2 extra clips added to recruiter's scope — leadership + pressure handling" },
+      { time: 6500, type: "delegate", node: "blooper", message: "Separate scope: blooper clip shared with friend — recruiter CANNOT see this" },
+      { time: 7200, type: "delegate", node: "friend", message: "Friend receives blooper link — different chain, different scope, same human root" },
+      { time: 8000, type: "action", node: "recruiter", message: "⏰ 14-day window expired — recruiter's access AUTO-REVOKED. Link shows: 'Access expired.'" },
+      { time: 9000, type: "revoke", node: "sarah", message: "⚠ Sarah revokes all sharing — CASCADE: recruiter + friend lose access. 47 recordings private again." },
+      { time: 9800, type: "blocked", node: "blocked", message: "🛑 HR system tried to access clips for onboarding — BLOCKED. Access was revoked. Content is gone." },
+    ],
+  },
   tokencost: {
     title: "Token Cost Control",
     subtitle: "Jason's $100/day agent budget — enforced by cryptography",
@@ -717,6 +767,7 @@ function MetricsPanel({ metrics, scenario }) {
     consortium: ["VERIFIED", "NODES", "QUORUM", "DRONES"],
     openclaw: ["VERIFIED", "NODES", "SCOPE"],
     tokencost: ["VERIFIED", "NODES", "SCOPE"],
+    personalai: ["VERIFIED", "NODES", "SCOPE"],
   };
   const allowed = SCENARIO_METRICS[scenario] || Object.keys(metrics);
   const filtered = Object.entries(metrics).filter(([key]) => allowed.includes(key));
@@ -1093,6 +1144,7 @@ function VACSimulation() {
               <optgroup label="⚡ Enterprise & Cost Control" style={{ color: "#888", background: "#0a0a0a" }}>
                 <option value="tokencost" style={{ color: "#D29922", background: "#111" }}>💰 Token Cost Control — Jason's $100/day budget</option>
                 <option value="openclaw" style={{ color: "#FF6F00", background: "#111" }}>🤖 OpenClaw — Agent Team Deployment</option>
+                <option value="personalai" style={{ color: "#CE93D8", background: "#111" }}>🎬 Personal AI — Video Identity (FolioAI)</option>
               </optgroup>
               <optgroup label="🛡 Defense & Government" style={{ color: "#888", background: "#0a0a0a" }}>
                 <option value="consortium" style={{ color: "#00BCD4", background: "#111" }}>🎯 Coalition Crisis — 7-Member Drone Consortium</option>
@@ -1248,6 +1300,7 @@ function VACSimulation() {
                    scenario === "rahui" ? "TRUST GRAPH — RĀHUI TEMPORAL" :
                    scenario === "consortium" ? "TRUST GRAPH — CONSORTIUM" :
                    scenario === "tokencost" ? "TRUST GRAPH — TOKEN BUDGET" :
+                   scenario === "personalai" ? "TRUST GRAPH — PERSONAL AI" :
                    "TRUST GRAPH"}
                 </div>
 
@@ -1431,6 +1484,63 @@ function VACSimulation() {
                 </svg>
                 )}
 
+                {scenario === "personalai" && (
+                <svg viewBox="0 0 700 340" style={{ width: "100%", maxWidth: 700 }}>
+                  {/* Sarah to FolioAI */}
+                  <line x1="350" y1="55" x2="350" y2="125" stroke="#CE93D866" strokeWidth="2" />
+                  {/* FolioAI to clips */}
+                  <line x1="350" y1="140" x2="140" y2="230" stroke="#CE93D844" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="350" y2="230" stroke="#CE93D844" strokeWidth="2" />
+                  <line x1="350" y1="140" x2="560" y2="230" stroke="#CE93D844" strokeWidth="2" />
+                  {/* Clips to recipients */}
+                  <line x1="140" y1="250" x2="140" y2="310" stroke="#66BB6A44" strokeWidth="2" />
+                  <line x1="350" y1="250" x2="350" y2="310" stroke="#FF444444" strokeWidth="2" strokeDasharray="6" />
+                  <line x1="560" y1="250" x2="560" y2="310" stroke="#66BB6A44" strokeWidth="2" />
+
+                  {/* Sarah */}
+                  <circle cx="350" cy="42" r="24" fill="#4A0E4E" stroke="#CE93D8" strokeWidth="2" />
+                  <text x="350" y="46" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
+                  <text x="350" y="80" textAnchor="middle" fill="#CE93D8" fontSize="10" fontWeight="700">Sarah</text>
+                  <text x="350" y="92" textAnchor="middle" fill="#888" fontSize="8">⭐ ROOT · 47 recordings · Full control</text>
+
+                  {/* FolioAI */}
+                  <circle cx="350" cy="138" r="18" fill="#1a1a1a" stroke="#CE93D8" strokeWidth="2" />
+                  <text x="350" y="142" textAnchor="middle" fill="#CE93D8" fontSize="11">✦</text>
+                  <text x="350" y="168" textAnchor="middle" fill="#CE93D8" fontSize="9" fontWeight="700">FolioAI · Secured by VAC</text>
+                  <text x="350" y="180" textAnchor="middle" fill="#888" fontSize="7">Enforces Sarah's sharing scope</text>
+
+                  {/* Curated clip */}
+                  <circle cx="140" cy="238" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="140" y="242" textAnchor="middle" fill="#fff" fontSize="10">🎬</text>
+                  <text x="140" y="266" textAnchor="middle" fill="#66BB6A" fontSize="8">Curated Clip</text>
+                  <text x="140" y="278" textAnchor="middle" fill="#888" fontSize="7">90s · VIEW ONLY · 14 days</text>
+
+                  {/* Blocked raw */}
+                  <circle cx="350" cy="238" r="16" fill="#3a0000" stroke="#FF4444" strokeWidth="2" />
+                  <text x="350" y="242" textAnchor="middle" fill="#FF4444" fontSize="10">🚫</text>
+                  <text x="350" y="266" textAnchor="middle" fill="#FF4444" fontSize="8">44 Raw Recordings</text>
+                  <text x="350" y="278" textAnchor="middle" fill="#FF4444" fontSize="7">BLOCKED — Private</text>
+
+                  {/* Blooper */}
+                  <circle cx="560" cy="238" r="16" fill="#1B5E20" stroke="#66BB6A" strokeWidth="2" />
+                  <text x="560" y="242" textAnchor="middle" fill="#fff" fontSize="10">😂</text>
+                  <text x="560" y="266" textAnchor="middle" fill="#66BB6A" fontSize="8">Blooper Clip</text>
+                  <text x="560" y="278" textAnchor="middle" fill="#888" fontSize="7">Friend only · SEPARATE scope</text>
+
+                  {/* Recruiter */}
+                  <circle cx="140" cy="318" r="14" fill="#1B3A5C" stroke="#2E75B6" strokeWidth="1.5" />
+                  <text x="140" y="322" textAnchor="middle" fill="#fff" fontSize="10">👤</text>
+                  <text x="140" y="340" textAnchor="middle" fill="#2E75B6" fontSize="8">Recruiter</text>
+
+                  {/* Friend */}
+                  <circle cx="560" cy="318" r="14" fill="#1B3A5C" stroke="#2E75B6" strokeWidth="1.5" />
+                  <text x="560" y="322" textAnchor="middle" fill="#fff" fontSize="10">👤</text>
+                  <text x="560" y="340" textAnchor="middle" fill="#2E75B6" fontSize="8">Friend</text>
+
+                  <text x="350" y="340" textAnchor="middle" fill="#555" fontSize="9">One human. Multiple sharing scopes. Each recipient sees only what Sarah chose. Auto-revokes.</text>
+                </svg>
+                )}
+
                 {scenario === "healthcare" && (
                 <svg viewBox="0 0 700 280" style={{ width: "100%", maxWidth: 700 }}>
                   <line x1="350" y1="45" x2="150" y2="140" stroke="#E5737366" strokeWidth="2" />
@@ -1566,6 +1676,7 @@ function VACSimulation() {
                   {scenario === "wananga" ? "In this scenario: when Mere vouches for Hemi, both mine a token. When Hemi's rangatahi complete the programme with verified progress, the programme's aggregate trust score rises — making every future vouch from this wānanga carry more weight." :
                    scenario === "openclaw" ? "In this scenario: when Jake verifies and deploys agents through PDOS, his trust score anchors the entire team. When Lisa joins and is independently verified, the team's aggregate reputation strengthens — two verified founders carry more weight than one." :
                    scenario === "tokencost" ? "In this scenario: Jason's biometric verification anchors a daily budget. Every dollar spent by every agent traces back to his verified identity. When the Research Agent is revoked and reinstated, a fresh biometric is required — not a cached approval. The trust graph isn't just about identity, it's about resource governance." :
+                   scenario === "personalai" ? "In this scenario: Sarah's biometric verification proves the video is genuinely her — not AI-generated, not a deepfake. Each sharing relationship is a separate scope in the delegation chain. The recruiter and friend see different content from the same root. When access expires, the content is gone. Sharing isn't surrendering." :
                    scenario === "healthcare" ? "In this scenario: Dr. Chen's anchor status means every clinical agent inherits verified provenance. Each successful delegation without scope violation strengthens the trust chain — the hospital's reputation grows with every compliant interaction." :
                    "In every scenario: vouches between verified humans create tokens. The harder trust is to earn, the more valuable the token. The graph grows stronger with every verified interaction."}
                 </div>
