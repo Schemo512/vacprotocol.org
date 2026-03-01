@@ -177,7 +177,23 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
 /* Success state */
 .vouch-success { padding: 28px; text-align: center; animation: fadeIn 0.3s ease-out; }
-.vouch-success-icon { width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: var(--success-bg); border: 1px solid var(--success-border); display: flex; align-items: center; justify-content: center; }
+.vouch-success-icon { width: 64px; height: 64px; margin: 0 auto 16px; }
+.vouch-success-icon img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--success-border); }
+
+/* Trust graph summary */
+.trust-graph-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; }
+.trust-graph-count { font-family: var(--mono); font-size: 13px; color: var(--text-secondary); }
+.trust-graph-count strong { color: var(--teal); font-weight: 600; }
+.trust-graph-dots { display: flex; gap: 4px; align-items: center; }
+.trust-graph-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); opacity: 0.7; }
+.trust-graph-dot.empty { background: var(--border); opacity: 0.4; }
+.trust-graph-label { font-size: 11px; color: var(--text-quaternary); font-family: var(--mono); margin-left: auto; }
+
+/* Post-vouch actions */
+.vouch-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.vouch-action-btn { font-family: var(--mono); font-size: 12px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+.vouch-action-btn:hover { border-color: var(--purple); color: var(--text-primary); }
+.vouch-action-btn.copied { border-color: var(--success); color: var(--success); }
 
 /* Scenarios */
 /* Use cases dropdown */
@@ -233,7 +249,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </svg>
         <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
     </a>
-    <div class="nav-badge valid" id="nav-badge">CHAIN VERIFIED</div>
+    <div class="nav-badge valid" id="nav-badge">CHAIN VALID</div>
 </div></div>
 
 <div class="page">
@@ -279,6 +295,9 @@ async function fetchChain(jti) {
 async function fetchVerif(jti) {
     try { const r = await fetch(`${API_BASE}/v1/vat/verify/${jti}`); if (!r.ok) return null; return await r.json(); } catch { return null; }
 }
+async function fetchVouches(jti) {
+    try { const r = await fetch(`${API_BASE}/v1/vat/vouches/${jti}`); if (!r.ok) return {count:0,vouches:[]}; return await r.json(); } catch { return {count:0,vouches:[]}; }
+}
 
 const MODS = {
     face_liveness:      { label: 'Face Liveness',       sub: 'Gemini visual analysis' },
@@ -319,14 +338,17 @@ const LOGO_SVG = `<svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://
     <circle cx="26" cy="40" r="2.5" fill="#00CEC9"/>
 </svg>`;
 
-function render(data, verif) {
+function render(data, verif, vouchData) {
     const app = document.getElementById('app');
     if (!data) { app.innerHTML = '<div class="error-card"><div class="error-title">Token Not Found</div><div class="error-msg">This verification link may have expired or been revoked.<br><br><a href="https://vacprotocol.org">Learn about VAC Protocol \u2192</a></div></div>'; return; }
 
     const { chain_display: cd, claim_mapping: cm, verification: v } = data;
     const ok = v.valid;
     const nb = document.getElementById('nav-badge');
+    const vc = vouchData ? vouchData.count : 0;
     if (!ok) { nb.textContent = 'CHAIN INVALID'; nb.className = 'nav-badge invalid'; }
+    else if (vc > 0) { nb.textContent = `VOUCHED · ${vc}`; nb.className = 'nav-badge valid'; }
+    else { nb.textContent = 'CHAIN VALID'; nb.className = 'nav-badge valid'; }
 
     const root = cd.find(n => n.is_root);
     const method = root ? root.verification_method : 'multi_modal';
@@ -334,6 +356,16 @@ function render(data, verif) {
     let h = '';
 
     h += `<div class="status-card ${ok?'valid':'invalid'}"><div class="status-dot"></div><div class="status-text">${ok?`Chain verified \u00b7 ${v.chain_length} node${v.chain_length!==1?'s':''} \u00b7 Trust ${(v.effective_trust_score*100).toFixed(1)}%`:`Chain invalid \u00b7 ${v.errors.length} error${v.errors.length!==1?'s':''}`}</div></div>`;
+
+    // Trust graph bar — shows vouch count
+    if (ok) {
+        const maxDots = 5;
+        const filledDots = Math.min(vc, maxDots);
+        const emptyDots = maxDots - filledDots;
+        const dotHtml = '<span class="trust-graph-dot"></span>'.repeat(filledDots) + '<span class="trust-graph-dot empty"></span>'.repeat(emptyDots);
+        const label = vc === 0 ? 'No vouches yet' : vc === 1 ? '1 human vouched' : `${vc} humans vouched`;
+        h += `<div class="trust-graph-bar"><div class="trust-graph-dots">${dotHtml}</div><div class="trust-graph-count"><strong>${vc}</strong> vouch${vc!==1?'es':''}</div><div class="trust-graph-label">${label}</div></div>`;
+    }
 
     if (root) {
         h += `<div class="sender-card"><div class="sender-icon">${LOGO_SVG}</div><div class="sender-name">Verified Human</div><div class="sender-org">${data.issuer||'vacprotocol.org'} \u00b7 Patent Pending</div><div class="sender-tagline">Humans start every chain.</div><div class="sender-method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${fmtMethod(method)} \u00b7 ${active.length} modalities</div></div>`;
@@ -366,7 +398,7 @@ function render(data, verif) {
     }
 
     if (ok) {
-        h += '<div class="vouch-section"><button class="vouch-btn" id="vouchBtn" onclick="startVouch()">Vouch for this identity</button><div class="vouch-help" id="vouchHelp">Vouching confirms you\'ve received and reviewed this credential. You become a node in their trust graph.</div><div class="vouch-flow" id="vouchFlow"></div></div>';
+        h += '<div class="vouch-section"><button class="vouch-btn" id="vouchBtn" onclick="startVouch()">Vouch for this chain</button><div class="vouch-help" id="vouchHelp">Vouching confirms you\'ve received and reviewed this delegation chain. You become a node in the trust graph.</div><div class="vouch-flow" id="vouchFlow"></div></div>';
     }
 
     // Use cases — dropdown selector with single visible card
@@ -585,12 +617,55 @@ function showVouchSuccess() {
     document.getElementById('vouchFlow').innerHTML = `
         <div class="vouch-success">
             <div class="vouch-success-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3FB950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <img src="https://vacprotocol.org/branding/vac-logo-icon-dark.png" alt="VAC" />
             </div>
             <div class="vouch-tagline">You are the private key.</div>
             <div class="vouch-confirm-text">Vouch recorded for ${_vouchEmail}</div>
-            <div style="font-size:12px;color:var(--text-quaternary);margin-top:12px;font-family:var(--mono);">You are now a node in this trust graph.</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:16px;line-height:1.6;max-width:340px;margin-left:auto;margin-right:auto;">
+                You're now a node in this trust graph. When others vouch, the network grows &mdash; that's the moat no code can replicate.
+            </div>
+            <div class="vouch-actions">
+                <button class="vouch-action-btn" onclick="copyVerifyLink(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Share this verification
+                </button>
+                <button class="vouch-action-btn" onclick="window.location.href='https://vacprotocol.org'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    Learn about VAC Protocol
+                </button>
+            </div>
         </div>`;
+    // Update the badge and trust graph bar to reflect the new vouch
+    const nb = document.getElementById('nav-badge');
+    if (nb) { nb.textContent = 'VOUCHED \u00b7 \u2713'; nb.className = 'nav-badge valid'; }
+    // Refresh vouch count in the trust graph bar
+    if (_currentJTI) {
+        fetchVouches(_currentJTI).then(vd => {
+            const bar = document.querySelector('.trust-graph-bar');
+            if (bar && vd) {
+                const vc = vd.count;
+                const maxDots = 5;
+                const filled = Math.min(vc, maxDots);
+                const empty = maxDots - filled;
+                bar.innerHTML = '<span class="trust-graph-dot"></span>'.repeat(filled)
+                    + '<span class="trust-graph-dot empty"></span>'.repeat(empty)
+                    + `<div class="trust-graph-count"><strong>${vc}</strong> vouch${vc!==1?'es':''}</div>`
+                    + `<div class="trust-graph-label">${vc === 1 ? '1 human vouched' : vc + ' humans vouched'}</div>`;
+            }
+        });
+    }
+}
+
+function copyVerifyLink(btn) {
+    const url = window.location.href.split('?')[0]; // Clean URL without vouch param
+    navigator.clipboard.writeText(url).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Share this verification';
+        }, 2000);
+    });
 }
 
 function demoData() {
@@ -625,8 +700,11 @@ function demoData() {
 async function init() {
     const jti = getJTI();
     _currentJTI = jti || '';
-    if (jti) { const [c,v] = await Promise.all([fetchChain(jti), fetchVerif(jti)]); render(c, v); }
-    else { const d = demoData(); render(d, d.verification); }
+    if (jti) {
+        const [c, v, vd] = await Promise.all([fetchChain(jti), fetchVerif(jti), fetchVouches(jti)]);
+        render(c, v, vd);
+    }
+    else { const d = demoData(); render(d, d.verification, {count:0,vouches:[]}); }
 
     // If ?vouch=email is present, user came from OTP email — skip straight to code entry
     const vouchEmail = new URLSearchParams(window.location.search).get('vouch');
