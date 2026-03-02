@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAC Protocol — Verify Authority Chain</title>
-<meta name="description" content="Verified Authority Chain — cryptographic proof of human-to-agent delegation">
-<meta property="og:title" content="VAC Protocol — Verify Authority Chain">
+<title>VAC Protocol — Verified Authority Chain</title>
+<meta name="description" content="Cryptographic proof that a verified human authorised this agent action. 285 patent claims.">
+<meta property="og:title" content="VAC Protocol — Verified Authority Chain">
 <meta property="og:description" content="Cryptographic proof that a verified human authorised this agent action. 285 patent claims.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vacprotocol.org">
@@ -14,274 +14,405 @@
 <meta name="twitter:site" content="@vacprotocol">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
-:root {
-    --bg: #0D1117;
-    --surface: #161B22;
-    --surface-raised: #1C2128;
-    --border: #30363D;
-    --border-light: #3D444D;
-    /* High contrast text hierarchy */
-    --text-primary: #F0F6FC;
-    --text-secondary: #C9D1D9;
-    --text-tertiary: #8B949E;
-    --text-quaternary: #6E7681;
-    /* Brand */
-    --purple: #6C5CE7;
-    --purple-dim: #5A4BD1;
-    --purple-bg: rgba(108,92,231,0.08);
-    --purple-border: rgba(108,92,231,0.25);
-    --teal: #00CEC9;
-    --teal-bg: rgba(0,206,201,0.08);
-    --teal-border: rgba(0,206,201,0.2);
-    /* Semantic */
-    --success: #3FB950;
-    --success-bg: rgba(63,185,80,0.08);
-    --success-border: rgba(63,185,80,0.2);
-    --warning: #D29922;
-    --warning-bg: rgba(210,153,34,0.08);
-    --warning-border: rgba(210,153,34,0.2);
-    --error: #F85149;
-    --error-bg: rgba(248,81,73,0.08);
-    --error-border: rgba(248,81,73,0.2);
-    --radius: 8px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--font); color: var(--text-secondary); background: var(--bg); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100dvh; }
-.page { max-width: 560px; margin: 0 auto; padding: 0 20px; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-.nav { border-bottom: 1px solid var(--border); padding: 0 20px; background: rgba(13,17,23,0.95); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
-.nav-inner { max-width: 560px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+/* ─── Theme defaults (overridden by vac-themes.js at runtime) ─── */
+:root {
+    --bg:              #080B12;
+    --bg-elevated:     #0D1117;
+    --surface:         #131921;
+    --surface-raised:  #1A2233;
+    --surface-hover:   #1F2937;
+    --border:          #1E2A3A;
+    --border-light:    #2A3A4E;
+    --border-focus:    #4A5C73;
+    --text-primary:    #F0F4F8;
+    --text-secondary:  #B8C4D0;
+    --text-tertiary:   #8899AA;
+    --text-muted:      #5C6F82;
+    --accent:          #7C6BF0;
+    --accent-light:    #9B8DF7;
+    --accent-dim:      #6455D4;
+    --accent-bg:       rgba(124,107,240,0.06);
+    --accent-bg-hover: rgba(124,107,240,0.12);
+    --accent-border:   rgba(124,107,240,0.2);
+    --accent-glow:     rgba(124,107,240,0.15);
+    --teal:            #2DD4BF;
+    --teal-dim:        #14B8A6;
+    --teal-bg:         rgba(45,212,191,0.06);
+    --teal-border:     rgba(45,212,191,0.15);
+    --success:         #34D399;
+    --success-dim:     #10B981;
+    --success-bg:      rgba(52,211,153,0.06);
+    --success-border:  rgba(52,211,153,0.15);
+    --warning:         #FBBF24;
+    --warning-bg:      rgba(251,191,36,0.06);
+    --warning-border:  rgba(251,191,36,0.15);
+    --error:           #F87171;
+    --error-bg:        rgba(248,113,113,0.06);
+    --error-border:    rgba(248,113,113,0.15);
+
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+    --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: var(--font);
+    color: var(--text-secondary);
+    background: var(--bg);
+    font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100dvh;
+    overflow-x: hidden;
+}
+
+/* ─── Ambient background (themed via JS) ─── */
+.ambient {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 600px; pointer-events: none; z-index: 0;
+}
+
+/* ─── Nav ─── */
+.nav {
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+.nav-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; }
 .nav-left { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.nav-icon { width: 22px; height: 22px; }
-.nav-wordmark { font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 1.5px; }
-.nav-wordmark span { font-weight: 400; color: var(--text-tertiary); letter-spacing: 1px; }
-.nav-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; font-weight: 600; }
+.nav-icon { width: 24px; height: 24px; }
+.nav-wordmark { font-weight: 800; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; }
+.nav-wordmark span { font-weight: 500; color: var(--text-tertiary); letter-spacing: 1.2px; }
+.nav-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; }
 .nav-badge.valid { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
 .nav-badge.invalid { color: var(--error); background: var(--error-bg); border: 1px solid var(--error-border); }
 
-.header { text-align: center; padding: 44px 0 28px; }
-.header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-.header-title { font-size: 26px; font-weight: 700; color: var(--text-primary); }
+/* ─── Page ─── */
+.page { max-width: 600px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
-.status-card { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: var(--radius); margin-bottom: 24px; border: 1px solid; }
-.status-card.valid { background: var(--success-bg); border-color: var(--success-border); }
-.status-card.invalid { background: var(--error-bg); border-color: var(--error-border); }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
-.valid .status-dot { background: var(--success); box-shadow: 0 0 6px rgba(63,185,80,0.4); }
-.invalid .status-dot { background: var(--error); box-shadow: 0 0 6px rgba(248,81,73,0.4); }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-.status-text { font-family: var(--mono); font-size: 13px; font-weight: 500; }
-.valid .status-text { color: var(--success); }
-.invalid .status-text { color: var(--error); }
+/* ─── Hero ─── */
+.hero { text-align: center; padding: 48px 0 36px; }
+.hero-eyebrow { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.5s 0.1s ease-out forwards; }
+.trust-ring-container { position: relative; width: 180px; height: 180px; margin: 0 auto 24px; opacity: 0; animation: scaleIn 0.6s 0.2s ease-out forwards; }
+.trust-ring-bg { position: absolute; inset: 0; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 0 40px var(--accent-glow); }
+.trust-ring-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.trust-ring-track { fill: none; stroke: var(--border); stroke-width: 4; }
+.trust-ring-fill { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 502; stroke-dashoffset: 502; transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.trust-ring-fill.high { stroke: url(#trustGradientHigh); }
+.trust-ring-fill.mid { stroke: url(#trustGradientMid); }
+.trust-ring-fill.low { stroke: var(--error); }
+.trust-ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.trust-score-value { font-family: var(--mono); font-size: 42px; font-weight: 700; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
+.trust-score-label { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+.hero-chain-info { font-family: var(--mono); font-size: 13px; color: var(--text-tertiary); opacity: 0; animation: fadeUp 0.5s 0.4s ease-out forwards; }
+.hero-chain-info .sep { color: var(--border-light); margin: 0 8px; }
+.hero-tagline { font-size: 17px; font-weight: 600; color: var(--text-primary); margin-top: 16px; opacity: 0; animation: fadeUp 0.5s 0.5s ease-out forwards; }
+.hero-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 6px; max-width: 380px; margin-left: auto; margin-right: auto; line-height: 1.6; opacity: 0; animation: fadeUp 0.5s 0.6s ease-out forwards; }
 
-.sender-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; text-align: center; }
-.sender-icon { margin: 0 auto 14px; width: 52px; height: 52px; }
-.sender-name { font-size: 22px; font-weight: 700; color: var(--text-primary); }
-.sender-org { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; font-family: var(--mono); }
-.sender-tagline { font-size: 15px; font-style: italic; color: var(--text-secondary); margin-top: 12px; letter-spacing: 0.2px; }
-.sender-method-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 6px 14px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 20px; font-family: var(--mono); font-size: 12px; color: var(--text-secondary); }
-
-.modalities-section { margin-bottom: 24px; }
-.section-label { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
-.modalities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.mod-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.mod-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.mod-dot.on { background: var(--success); box-shadow: 0 0 4px rgba(63,185,80,0.3); }
-.mod-dot.off { background: var(--text-quaternary); }
-.mod-text { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-.mod-sub { font-size: 11px; color: var(--text-tertiary); font-family: var(--mono); }
-
-.chain-section { margin-bottom: 24px; }
-.chain-container { position: relative; padding-left: 22px; }
-.chain-container::before { content: ''; position: absolute; left: 6px; top: 18px; bottom: 18px; width: 1.5px; background: linear-gradient(to bottom, var(--purple), var(--border)); }
-.chain-node { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; opacity: 0; animation: fadeIn 0.3s ease-out forwards; }
-.chain-node:nth-child(1) { animation-delay: 0.08s; }
-.chain-node:nth-child(2) { animation-delay: 0.18s; }
-.chain-node:nth-child(3) { animation-delay: 0.28s; }
-.chain-node:nth-child(4) { animation-delay: 0.38s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-.chain-node.root { border-color: var(--purple-border); }
-.chain-node::before { content: ''; position: absolute; left: -19px; top: 18px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--purple); background: var(--bg); }
-.chain-node.root::before { background: var(--purple); box-shadow: 0 0 6px rgba(108,92,231,0.4); }
-.node-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.node-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-.node-badge { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
-.node-badge.active { background: var(--success-bg); color: var(--success); }
-.node-badge.revoked { background: var(--error-bg); color: var(--error); }
-.node-badge.expired { background: var(--warning-bg); color: var(--warning); }
-.node-meta { display: flex; gap: 14px; font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-bottom: 6px; }
-.trust-row { display: flex; align-items: center; gap: 8px; }
-.trust-lbl { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; min-width: 32px; }
-.trust-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-.trust-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease-out; }
-.trust-fill.high { background: var(--success); }
-.trust-fill.mid { background: var(--warning); }
-.trust-fill.low { background: var(--error); }
-.trust-val { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 34px; text-align: right; }
-.scope-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
-.scope-tag { font-family: var(--mono); font-size: 11px; padding: 3px 7px; border-radius: 3px; border: 1px solid var(--border); color: var(--text-tertiary); }
-.scope-tag.action { color: var(--purple); border-color: var(--purple-border); background: var(--purple-bg); }
-.scope-tag.excluded { color: var(--error); text-decoration: line-through; border-color: var(--error-border); }
-.narrowing { display: flex; align-items: center; gap: 5px; padding: 1px 0 1px 4px; margin-bottom: 8px; font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
-.narrowing-arrow { color: var(--purple); }
-
-.claims-section { margin-bottom: 24px; }
-.claims-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.claim-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
-.claim-row:last-child { border-bottom: none; }
-.claim-num { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--purple); background: var(--purple-bg); border: 1px solid var(--purple-border); padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
-.claim-desc { font-size: 13px; color: var(--text-secondary); flex: 1; }
-.claim-check { color: var(--success); font-family: var(--mono); font-size: 13px; }
-
-.inspector-toggle { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 1.5px; text-transform: uppercase; transition: background 0.15s; }
-.inspector-toggle:hover { background: var(--surface-raised); }
-.inspector-chevron { transition: transform 0.2s; font-size: 10px; }
-.inspector-toggle.open { border-radius: var(--radius) var(--radius) 0 0; }
-.inspector-toggle.open .inspector-chevron { transform: rotate(180deg); }
-.inspector-body { display: none; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 14px; margin-bottom: 24px; }
-.inspector-body.open { display: block; }
-.token-block { font-family: var(--mono); font-size: 11px; line-height: 1.7; color: var(--text-tertiary); background: var(--bg); padding: 12px; border-radius: 4px; border: 1px solid var(--border); max-height: 260px; overflow-y: auto; word-break: break-all; }
-.tk-label { color: var(--purple); font-weight: 600; }
-.tk-value { color: var(--text-secondary); }
-.tk-dim { color: var(--text-quaternary); }
-
-.vouch-section { text-align: center; padding: 24px 0 12px; }
-.vouch-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--purple); color: #fff; font-family: var(--font); font-weight: 600; font-size: 15px; padding: 12px 28px; border-radius: var(--radius); border: none; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; }
-.vouch-btn:hover { background: var(--purple-dim); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,92,231,0.25); }
+/* ─── Vouch CTA ─── */
+.vouch-cta { background: linear-gradient(135deg, var(--accent-bg), var(--teal-bg)); border: 1px solid var(--accent-border); border-radius: var(--radius); padding: 28px 24px; text-align: center; margin-bottom: 32px; position: relative; overflow: hidden; opacity: 0; animation: fadeUp 0.5s 0.7s ease-out forwards; }
+.vouch-cta::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-light), transparent); opacity: 0.4; }
+.vouch-cta-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.vouch-cta-sub { font-size: 13px; color: var(--text-tertiary); margin-bottom: 18px; max-width: 360px; margin-left: auto; margin-right: auto; }
+.vouch-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; font-family: var(--font); font-weight: 700; font-size: 15px; padding: 14px 36px; border-radius: 50px; border: none; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; box-shadow: 0 4px 20px var(--accent-glow); min-height: 48px; }
+.vouch-btn:hover { background: var(--accent-dim); transform: translateY(-2px); box-shadow: 0 6px 28px var(--accent-glow); }
+.vouch-btn:active { transform: translateY(0); }
 .vouch-btn:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
-.vouch-help { font-size: 13px; color: var(--text-tertiary); margin-top: 14px; max-width: 380px; margin-left: auto; margin-right: auto; line-height: 1.6; }
-.vouch-flow { margin-top: 20px; }
-.vouch-tagline { font-size: 18px; font-style: italic; color: var(--text-primary); margin-bottom: 6px; }
-.vouch-confirm-text { font-size: 13px; color: var(--text-tertiary); font-family: var(--mono); }
+.vouch-counter { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.vouch-dots { display: flex; gap: 3px; }
+.vouch-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0.3; }
+.vouch-dot.filled { opacity: 1; box-shadow: 0 0 4px var(--accent-glow); }
 
-/* Vouch flow steps */
-.vouch-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-top: 16px; text-align: center; animation: fadeIn 0.25s ease-out; }
-.vouch-step-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
-.vouch-input { width: 100%; max-width: 320px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none; transition: border-color 0.15s; }
-.vouch-input:focus { border-color: var(--purple); }
-.vouch-input::placeholder { color: var(--text-quaternary); }
-.vouch-submit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--purple); color: #fff; font-family: var(--font); font-weight: 600; font-size: 14px; padding: 10px 24px; border-radius: 6px; border: none; cursor: pointer; margin-top: 12px; transition: all 0.15s; min-width: 140px; min-height: 44px; }
-.vouch-submit:hover { background: var(--purple-dim); }
+/* ─── Vouch flow ─── */
+.vouch-flow { margin-top: 20px; }
+.vouch-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 24px; text-align: center; animation: fadeUp 0.3s ease-out; }
+.vouch-step-label { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; }
+.vouch-input { width: 100%; max-width: 320px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 13px 16px; font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.vouch-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.vouch-input::placeholder { color: var(--text-muted); }
+.vouch-submit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--accent); color: #fff; font-family: var(--font); font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 50px; border: none; cursor: pointer; margin-top: 14px; transition: all 0.2s; min-width: 140px; min-height: 46px; }
+.vouch-submit:hover { background: var(--accent-dim); }
 .vouch-submit:disabled { opacity: 0.5; cursor: default; }
 .vouch-error { font-size: 13px; color: var(--error); margin-top: 10px; font-family: var(--mono); }
-.vouch-note { font-size: 12px; color: var(--text-quaternary); margin-top: 10px; }
-
-/* OTP input */
-.otp-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 4px; }
-.otp-digit { width: 44px; height: 52px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--text-primary); outline: none; transition: border-color 0.15s; }
-.otp-digit:focus { border-color: var(--purple); box-shadow: 0 0 0 2px rgba(108,92,231,0.15); }
-.otp-resend { font-size: 12px; color: var(--text-quaternary); margin-top: 10px; cursor: pointer; background: none; border: none; font-family: var(--mono); }
+.vouch-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+.otp-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+.otp-digit { width: 46px; height: 54px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xs); text-align: center; font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--text-primary); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.otp-digit:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.otp-resend { font-size: 12px; color: var(--text-muted); margin-top: 10px; cursor: pointer; background: none; border: none; font-family: var(--mono); transition: color 0.15s; }
 .otp-resend:hover { color: var(--text-tertiary); }
 
-/* Success state */
-.vouch-success { padding: 28px; text-align: center; animation: fadeIn 0.3s ease-out; }
-.vouch-success-icon { width: 64px; height: 64px; margin: 0 auto 16px; }
-.vouch-success-icon img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--success-border); }
+/* Vouch success */
+.vouch-success { padding: 32px; text-align: center; animation: fadeUp 0.4s ease-out; }
+.vouch-success-ring { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: var(--success-bg); border: 2px solid var(--success-border); display: flex; align-items: center; justify-content: center; animation: scaleIn 0.4s ease-out; }
+.vouch-success-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.vouch-success-sub { font-size: 13px; color: var(--text-tertiary); font-family: var(--mono); }
+.vouch-success-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 8px 16px; background: var(--accent-bg); border: 1px solid var(--accent-border); border-radius: 20px; font-family: var(--mono); font-size: 12px; color: var(--accent-light); }
 
-/* Trust graph summary */
-.trust-graph-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; }
-.trust-graph-count { font-family: var(--mono); font-size: 13px; color: var(--text-secondary); }
-.trust-graph-count strong { color: var(--teal); font-weight: 600; }
-.trust-graph-dots { display: flex; gap: 4px; align-items: center; }
-.trust-graph-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); opacity: 0.7; }
-.trust-graph-dot.empty { background: var(--border); opacity: 0.4; }
-.trust-graph-label { font-size: 11px; color: var(--text-quaternary); font-family: var(--mono); margin-left: auto; }
+/* ─── Section cards ─── */
+.section { margin-bottom: 20px; opacity: 0; animation: fadeUp 0.5s ease-out forwards; }
+.section:nth-child(1) { animation-delay: 0.8s; }
+.section:nth-child(2) { animation-delay: 0.9s; }
+.section:nth-child(3) { animation-delay: 1.0s; }
+.section:nth-child(4) { animation-delay: 1.1s; }
+.section-label { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-left: 2px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 
-/* Post-vouch actions */
-.vouch-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
-.vouch-action-btn { font-family: var(--mono); font-size: 12px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
-.vouch-action-btn:hover { border-color: var(--purple); color: var(--text-primary); }
-.vouch-action-btn.copied { border-color: var(--success); color: var(--success); }
+/* ─── Sender card ─── */
+.sender-card { display: flex; align-items: center; gap: 16px; padding: 20px; }
+.sender-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sender-info { flex: 1; min-width: 0; }
+.sender-name { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.sender-meta { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.sender-method { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: var(--accent-bg); border: 1px solid var(--accent-border); border-radius: 20px; font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--accent-light); margin-top: 8px; }
 
-/* Scenarios */
-/* Use cases dropdown */
-.scenarios-section { margin-bottom: 24px; }
+/* ─── Modalities ─── */
+.modalities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.mod-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface); }
+.mod-item:nth-child(odd):last-child { grid-column: 1 / -1; }
+.mod-indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mod-indicator.on { background: var(--success); box-shadow: 0 0 6px var(--success-border); animation: modPulse 2.5s ease-in-out infinite; }
+.mod-indicator.off { background: var(--text-muted); opacity: 0.4; }
+@keyframes modPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.mod-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.mod-sub { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+
+/* ─── Chain ─── */
+.chain-container { position: relative; padding: 20px; }
+.chain-line { position: absolute; left: 36px; top: 40px; bottom: 40px; width: 2px; background: linear-gradient(to bottom, var(--accent), var(--border)); border-radius: 1px; }
+.chain-node { position: relative; padding-left: 40px; margin-bottom: 16px; opacity: 0; animation: fadeRight 0.4s ease-out forwards; }
+.chain-node:last-child { margin-bottom: 0; }
+.chain-node:nth-child(2) { animation-delay: 0.1s; }
+.chain-node:nth-child(3) { animation-delay: 0.2s; }
+.chain-node:nth-child(4) { animation-delay: 0.3s; }
+.chain-node:nth-child(5) { animation-delay: 0.4s; }
+.chain-dot { position: absolute; left: 0; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--accent); background: var(--bg); z-index: 2; }
+.chain-dot.root { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.chain-node-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.chain-node.root .chain-node-card { border-color: var(--accent-border); background: linear-gradient(135deg, var(--accent-bg), transparent); }
+.chain-node-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.chain-node-label { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.chain-node-badge { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.chain-node-badge.active { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+.chain-node-badge.revoked { background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); }
+.chain-node-badge.expired { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+.chain-node-meta { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.chain-trust-bar { display: flex; align-items: center; gap: 8px; }
+.chain-trust-label { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; min-width: 32px; }
+.chain-trust-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.chain-trust-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+.chain-trust-fill.high { background: linear-gradient(90deg, var(--success-dim), var(--success)); }
+.chain-trust-fill.mid { background: linear-gradient(90deg, var(--warning), #F59E0B); }
+.chain-trust-fill.low { background: var(--error); }
+.chain-trust-val { font-family: var(--mono); font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; }
+.chain-scopes { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+.scope-tag { font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); color: var(--text-muted); letter-spacing: 0.3px; }
+.scope-tag.action { color: var(--accent-light); border-color: var(--accent-border); background: var(--accent-bg); }
+.scope-tag.excluded { color: var(--error); text-decoration: line-through; border-color: var(--error-border); }
+.chain-narrowing { display: flex; align-items: center; gap: 6px; padding: 4px 0 4px 40px; margin-bottom: 8px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.narrowing-arrow { color: var(--accent-light); }
+
+/* ─── Collapse sections ─── */
+.collapse-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; transition: background 0.15s, border-color 0.15s; }
+.collapse-trigger:hover { background: var(--surface-raised); border-color: var(--border-light); }
+.collapse-trigger.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
+.collapse-chevron { font-size: 10px; transition: transform 0.25s; }
+.collapse-trigger.open .collapse-chevron { transform: rotate(180deg); }
+.collapse-body { display: none; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 16px 20px; }
+.collapse-body.open { display: block; }
+
+/* Patent Showcase */
+.adaptive-modality-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; font-family: var(--mono); font-size: 12px; }
+.adaptive-modality-bar.streamlined { background: linear-gradient(135deg, var(--success-bg), var(--teal-bg)); border: 1px solid var(--success-border); border-bottom: none; }
+.adaptive-modality-bar.standard { background: var(--surface); border: 1px solid var(--border); border-bottom: none; }
+.adaptive-modality-bar.enhanced { background: linear-gradient(135deg, var(--warning-bg, rgba(234,179,8,0.08)), var(--surface)); border: 1px solid var(--warning, #eab308); border-bottom: none; }
+.adaptive-modality-bar.maximum { background: linear-gradient(135deg, var(--error-bg, rgba(239,68,68,0.08)), var(--surface)); border: 1px solid var(--error); border-bottom: none; }
+.adaptive-label { display: flex; align-items: center; gap: 8px; }
+.adaptive-label .dot { width: 8px; height: 8px; border-radius: 50%; }
+.adaptive-label .dot.streamlined { background: var(--success); }
+.adaptive-label .dot.standard { background: var(--accent); }
+.adaptive-label .dot.enhanced { background: var(--warning, #eab308); }
+.adaptive-label .dot.maximum { background: var(--error); }
+.adaptive-label span { color: var(--text-secondary); }
+.adaptive-override { font-size: 11px; color: var(--accent-light); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.adaptive-override:hover { color: var(--accent); }
+.mod-item.can-skip { opacity: 0.35; }
+.mod-item.recommended { opacity: 0.7; }
+.mod-item.recommended .mod-indicator { border-color: var(--accent-border); }
+.patent-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; transition: background 0.15s, border-color 0.15s; }
+.patent-trigger:hover { background: var(--surface-raised); border-color: var(--border-light); }
+.patent-trigger.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
+.patent-trigger .patent-stats { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.patent-trigger .patent-stats .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
+.patent-trigger .patent-stats .ref-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); opacity: 0.5; display: inline-block; }
+.patent-body { display: none; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 12px; }
+.patent-body.open { display: block; }
+.patent-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.patent-tile { padding: 12px 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); position: relative; overflow: hidden; transition: border-color 0.2s; }
+.patent-tile.demonstrated { border-color: var(--accent-border); }
+.patent-tile.demonstrated::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--teal)); }
+.patent-tile.referenced { opacity: 0.55; }
+.patent-tile-claims { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.patent-tile.demonstrated .patent-tile-claims { color: var(--accent-light); }
+.patent-tile.referenced .patent-tile-claims { color: var(--text-muted); }
+.patent-tile-badge { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.patent-tile.demonstrated .patent-tile-badge { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+.patent-tile.referenced .patent-tile-badge { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+.patent-tile-desc { font-size: 10px; color: var(--text-tertiary); line-height: 1.4; }
+.patent-tile.demonstrated .patent-tile-desc { color: var(--text-secondary); }
+@media (max-width: 480px) { .patent-grid { grid-template-columns: 1fr 1fr; } }
+
+/* Token inspector */
+.token-block { font-family: var(--mono); font-size: 11px; line-height: 1.8; color: var(--text-muted); background: var(--bg); padding: 14px; border-radius: var(--radius-xs); border: 1px solid var(--border); max-height: 280px; overflow-y: auto; word-break: break-all; }
+.tk-label { color: var(--accent-light); font-weight: 700; }
+.tk-value { color: var(--text-secondary); }
+.tk-dim { color: var(--text-muted); }
+
+/* Use cases */
 .usecase-select-wrap { position: relative; margin-bottom: 10px; }
-.usecase-select { width: 100%; padding: 12px 40px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-primary); font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; transition: border-color 0.15s; }
-.usecase-select:focus { border-color: var(--purple); }
-.usecase-chevron { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-tertiary); font-size: 10px; }
-.usecase-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; animation: fadeIn 0.2s ease-out; }
-.usecase-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-.usecase-body a { color: var(--teal); text-decoration: none; }
-.usecase-body a:hover { text-decoration: underline; }
+.usecase-select { width: 100%; padding: 13px 40px 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-primary); font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; transition: border-color 0.15s; }
+.usecase-select:focus { border-color: var(--accent); }
+.usecase-chevron { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); font-size: 10px; }
+.usecase-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; animation: fadeUp 0.2s ease-out; }
+.usecase-body { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+.usecase-body a { color: var(--teal); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+.usecase-body a:hover { color: var(--teal-dim); text-decoration: underline; }
 
-.footer { text-align: center; padding: 24px 0 40px; border-top: 1px solid var(--border); margin-top: 12px; }
-.footer-line { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-bottom: 3px; }
+/* Footer */
+.footer { text-align: center; padding: 32px 0 48px; border-top: 1px solid var(--border); margin-top: 20px; }
+.footer-line { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .footer-line a { color: var(--teal); text-decoration: none; }
+.footer-tagline { font-size: 13px; font-style: italic; color: var(--text-tertiary); margin-top: 12px; }
 
-.loading { text-align: center; padding: 80px 20px; }
-.spinner { width: 26px; height: 26px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+/* Loading / error */
+.loading { text-align: center; padding: 100px 20px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: var(--text-tertiary); }
-.error-card { background: var(--surface); border: 1px solid var(--error-border); border-radius: var(--radius); padding: 36px; text-align: center; }
-.error-title { font-size: 17px; font-weight: 600; color: var(--error); margin-bottom: 8px; }
-.error-msg { font-size: 13px; color: var(--text-tertiary); line-height: 1.6; }
+.loading-text { font-family: var(--mono); font-size: 13px; color: var(--text-muted); }
+.error-card { background: var(--surface); border: 1px solid var(--error-border); border-radius: var(--radius); padding: 48px 24px; text-align: center; margin-top: 40px; }
+.error-title { font-size: 18px; font-weight: 700; color: var(--error); margin-bottom: 8px; }
+.error-msg { font-size: 14px; color: var(--text-tertiary); line-height: 1.6; }
 .error-msg a { color: var(--teal); text-decoration: none; }
+.warnings-bar { padding: 12px 16px; background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius-sm); margin-bottom: 20px; }
+.warning-item { font-size: 12px; color: var(--warning); font-family: var(--mono); display: flex; align-items: center; gap: 6px; }
 
-/* Scroll indicator */
-.scroll-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.scroll-hint.visible { opacity: 1; }
-.scroll-hint svg { animation: bounce 1.5s infinite; }
-@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+/* Theme selector (visible in demo mode) */
+.theme-selector { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: none; }
+.theme-selector.show { display: flex; }
+.theme-selector select { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 8px 12px; color: var(--text-primary); font-family: var(--mono); font-size: 12px; outline: none; cursor: pointer; }
 
-@media (max-width: 420px) { .modalities-grid { grid-template-columns: 1fr; } .node-meta { flex-direction: column; gap: 1px; } }
+/* ─── Animations ─── */
+/* Trust State Machine */
+.state-machine { margin-top: 24px; }
+.state-machine-label { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; text-align: center; }
+.state-track { display: flex; align-items: center; gap: 0; position: relative; padding: 0 4px; }
+.state-node { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 2; cursor: default; }
+.state-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; transition: all 0.3s; border: 2px solid var(--border); background: var(--surface); color: var(--text-muted); }
+.state-dot.completed { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+.state-dot.current { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent-glow); animation: statePulse 2s ease-in-out infinite; }
+.state-dot.mutual { background: linear-gradient(135deg, var(--accent), var(--teal)); border-color: var(--teal); color: #fff; }
+.state-name { font-family: var(--mono); font-size: 9px; color: var(--text-muted); margin-top: 6px; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+.state-node.completed .state-name { color: var(--success); }
+.state-node.current .state-name { color: var(--accent-light); font-weight: 600; }
+.state-connector { flex: 1; height: 2px; background: var(--border); min-width: 8px; z-index: 1; }
+.state-connector.completed { background: var(--success); }
+.state-connector.active { background: linear-gradient(90deg, var(--success), var(--accent)); }
+.state-desc { font-size: 12px; color: var(--text-tertiary); text-align: center; margin-top: 12px; font-style: italic; }
+@keyframes statePulse { 0%,100% { box-shadow: 0 0 12px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } }
+.vouch-back-cta { margin-top: 20px; padding: 20px; background: linear-gradient(135deg, var(--accent-bg), var(--teal-bg)); border: 1px solid var(--accent-border); border-radius: var(--radius-sm); text-align: center; animation: fadeUp 0.4s 0.3s ease-out backwards; }
+.vouch-back-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.vouch-back-sub { font-size: 13px; color: var(--text-tertiary); margin-bottom: 14px; }
+.vouch-back-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; font-family: var(--font); font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 50px; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; min-height: 46px; }
+.vouch-back-btn:hover { background: var(--accent-dim); transform: translateY(-1px); }
+@media (max-width: 480px) { .state-name { font-size: 8px; } .state-dot { width: 24px; height: 24px; font-size: 10px; } }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeRight { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ─── Responsive ─── */
+@media (max-width: 480px) {
+    .page { padding: 0 16px; }
+    .nav-inner { padding: 0 16px; }
+    .modalities-grid { grid-template-columns: 1fr; }
+    .trust-ring-container { width: 150px; height: 150px; }
+    .trust-score-value { font-size: 36px; }
+    .sender-card { flex-direction: column; text-align: center; gap: 12px; }
+    .sender-meta { justify-content: center; }
+    .otp-digit { width: 40px; height: 48px; font-size: 20px; }
+}
 </style>
 </head>
 <body>
 
-<div class="nav"><div class="nav-inner">
+<div class="ambient"></div>
+
+<!-- SVG defs — gradient stops updated by theme system -->
+<svg width="0" height="0" style="position:absolute">
+    <defs>
+        <linearGradient id="trustGradientHigh" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#7C6BF0" id="trustGradFrom"/>
+            <stop offset="100%" stop-color="#2DD4BF" id="trustGradTo"/>
+        </linearGradient>
+        <linearGradient id="trustGradientMid" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FBBF24"/>
+            <stop offset="100%" stop-color="#F59E0B"/>
+        </linearGradient>
+    </defs>
+</svg>
+
+<nav class="nav"><div class="nav-inner">
     <a href="https://vacprotocol.org" class="nav-left">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" fill="none" stroke="#6C5CE7" stroke-width="1.2" stroke-dasharray="4 2"/>
-            <circle cx="12" cy="12" r="6" fill="none" stroke="#00CEC9" stroke-width="0.8"/>
-            <circle cx="12" cy="12" r="2.5" fill="#6C5CE7"/>
-            <circle cx="12" cy="12" r="1" fill="#00CEC9"/>
-            <line x1="14.5" y1="12" x2="18" y2="12" stroke="#00CEC9" stroke-width="0.6"/>
-            <line x1="6" y1="12" x2="9.5" y2="12" stroke="#00CEC9" stroke-width="0.6"/>
-            <line x1="12" y1="6" x2="12" y2="9.5" stroke="#00CEC9" stroke-width="0.6"/>
-            <line x1="12" y1="14.5" x2="12" y2="18" stroke="#00CEC9" stroke-width="0.6"/>
-            <circle cx="18" cy="12" r="1.2" fill="#00CEC9"/>
-            <circle cx="6" cy="12" r="1.2" fill="#00CEC9"/>
-            <circle cx="12" cy="6" r="1.2" fill="#00CEC9"/>
-            <circle cx="12" cy="18" r="1.2" fill="#00CEC9"/>
+            <circle cx="12" cy="12" r="10" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="4 2"/>
+            <circle cx="12" cy="12" r="6" fill="none" stroke="var(--teal)" stroke-width="0.8"/>
+            <circle cx="12" cy="12" r="2.5" fill="var(--accent)"/>
+            <circle cx="12" cy="12" r="1" fill="var(--teal)"/>
+            <line x1="14.5" y1="12" x2="18" y2="12" stroke="var(--teal)" stroke-width="0.6"/>
+            <line x1="6" y1="12" x2="9.5" y2="12" stroke="var(--teal)" stroke-width="0.6"/>
+            <line x1="12" y1="6" x2="12" y2="9.5" stroke="var(--teal)" stroke-width="0.6"/>
+            <line x1="12" y1="14.5" x2="12" y2="18" stroke="var(--teal)" stroke-width="0.6"/>
+            <circle cx="18" cy="12" r="1.2" fill="var(--teal)"/>
+            <circle cx="6" cy="12" r="1.2" fill="var(--teal)"/>
+            <circle cx="12" cy="6" r="1.2" fill="var(--teal)"/>
+            <circle cx="12" cy="18" r="1.2" fill="var(--teal)"/>
         </svg>
         <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
     </a>
-    <div class="nav-badge valid" id="nav-badge">CHAIN VALID</div>
-</div></div>
+    <div class="nav-badge valid" id="nav-badge">VERIFIED</div>
+</div></nav>
 
 <div class="page">
-    <div class="header">
-        <div class="header-eyebrow">Verified Authority Chain</div>
-        <h1 class="header-title">Delegation Chain Verification</h1>
-    </div>
-    <div id="app"><div class="loading"><div class="spinner"></div><div class="loading-text">Verifying chain integrity…</div></div></div>
+    <div id="app"><div class="loading"><div class="spinner"></div><div class="loading-text">Verifying chain integrity</div></div></div>
     <div class="footer">
-        <div class="footer-line"><a href="https://vacprotocol.org">vacprotocol.org</a> · Ed25519 + JWT · Protocol v0.1.0</div>
-        <div class="footer-line">285 patent claims · 6 provisional filings · Violet Shores Pty Ltd</div>
+        <div class="footer-line"><a href="https://vacprotocol.org">vacprotocol.org</a></div>
+        <div class="footer-line">Ed25519 + JWT · Protocol v0.1.0 · 285 patent claims</div>
+        <div class="footer-tagline" id="footerTagline">Math so neither party has to rely on trust alone.</div>
     </div>
 </div>
 
-<div class="scroll-hint" id="scroll-hint">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8B949E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+<!-- Theme selector (demo mode only — shown when no JTI in URL) -->
+<div class="theme-selector" id="themeSelector">
+    <select id="themePicker" onchange="switchTheme(this.value)">
+        <option value="default">Default (Investor)</option>
+        <option value="nist">NIST / Federal</option>
+        <option value="enterprise">Enterprise</option>
+        <option value="defense">Defense</option>
+    </select>
 </div>
+
+<!-- Theme system — loaded before main script -->
+<script src="vac-themes.js"></script>
 
 <script>
 const API_BASE = window.VAC_API_BASE || 'https://vac-system-production.up.railway.app';
-
-// Scroll indicator — show if page overflows, hide once user scrolls
-const hint = document.getElementById('scroll-hint');
-function checkScroll() {
-    if (document.documentElement.scrollHeight > window.innerHeight + 40) {
-        if (window.scrollY < 60) { hint.classList.add('visible'); }
-        else { hint.classList.remove('visible'); }
-    } else { hint.classList.remove('visible'); }
-}
-window.addEventListener('scroll', checkScroll, { passive: true });
-window.addEventListener('resize', checkScroll);
-setTimeout(checkScroll, 500);
 
 function getJTI() {
     const m = window.location.pathname.match(/\/vat\/verify\/(.+)/);
@@ -289,31 +420,27 @@ function getJTI() {
     const p = new URLSearchParams(window.location.search);
     return p.get('jti') || p.get('token');
 }
+
 async function fetchChain(jti) {
     try { const r = await fetch(`${API_BASE}/v1/vat/chain/${jti}`); if (!r.ok) throw 0; return await r.json(); } catch { return null; }
 }
 async function fetchVerif(jti) {
     try { const r = await fetch(`${API_BASE}/v1/vat/verify/${jti}`); if (!r.ok) return null; return await r.json(); } catch { return null; }
 }
-async function fetchVouches(jti) {
-    try { const r = await fetch(`${API_BASE}/v1/vat/vouches/${jti}`); if (!r.ok) return {count:0,vouches:[]}; return await r.json(); } catch { return {count:0,vouches:[]}; }
-}
 
 const MODS = {
     face_liveness:      { label: 'Face Liveness',       sub: 'Gemini visual analysis' },
-    deepfake_detection: { label: 'Deepfake Detection',  sub: 'AI generation analysis' },
+    deepfake_detection: { label: 'Deepfake Detection',  sub: 'AI generation scoring' },
     face_consistency:   { label: 'Face Consistency',     sub: 'Reference matching' },
     voice_biometric:    { label: 'Voice Biometric',      sub: 'Deepgram + lip sync' },
-    challenge_response: { label: 'Challenge-Response',   sub: 'Anti-replay protocol' },
+    challenge_response: { label: 'Challenge\u2013Response',   sub: 'Anti-replay protocol' },
     geolocation:        { label: 'Geolocation',          sub: 'Spatial verification' },
 };
 
 function modsForMethod(m) {
     return ({
-        'multi_modal_full': ['face_liveness','deepfake_detection','face_consistency','voice_biometric','challenge_response','geolocation'],
-        'multi_modal_plus_behavioural': ['face_liveness','deepfake_detection','face_consistency','voice_biometric','challenge_response','geolocation'],
-        'multi_modal_3': ['face_liveness','deepfake_detection','voice_biometric','challenge_response','geolocation'],
         'multi_modal': ['face_liveness','deepfake_detection','voice_biometric','challenge_response','geolocation'],
+        'multi_modal_plus_behavioural': ['face_liveness','deepfake_detection','face_consistency','voice_biometric','challenge_response','geolocation'],
         'facial_geometry': ['face_liveness','deepfake_detection','face_consistency'],
         'voice_pattern': ['voice_biometric'],
         'single_modal': ['face_liveness'],
@@ -325,138 +452,214 @@ function fmtMethod(m) {
     return ({ multi_modal:'Multi-Modal Biometric', multi_modal_plus_behavioural:'Multi-Modal + Behavioural', facial_geometry:'Facial Geometry', voice_pattern:'Voice Pattern', single_modal:'Single Modal', simulated:'Simulated (Demo)' })[m] || m;
 }
 
-const LOGO_SVG = `<svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="26" cy="26" r="22" fill="none" stroke="#6C5CE7" stroke-width="1.8" stroke-dasharray="7 3.5"/>
-    <circle cx="26" cy="26" r="14" fill="none" stroke="#00CEC9" stroke-width="1.2"/>
-    <circle cx="26" cy="26" r="5.5" fill="#6C5CE7"/>
-    <circle cx="26" cy="26" r="2.2" fill="#00CEC9"/>
-    <line x1="31.5" y1="26" x2="40" y2="26" stroke="#00CEC9" stroke-width="0.9"/>
-    <line x1="12" y1="26" x2="20.5" y2="26" stroke="#00CEC9" stroke-width="0.9"/>
-    <line x1="26" y1="12" x2="26" y2="20.5" stroke="#00CEC9" stroke-width="0.9"/>
-    <line x1="26" y1="31.5" x2="26" y2="40" stroke="#00CEC9" stroke-width="0.9"/>
-    <circle cx="40" cy="26" r="2.5" fill="#00CEC9"/>
-    <circle cx="12" cy="26" r="2.5" fill="#00CEC9"/>
-    <circle cx="26" cy="12" r="2.5" fill="#00CEC9"/>
-    <circle cx="26" cy="40" r="2.5" fill="#00CEC9"/>
-</svg>`;
+/** Switch theme at runtime */
+function switchTheme(id) {
+    if (typeof VACTheme !== 'undefined') {
+        const theme = VACTheme.apply(id);
+        // Update footer tagline
+        const ft = document.getElementById('footerTagline');
+        if (ft && theme.meta) ft.textContent = theme.meta.tagline;
+    }
+}
 
-function render(data, verif, vouchData) {
+function render(data, verif) {
     const app = document.getElementById('app');
-    if (!data) { app.innerHTML = '<div class="error-card"><div class="error-title">Token Not Found</div><div class="error-msg">This verification link may have expired or been revoked.<br><br><a href="https://vacprotocol.org">Learn about VAC Protocol \u2192</a></div></div>'; return; }
+    const theme = (typeof VACTheme !== 'undefined') ? VACTheme.current() : { meta: {} };
+
+    if (!data) {
+        app.innerHTML = '<div class="error-card"><div class="error-title">Token Not Found</div><div class="error-msg">This verification link may have expired or been revoked.<br><br><a href="https://vacprotocol.org">Learn about VAC Protocol \u2192</a></div></div>';
+        return;
+    }
 
     const { chain_display: cd, claim_mapping: cm, verification: v } = data;
     const ok = v.valid;
     const nb = document.getElementById('nav-badge');
-    const vc = vouchData ? vouchData.count : 0;
-    if (!ok) { nb.textContent = 'CHAIN INVALID'; nb.className = 'nav-badge invalid'; }
-    else if (vc > 0) { nb.textContent = `VOUCHED · ${vc}`; nb.className = 'nav-badge valid'; }
-    else { nb.textContent = 'CHAIN VALID'; nb.className = 'nav-badge valid'; }
+    if (!ok) { nb.textContent = 'INVALID'; nb.className = 'nav-badge invalid'; }
 
     const root = cd.find(n => n.is_root);
     const method = root ? root.verification_method : 'multi_modal';
     const active = modsForMethod(method);
+    const trustPct = (v.effective_trust_score * 100).toFixed(1);
+    const trustCls = v.effective_trust_score > 0.7 ? 'high' : v.effective_trust_score > 0.4 ? 'mid' : 'low';
+    const trustColor = v.effective_trust_score > 0.7 ? 'var(--success)' : v.effective_trust_score > 0.4 ? 'var(--warning)' : 'var(--error)';
+
     let h = '';
 
-    h += `<div class="status-card ${ok?'valid':'invalid'}"><div class="status-dot"></div><div class="status-text">${ok?`Chain verified \u00b7 ${v.chain_length} node${v.chain_length!==1?'s':''} \u00b7 Trust ${(v.effective_trust_score*100).toFixed(1)}%`:`Chain invalid \u00b7 ${v.errors.length} error${v.errors.length!==1?'s':''}`}</div></div>`;
-
-    // Trust graph bar — shows vouch count
+    // Hero
     if (ok) {
-        const maxDots = 5;
-        const filledDots = Math.min(vc, maxDots);
-        const emptyDots = maxDots - filledDots;
-        const dotHtml = '<span class="trust-graph-dot"></span>'.repeat(filledDots) + '<span class="trust-graph-dot empty"></span>'.repeat(emptyDots);
-        const label = vc === 0 ? 'No vouches yet' : vc === 1 ? '1 human vouched' : `${vc} humans vouched`;
-        h += `<div class="trust-graph-bar"><div class="trust-graph-dots">${dotHtml}</div><div class="trust-graph-count"><strong>${vc}</strong> vouch${vc!==1?'es':''}</div><div class="trust-graph-label">${label}</div></div>`;
+        h += `<div class="hero">
+            <div class="hero-eyebrow">Verified Authority Chain</div>
+            <div class="trust-ring-container">
+                <div class="trust-ring-bg"></div>
+                <svg class="trust-ring-svg" viewBox="0 0 180 180">
+                    <circle class="trust-ring-track" cx="90" cy="90" r="80"/>
+                    <circle class="trust-ring-fill ${trustCls}" cx="90" cy="90" r="80" id="trustRing"/>
+                </svg>
+                <div class="trust-ring-center">
+                    <div class="trust-score-value" id="trustValue">0</div>
+                    <div class="trust-score-label">Trust Score</div>
+                </div>
+            </div>
+            <div class="hero-chain-info">
+                ${v.chain_length} node${v.chain_length !== 1 ? 's' : ''}<span class="sep">\u00b7</span>${active.length} modalities<span class="sep">\u00b7</span>Ed25519
+            </div>
+            <div class="hero-tagline">A verified human started this chain.</div>
+            <div class="hero-sub">Every agent in this delegation traces back to a biometrically verified person. Vouch to join their trust graph.</div>
+        </div>`;
+    } else {
+        h += `<div class="hero">
+            <div class="hero-eyebrow" style="color:var(--error)">Chain Verification Failed</div>
+            <div style="text-align:center;margin:20px 0;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div class="hero-tagline" style="color:var(--error)">${v.errors.length} error${v.errors.length !== 1 ? 's' : ''} detected</div>
+        </div>`;
     }
 
+    // Vouch CTA
+    if (ok) {
+        const vc = data.vouch_count || (verif && verif.vouch_count) || 0;
+        h += `<div class="vouch-cta" id="vouchSection">
+            <div class="vouch-cta-title">Vouch for this identity</div>
+            <div class="vouch-cta-sub">Confirm you received and reviewed this credential. You become a node in their trust graph.</div>
+            <button class="vouch-btn" id="vouchBtn" onclick="startVouch()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                Vouch Now
+            </button>
+            <div class="vouch-counter">
+                <div class="vouch-dots">${Array.from({length: Math.min(Math.max(vc, 3), 10)}, (_, i) => `<div class="vouch-dot ${i < vc ? 'filled' : ''}"></div>`).join('')}</div>
+                <span>${vc} vouch${vc !== 1 ? 'es' : ''} recorded</span>
+            </div>
+            <div class="vouch-flow" id="vouchFlow"></div>
+        </div>`;
+    }
+
+    // Sender
     if (root) {
-        h += `<div class="sender-card"><div class="sender-icon">${LOGO_SVG}</div><div class="sender-name">Verified Human</div><div class="sender-org">${data.issuer||'vacprotocol.org'} \u00b7 Patent Pending</div><div class="sender-tagline">Humans start every chain.</div><div class="sender-method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${fmtMethod(method)} \u00b7 ${active.length} modalities</div></div>`;
+        h += `<div class="section"><div class="section-label">Issuer</div><div class="card"><div class="sender-card">
+            <div class="sender-avatar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="sender-info">
+                <div class="sender-name">Verified Human</div>
+                <div class="sender-meta"><span>${data.issuer || 'vacprotocol.org'}</span><span>\u00b7</span><span>Patent Pending</span></div>
+                <div class="sender-method">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    ${fmtMethod(method)} \u00b7 ${active.length} modalities
+                </div>
+            </div>
+        </div></div></div>`;
     }
 
-    h += '<div class="modalities-section"><div class="section-label">Verification Modalities</div><div class="modalities-grid">';
-    for (const [k, mod] of Object.entries(MODS)) {
-        const on = active.includes(k);
-        h += `<div class="mod-item"><div class="mod-dot ${on?'on':'off'}"></div><div><div class="mod-text">${mod.label}</div><div class="mod-sub">${on?mod.sub:'not used'}</div></div></div>`;
-    }
-    h += '</div></div>';
-
-    h += '<div class="chain-section"><div class="section-label">Delegation Chain</div><div class="chain-container">';
-    cd.forEach((n, i) => {
-        const pct = (n.trust_score*100).toFixed(1);
-        const cls = n.trust_score>0.7?'high':n.trust_score>0.4?'mid':'low';
-        const col = n.trust_score>0.7?'var(--success)':n.trust_score>0.4?'var(--warning)':'var(--error)';
-        if (i>0) h += `<div class="narrowing"><span class="narrowing-arrow">\u2193</span> scope narrowed: ${cd[i-1].scope_summary.resources} \u2192 ${n.scope_summary.resources} resources</div>`;
-        h += `<div class="chain-node ${n.is_root?'root':''}"><div class="node-row"><div class="node-label">${n.label}</div><div class="node-badge ${n.status}">${n.status}</div></div><div class="node-meta">${n.is_root?`<span>root \u00b7 depth 0</span>`:`<span>agent: ${n.agent_id}</span><span>depth: ${n.depth}</span>`}</div><div class="trust-row"><div class="trust-lbl">trust</div><div class="trust-track"><div class="trust-fill ${cls}" style="width:${pct}%"></div></div><div class="trust-val" style="color:${col}">${pct}%</div></div><div class="scope-row">${n.scope_summary.actions.map(a=>`<span class="scope-tag action">${a}</span>`).join('')}${n.scope_summary.exclusions>0?`<span class="scope-tag excluded">${n.scope_summary.exclusions} excluded</span>`:''}</div></div>`;
-    });
-    h += '</div></div>';
-
-    if (verif && verif.chain) {
-        h += '<div class="inspector-toggle" onclick="togInsp(this)"><span>Token Inspector</span><span class="inspector-chevron">\u25BC</span></div><div class="inspector-body" id="insp"><div class="token-block">';
-        verif.chain.forEach((n,i) => {
-            const sep = i<verif.chain.length-1?'border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;':'';
-            h += `<div style="${sep}"><div class="tk-label">${n.is_root?'\u25cf Root VAT':`\u25cf Derived VAT (depth ${n.delegation_depth})`}</div><div><span class="tk-dim">jti: </span><span class="tk-value">${n.token_id}</span></div><div><span class="tk-dim">trust: </span><span class="tk-value">${n.trust_score}</span></div><div><span class="tk-dim">method: </span><span class="tk-value">${n.verification_method}</span></div><div><span class="tk-dim">issued: </span><span class="tk-value">${new Date(n.issued_at).toLocaleString()}</span></div><div><span class="tk-dim">expires: </span><span class="tk-value">${new Date(n.expires_at).toLocaleString()}</span></div><div><span class="tk-dim">chain_hash: </span><span class="tk-dim">${(n.chain_hash||'').substring(0,32)}\u2026</span></div></div>`;
-        });
-        h += '</div></div>';
-    }
-
-    if (ok) {
-        h += '<div class="vouch-section"><button class="vouch-btn" id="vouchBtn" onclick="startVouch()">Vouch for this chain</button><div class="vouch-help" id="vouchHelp">Vouching confirms you\'ve received and reviewed this delegation chain. You become a node in the trust graph.</div><div class="vouch-flow" id="vouchFlow"></div></div>';
-    }
-
-    // Use cases — dropdown selector with single visible card
-    const useCases = [
-        { id:'defense', title:'Defense & Coalition Operations', color:'#F85149',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F85149" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-          body:'A classified operation requires 2 of 3 authorised humans to biometrically verify before a 40-drone swarm activates. No single person can unilaterally deploy AI agents with access to weapons systems. If one member\u2019s clearance changes mid-mission, their delegation is revoked and every downstream agent enters safe state instantly.',
-          link:'https://vacprotocol.org/simulation.html', linkText:'Run the coalition drone simulation' },
-        { id:'enterprise', title:'Enterprise AI Agents', color:'#6C5CE7',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C5CE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-          body:'Your company deploys 50 AI agents across email, CRM, and databases. VAC ensures every agent action traces to a verified employee with scoped authority. No agent can exceed its delegation. Revoke one human, every downstream agent stops.',
-          link:'https://vacprotocol.org/simulation.html', linkText:'Run the OpenClaw simulation' },
-        { id:'tokencost', title:'Token Cost Control', color:'#D29922',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D29922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-          body:'Jason Calacanis said it on All-In \u2014 agent token costs are out of control. We built the solution. VAC scope constraints include spend limits: a coordinator gets $50/day, the researcher it delegates to gets $20, the writer gets $5. Monotonic narrowing means no sub-agent can spend more than its parent authorised. Hit the limit, the chain revokes. Not an alert \u2014 a hard stop.',
-          link:'https://vacprotocol.org/simulation.html', linkText:'Run Jason\u2019s token cost simulation' },
-        { id:'personalai', title:'Personal AI \u2014 Video Identity', color:'#CE93D8',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CE93D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
-          body:'Sarah records a coaching reflection in FolioAI. She shares a curated 90-second clip with a recruiter \u2014 view only, 14 days, no download. Raw practice footage? BLOCKED. Private reflections? BLOCKED. The recruiter sees verified identity (biometric proof it\u2019s really her) and exactly what she chose to share. Access auto-revokes when the window expires.',
-          link:'https://vacprotocol.org/simulation.html', linkText:'Run the personal AI simulation' },
-        { id:'indigenous', title:'Indigenous Data Sovereignty', color:'#3FB950',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3FB950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4 0 8-2 8-8s-4-10-8-10S4 8 4 14s4 8 8 8z"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>',
-          body:'A w\u0101nanga (M\u0101ori house of learning) records rangatahi practicing kapa haka. The kaum\u0101tua (elder) sets a VAC scope: cultural content stays within the wh\u0101nau. Government funders see aggregate stats \u2014 \u201c14 active, 73% improvement\u201d \u2014 but no names, no videos. When an external researcher requests the raw footage, the protocol blocks it automatically. Not because someone remembered to say no \u2014 because the kaum\u0101tua\u2019s authority is cryptographically binding.',
-          link:'https://vacprotocol.org/simulation.html', linkText:'Run the w\u0101nanga simulation' },
-        { id:'thispage', title:'What You\u2019re Looking At Right Now', color:'#00CEC9',
-          icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00CEC9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-          body:'The person who sent you this link was biometrically verified through 5 modalities. This page is the credential. By vouching, you confirm you received it and become a node in their trust graph \u2014 the network effect that makes VAC harder to replicate than the code itself.',
-          link:null },
-    ];
-    h += '<div class="scenarios-section"><div class="section-label">VAC Use Cases</div>';
-    h += '<div class="usecase-select-wrap"><select class="usecase-select" id="usecaseSelect" onchange="showUseCase()">';
-    useCases.forEach((uc,i) => { h += `<option value="${i}" style="color:${uc.color}">${uc.title}</option>`; });
-    h += '</select><div class="usecase-chevron">\u25BC</div></div>';
-    h += '<div id="usecaseBody"></div></div>';
-
-    if (cm && cm.length) {
-        const demoCount = cm.filter(c => c.status === 'demonstrated').length;
-        h += `<div class="inspector-toggle" onclick="togClaims(this)"><span>Patent Claims \u00b7 285 claims \u00b7 ${demoCount} demonstrated</span><span class="inspector-chevron">\u25BC</span></div><div class="inspector-body" id="claimsPanel"><div class="claims-card">`;
-        cm.forEach(c => { const demo = c.status === 'demonstrated'; h += `<div class="claim-row"><div class="claim-num">${c.claims}</div><div class="claim-desc">${c.description}</div><div class="claim-check" style="color:${demo?'var(--success)':'var(--text-quaternary)'}">${demo?'\u2713':'\u2014'}</div></div>`; });
-        h += '</div></div>';
-    }
-
-    if (v.warnings && v.warnings.length) {
-        h += '<div style="padding:10px 14px;background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:var(--radius);margin-bottom:16px;">';
-        v.warnings.forEach(w => { h += `<div style="font-size:12px;color:var(--warning);font-family:var(--mono);">\u26A0 ${w}</div>`; });
+    // Modalities
+    // Adaptive Modality — show trust-reduced requirements
+    const mp = data.modality_policy || null;
+    h += '<div class="section"><div class="section-label">Verification Modalities</div>';
+    if (mp && mp.label) {
+        const lvl = mp.label.toLowerCase();
+        h += `<div class="adaptive-modality-bar ${lvl}"><div class="adaptive-label"><div class="dot ${lvl}"></div><span>${mp.label}: ${mp.total_required} of ${mp.total_available} required</span></div>`;
+        if (mp.total_required < mp.total_available && mp.user_can_override) {
+            h += '<span class="adaptive-override" onclick="document.querySelectorAll(\'.mod-item\').forEach(e=>e.classList.remove(\'can-skip\',\'recommended\'))">Use all modalities</span>';
+        }
         h += '</div>';
     }
+    h += '<div class="card" style="border-top-left-radius:0;border-top-right-radius:0;"><div class="modalities-grid">';
+    for (const [k, mod] of Object.entries(MODS)) {
+        const on = active.includes(k);
+        let extraCls = '';
+        if (mp) {
+            if (mp.can_skip && mp.can_skip.includes(k)) extraCls = ' can-skip';
+            else if (mp.recommended && mp.recommended.includes(k)) extraCls = ' recommended';
+        }
+        h += `<div class="mod-item${extraCls}"><div class="mod-indicator ${on ? 'on' : 'off'}"></div><div><div class="mod-label">${mod.label}</div><div class="mod-sub">${on ? mod.sub : 'Not used'}</div></div></div>`;
+    }
+    h += '</div></div></div>';
+
+    // Chain
+    h += '<div class="section"><div class="section-label">Delegation Chain</div><div class="card"><div class="chain-container"><div class="chain-line"></div>';
+    cd.forEach((n, i) => {
+        const pct = (n.trust_score * 100).toFixed(1);
+        const cls = n.trust_score > 0.7 ? 'high' : n.trust_score > 0.4 ? 'mid' : 'low';
+        const col = n.trust_score > 0.7 ? 'var(--success)' : n.trust_score > 0.4 ? 'var(--warning)' : 'var(--error)';
+        if (i > 0) h += `<div class="chain-narrowing"><span class="narrowing-arrow">\u2193</span> scope narrowed: ${cd[i-1].scope_summary.resources} \u2192 ${n.scope_summary.resources} resources</div>`;
+        h += `<div class="chain-node ${n.is_root ? 'root' : ''}"><div class="chain-dot ${n.is_root ? 'root' : ''}"></div><div class="chain-node-card">
+            <div class="chain-node-header"><div class="chain-node-label">${n.label}</div><div class="chain-node-badge ${n.status}">${n.status}</div></div>
+            <div class="chain-node-meta">${n.is_root ? 'root \u00b7 depth 0' : `agent: ${n.agent_id} \u00b7 depth: ${n.depth}`}</div>
+            <div class="chain-trust-bar"><div class="chain-trust-label">Trust</div><div class="chain-trust-track"><div class="chain-trust-fill ${cls}" style="width:${pct}%"></div></div><div class="chain-trust-val" style="color:${col}">${pct}%</div></div>
+            <div class="chain-scopes">${n.scope_summary.actions.map(a => `<span class="scope-tag action">${a}</span>`).join('')}${n.scope_summary.exclusions > 0 ? `<span class="scope-tag excluded">${n.scope_summary.exclusions} excluded</span>` : ''}</div>
+        </div></div>`;
+    });
+    h += '</div></div></div>';
+
+    // Token inspector
+    if (verif && verif.chain) {
+        h += '<div class="section"><div class="collapse-trigger" onclick="togSection(this,\'insp\')"><span>Token Inspector</span><span class="collapse-chevron">\u25BC</span></div><div class="collapse-body" id="insp"><div class="token-block">';
+        verif.chain.forEach((n, i) => {
+            const sep = i < verif.chain.length - 1 ? 'border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;' : '';
+            h += `<div style="${sep}"><div class="tk-label">${n.is_root ? '\u25cf Root VAT' : `\u25cf Derived VAT (depth ${n.delegation_depth})`}</div><div><span class="tk-dim">jti: </span><span class="tk-value">${n.token_id}</span></div><div><span class="tk-dim">trust: </span><span class="tk-value">${n.trust_score}</span></div><div><span class="tk-dim">method: </span><span class="tk-value">${n.verification_method}</span></div><div><span class="tk-dim">issued: </span><span class="tk-value">${new Date(n.issued_at).toLocaleString()}</span></div><div><span class="tk-dim">expires: </span><span class="tk-value">${new Date(n.expires_at).toLocaleString()}</span></div><div><span class="tk-dim">chain_hash: </span><span class="tk-dim">${(n.chain_hash || '').substring(0, 32)}\u2026</span></div></div>`;
+        });
+        h += '</div></div></div>';
+    }
+
+    // Patent Portfolio — dropdown, clean by default
+    if (cm && cm.length) {
+        const dc = cm.filter(c => c.status === 'demonstrated').length;
+        const rc = cm.length - dc;
+        h += `<div class="section"><div class="patent-trigger" onclick="togSection(this,'patentGrid')"><span>Patent Portfolio \u00b7 285 Claims \u00b7 6 Filings</span><div class="patent-stats"><span class="live-dot"></span><span style="color:var(--success)">${dc} live</span><span class="ref-dot"></span><span style="color:var(--text-muted)">${rc} coming</span><span class="collapse-chevron">\u25bc</span></div></div><div class="patent-body" id="patentGrid"><div class="patent-grid">`;
+        cm.forEach(c => {
+            const demo = c.status === 'demonstrated';
+            const cls = demo ? 'demonstrated' : 'referenced';
+            const badge = demo ? 'LIVE' : 'COMING';
+            h += `<div class="patent-tile ${cls}"><div class="patent-tile-claims">${c.claims}<span class="patent-tile-badge">${badge}</span></div><div class="patent-tile-desc">${c.description}</div></div>`;
+        });
+        h += '</div></div></div>';
+    }
+
+    // Use cases
+    const useCases = [
+        { id:'defense', title:'Defense & Coalition Operations', body:'A classified operation requires 2 of 3 authorised humans to biometrically verify before a 40-drone swarm activates. No single person can unilaterally deploy AI agents with weapons access. If one member\u2019s clearance changes mid-mission, their delegation is revoked and every downstream agent enters safe state instantly.', link:'https://vacprotocol.org/simulation.html', linkText:'Run the coalition drone simulation' },
+        { id:'enterprise', title:'Enterprise AI Agents', body:'Your company deploys 50 AI agents across email, CRM, and databases. VAC ensures every agent action traces to a verified employee with scoped authority. No agent can exceed its delegation. Revoke one human, every downstream agent stops.', link:'https://vacprotocol.org/simulation.html', linkText:'Run the OpenClaw simulation' },
+        { id:'tokencost', title:'Token Cost Control', body:'Jason Calacanis said it on All-In \u2014 agent token costs are out of control. VAC scope constraints include spend limits: a coordinator gets $50/day, the researcher gets $20, the writer gets $5. Monotonic narrowing means no sub-agent can spend more than its parent authorised. Hit the limit, the chain revokes. Not an alert \u2014 a hard stop.', link:'https://vacprotocol.org/simulation.html', linkText:'Run the token cost simulation' },
+        { id:'personalai', title:'Personal AI \u2014 Video Identity', body:'Sarah records a coaching reflection in FolioAI. She shares a curated 90-second clip with a recruiter \u2014 view only, 14 days, no download. Raw practice footage? BLOCKED. The recruiter sees verified identity and exactly what she chose to share. Access auto-revokes when the window expires.', link:'https://vacprotocol.org/simulation.html', linkText:'Run the personal AI simulation' },
+        { id:'indigenous', title:'Indigenous Data Sovereignty', body:'A w\u0101nanga records rangatahi practicing kapa haka. The kaum\u0101tua sets a VAC scope: cultural content stays within the wh\u0101nau. Government funders see aggregate stats but no names, no videos. Not because someone remembered to say no \u2014 because the authority is cryptographically binding.', link:'https://vacprotocol.org/simulation.html', linkText:'Run the w\u0101nanga simulation' },
+        { id:'thispage', title:'What You\u2019re Looking At Right Now', body:'The person who sent you this link was biometrically verified through 5 modalities. This page is the credential. By vouching, you confirm you received it and become a node in their trust graph \u2014 the network effect that makes VAC harder to replicate than the code itself.', link: null },
+    ];
+    h += '<div class="section"><div class="section-label">VAC Use Cases</div><div class="usecase-select-wrap"><select class="usecase-select" id="usecaseSelect" onchange="showUseCase()">';
+    useCases.forEach((uc, i) => { h += `<option value="${i}">${uc.title}</option>`; });
+    h += '</select><div class="usecase-chevron">\u25BC</div></div><div id="usecaseBody"></div></div>';
+
+    // Warnings
+    if (v.warnings && v.warnings.length) {
+        h += '<div class="warnings-bar">';
+        v.warnings.forEach(w => { h += `<div class="warning-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${w}</div>`; });
+        h += '</div>';
+    }
+
     app.innerHTML = h;
     _useCases = useCases;
     showUseCase();
+
+    // Animate trust ring
+    if (ok) {
+        setTimeout(() => {
+            const ring = document.getElementById('trustRing');
+            if (!ring) return;
+            const circumference = 2 * Math.PI * 80;
+            ring.style.strokeDashoffset = circumference * (1 - v.effective_trust_score);
+            const valEl = document.getElementById('trustValue');
+            const target = parseFloat(trustPct);
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min((now - start) / 1200, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                valEl.textContent = (target * eased).toFixed(1) + '%';
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }, 400);
+    }
 }
 
-function togInsp(el) { el.classList.toggle('open'); document.getElementById('insp').classList.toggle('open'); }
-function togClaims(el) { el.classList.toggle('open'); document.getElementById('claimsPanel').classList.toggle('open'); }
+function togSection(el, id) { el.classList.toggle('open'); document.getElementById(id).classList.toggle('open'); }
 
-// Use case dropdown
 let _useCases = [];
 function showUseCase() {
     const sel = document.getElementById('usecaseSelect');
@@ -469,260 +672,184 @@ function showUseCase() {
     body.innerHTML = html;
 }
 
-// ---- Vouch Flow ----
-let _vouchEmail = '';
-let _vouchOtpId = '';
-let _currentJTI = '';
+// ─── Vouch Flow ───
+let _vouchEmail = '', _currentJTI = '';
 
 function startVouch() {
     document.getElementById('vouchBtn').style.display = 'none';
-    document.getElementById('vouchHelp').style.display = 'none';
-    document.getElementById('vouchFlow').innerHTML = `
-        <div class="vouch-step">
-            <div class="vouch-step-label">Step 1 of 2 — Verify your email</div>
-            <input class="vouch-input" id="vouchEmail" type="email" placeholder="your@email.com"
-                autocomplete="email" autocapitalize="none" spellcheck="false">
-            <br>
-            <button class="vouch-submit" id="vouchEmailBtn" onclick="submitEmail()">Send code</button>
-            <div class="vouch-error" id="vouchEmailErr"></div>
-            <div class="vouch-note">We'll send a 6-digit code to verify your email.</div>
-        </div>`;
+    document.querySelector('.vouch-cta-sub').style.display = 'none';
+    document.querySelector('.vouch-counter').style.display = 'none';
+    document.getElementById('vouchFlow').innerHTML = `<div class="vouch-step">
+        <div class="vouch-step-label">Step 1 of 2 \u2014 Verify your email</div>
+        <input class="vouch-input" id="vouchEmail" type="email" placeholder="your@email.com" autocomplete="email" autocapitalize="none" spellcheck="false"><br>
+        <button class="vouch-submit" id="vouchEmailBtn" onclick="submitEmail()">Send verification code</button>
+        <div class="vouch-error" id="vouchEmailErr"></div>
+        <div class="vouch-note">A 6-digit code will be sent to verify your email.</div>
+    </div>`;
     setTimeout(() => document.getElementById('vouchEmail').focus(), 80);
-    // Enter key support
     document.getElementById('vouchEmail').addEventListener('keydown', e => { if (e.key === 'Enter') submitEmail(); });
 }
 
 async function submitEmail() {
-    const input = document.getElementById('vouchEmail');
-    const btn = document.getElementById('vouchEmailBtn');
-    const err = document.getElementById('vouchEmailErr');
+    const input = document.getElementById('vouchEmail'), btn = document.getElementById('vouchEmailBtn'), err = document.getElementById('vouchEmailErr');
     const email = input.value.trim().toLowerCase();
-
-    // Validate
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        err.textContent = 'Please enter a valid email address';
-        input.focus();
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div>';
-    err.textContent = '';
-    _vouchEmail = email;
-
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Please enter a valid email address'; input.focus(); return; }
+    btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div>'; err.textContent = ''; _vouchEmail = email;
     try {
-        const resp = await fetch(API_BASE + '/v1/vat/request-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, jti: _currentJTI })
-        });
-        if (!resp.ok) throw new Error('Failed to send');
-        showOtpStep();
-    } catch (e) {
-        err.textContent = 'Failed to send code. Please try again.';
-        btn.disabled = false;
-        btn.textContent = 'Send code';
-    }
+        const resp = await fetch(API_BASE + '/v1/vat/request-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, jti: _currentJTI }) });
+        if (!resp.ok) throw 0; showOtpStep();
+    } catch { err.textContent = 'Failed to send code. Please try again.'; btn.disabled = false; btn.textContent = 'Send verification code'; }
 }
 
 function showOtpStep() {
-    document.getElementById('vouchFlow').innerHTML = `
-        <div class="vouch-step">
-            <div class="vouch-step-label">Step 2 of 2 — Enter your code</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
-                Sent to <span style="color:var(--text-primary);font-family:var(--mono);">${_vouchEmail}</span>
-            </div>
-            <div class="otp-row" id="otpRow">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
-            </div>
-            <div class="vouch-error" id="otpErr"></div>
-            <button class="otp-resend" onclick="resendOtp()">Didn't receive it? Resend</button>
-        </div>`;
+    document.getElementById('vouchFlow').innerHTML = `<div class="vouch-step">
+        <div class="vouch-step-label">Step 2 of 2 \u2014 Enter your code</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Sent to <span style="color:var(--text-primary);font-family:var(--mono);">${_vouchEmail}</span></div>
+        <div class="otp-row" id="otpRow">${Array(6).fill('<input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">').join('')}</div>
+        <div class="vouch-error" id="otpErr"></div>
+        <button class="otp-resend" onclick="resendOtp()">Didn\u2019t receive it? Resend</button>
+    </div>`;
     initOtpInputs();
 }
 
 function initOtpInputs() {
-    const digits = document.querySelectorAll('.otp-digit');
-    digits[0].focus();
-    digits.forEach((d, i) => {
-        d.addEventListener('input', e => {
-            const v = e.target.value.replace(/[^0-9]/g, '');
-            e.target.value = v;
-            if (v && i < 5) digits[i+1].focus();
-            if (i === 5 && v) verifyOtp();
-        });
-        d.addEventListener('keydown', e => {
-            if (e.key === 'Backspace' && !d.value && i > 0) {
-                digits[i-1].focus();
-                digits[i-1].value = '';
-            }
-        });
-        d.addEventListener('paste', e => {
-            e.preventDefault();
-            const text = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '').slice(0, 6);
-            text.split('').forEach((ch, j) => { if (digits[j]) digits[j].value = ch; });
-            if (text.length === 6) verifyOtp();
-            else if (text.length > 0) digits[Math.min(text.length, 5)].focus();
-        });
+    const d = document.querySelectorAll('.otp-digit'); d[0].focus();
+    d.forEach((el, i) => {
+        el.addEventListener('input', e => { const v = e.target.value.replace(/[^0-9]/g, ''); e.target.value = v; if (v && i < 5) d[i+1].focus(); if (i === 5 && v) verifyOtp(); });
+        el.addEventListener('keydown', e => { if (e.key === 'Backspace' && !el.value && i > 0) { d[i-1].focus(); d[i-1].value = ''; } });
+        el.addEventListener('paste', e => { e.preventDefault(); const t = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '').slice(0, 6); t.split('').forEach((ch, j) => { if (d[j]) d[j].value = ch; }); if (t.length === 6) verifyOtp(); else if (t.length > 0) d[Math.min(t.length, 5)].focus(); });
     });
 }
 
 async function verifyOtp() {
-    const digits = document.querySelectorAll('.otp-digit');
-    const code = Array.from(digits).map(d => d.value).join('');
-    const err = document.getElementById('otpErr');
-
-    if (code.length !== 6) return;
-
-    digits.forEach(d => d.disabled = true);
-    err.textContent = '';
-
+    const d = document.querySelectorAll('.otp-digit'), code = Array.from(d).map(x => x.value).join(''), err = document.getElementById('otpErr');
+    if (code.length !== 6) return; d.forEach(x => x.disabled = true); err.textContent = '';
     try {
-        const resp = await fetch(API_BASE + '/v1/vat/verify-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: _vouchEmail, code: code, jti: _currentJTI })
-        });
+        const resp = await fetch(API_BASE + '/v1/vat/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: _vouchEmail, code, jti: _currentJTI }) });
         const data = await resp.json();
-        if (data.verified || data.authorized) {
-            showVouchSuccess();
-        } else {
-            err.textContent = 'Incorrect code. Please try again.';
-            digits.forEach(d => { d.disabled = false; d.value = ''; });
-            digits[0].focus();
-        }
-    } catch (e) {
-        err.textContent = 'Verification failed. Please try again.';
-        digits.forEach(d => d.disabled = false);
-    }
+        if (data.verified || data.authorized) showVouchSuccess(data); else { err.textContent = 'Incorrect code. Please try again.'; d.forEach(x => { x.disabled = false; x.value = ''; }); d[0].focus(); }
+    } catch { err.textContent = 'Verification failed. Please try again.'; d.forEach(x => x.disabled = false); }
 }
 
 async function resendOtp() {
-    try {
-        await fetch(API_BASE + '/v1/vat/request-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: _vouchEmail, jti: _currentJTI })
-        });
-        document.getElementById('otpErr').innerHTML = '<span style="color:var(--success)">Code resent.</span>';
-    } catch (e) {
-        document.getElementById('otpErr').textContent = 'Failed to resend. Please try again.';
-    }
+    try { await fetch(API_BASE + '/v1/vat/request-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: _vouchEmail, jti: _currentJTI }) }); document.getElementById('otpErr').innerHTML = '<span style="color:var(--success)">Code resent.</span>'; }
+    catch { document.getElementById('otpErr').textContent = 'Failed to resend.'; }
 }
 
-function showVouchSuccess() {
-    document.getElementById('vouchFlow').innerHTML = `
-        <div class="vouch-success">
-            <div class="vouch-success-icon">
-                <img src="https://vacprotocol.org/branding/vac-logo-icon-dark.png" alt="VAC" />
-            </div>
-            <div class="vouch-tagline">You are the private key.</div>
-            <div class="vouch-confirm-text">Vouch recorded for ${_vouchEmail}</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-top:16px;line-height:1.6;max-width:340px;margin-left:auto;margin-right:auto;">
-                You're now a node in this trust graph. When others vouch, the network grows &mdash; that's the moat no code can replicate.
-            </div>
-            <div class="vouch-actions">
-                <button class="vouch-action-btn" onclick="copyVerifyLink(this)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Share this verification
-                </button>
-                <button class="vouch-action-btn" onclick="window.location.href='https://vacprotocol.org'">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                    Learn about VAC Protocol
-                </button>
-            </div>
-        </div>`;
-    // Update the badge and trust graph bar to reflect the new vouch
-    const nb = document.getElementById('nav-badge');
-    if (nb) { nb.textContent = 'VOUCHED \u00b7 \u2713'; nb.className = 'nav-badge valid'; }
-    // Refresh vouch count in the trust graph bar
-    if (_currentJTI) {
-        fetchVouches(_currentJTI).then(vd => {
-            const bar = document.querySelector('.trust-graph-bar');
-            if (bar && vd) {
-                const vc = vd.count;
-                const maxDots = 5;
-                const filled = Math.min(vc, maxDots);
-                const empty = maxDots - filled;
-                bar.innerHTML = '<span class="trust-graph-dot"></span>'.repeat(filled)
-                    + '<span class="trust-graph-dot empty"></span>'.repeat(empty)
-                    + `<div class="trust-graph-count"><strong>${vc}</strong> vouch${vc!==1?'es':''}</div>`
-                    + `<div class="trust-graph-label">${vc === 1 ? '1 human vouched' : vc + ' humans vouched'}</div>`;
-            }
-        });
-    }
-}
+function showVouchSuccess(data) {
+    data = data || {};
+    const isMutual = data.is_mutual || false;
+    const vouchBackUrl = data.vouch_back_url || '';
+    const edge = data.trust_edge || {};
+    const currentState = edge.state || 'vouched';
 
-function copyVerifyLink(btn) {
-    const url = window.location.href.split('?')[0]; // Clean URL without vouch param
-    navigator.clipboard.writeText(url).then(() => {
-        btn.classList.add('copied');
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-        setTimeout(() => {
-            btn.classList.remove('copied');
-            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Share this verification';
-        }, 2000);
+    const states = [
+        { id: 'invited',      label: 'Invited',   icon: '1' },
+        { id: 'viewed',       label: 'Viewed',    icon: '2' },
+        { id: 'vouched',      label: 'Vouched',   icon: '3' },
+        { id: 'invited_back', label: 'Your Turn',  icon: '4' },
+        { id: 'verified',     label: 'Verified',  icon: '5' },
+        { id: 'mutual',       label: 'Mutual',    icon: '6' },
+    ];
+
+    const stateIdx = states.findIndex(s => s.id === currentState);
+    
+    let stateHtml = '<div class="state-machine"><div class="state-machine-label">Trust Relationship</div><div class="state-track">';
+    states.forEach((s, i) => {
+        const completed = i < stateIdx;
+        const current = i === stateIdx;
+        const cls = completed ? 'completed' : current ? (s.id === 'mutual' ? 'current mutual' : 'current') : '';
+        if (i > 0) {
+            const connCls = i <= stateIdx ? (i === stateIdx ? 'active' : 'completed') : '';
+            stateHtml += `<div class="state-connector ${connCls}"></div>`;
+        }
+        stateHtml += `<div class="state-node ${cls}"><div class="state-dot ${cls}">${completed ? '\u2713' : s.icon}</div><div class="state-name">${s.label}</div></div>`;
     });
+    stateHtml += '</div>';
+    
+    const descs = {
+        vouched: 'You vouched. Now get verified so they can vouch for you back.',
+        invited_back: 'Vouch-back invitation sent. Complete your verification.',
+        verified: "You're verified. Waiting for the mutual vouch.",
+        mutual: 'Mutual trust established. The strongest link in the network.',
+    };
+    stateHtml += `<div class="state-desc">${descs[currentState] || ''}</div></div>`;
+
+    let html = '<div class="vouch-success">';
+    
+    if (isMutual) {
+        html += `<div class="vouch-success-ring" style="border-color:var(--teal);background:var(--teal-bg);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="vouch-success-title">Mutual trust established.</div>
+        <div class="vouch-success-sub">Bidirectional vouch confirmed</div>
+        <div class="vouch-success-badge" style="color:var(--teal);border-color:var(--teal-border);background:var(--teal-bg);">Strongest trust link in the VAC network</div>`;
+    } else {
+        html += `<div class="vouch-success-ring"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="vouch-success-title">You are the private key.</div>
+        <div class="vouch-success-sub">Vouch recorded for ${_vouchEmail}</div>
+        <div class="vouch-success-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>You are now a node in this trust graph</div>`;
+    }
+
+    html += stateHtml;
+
+    if (!isMutual && vouchBackUrl) {
+        html += `<div class="vouch-back-cta"><div class="vouch-back-title">Now it's your turn</div><div class="vouch-back-sub">Get verified yourself and they can vouch for you back. Mutual vouches create the strongest trust links.</div><a class="vouch-back-btn" href="${vouchBackUrl}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Get Verified</a></div>`;
+    } else if (!isMutual) {
+        const authUrl = (window.location.origin || 'https://vacprotocol.org') + '/auth';
+        html += `<div class="vouch-back-cta"><div class="vouch-back-title">Want mutual trust?</div><div class="vouch-back-sub">Get verified at vacprotocol.org/auth and share your chain back. Mutual vouches are the strongest trust links.</div><a class="vouch-back-btn" href="${authUrl}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Get Verified</a></div>`;
+    }
+
+    html += '</div>';
+    document.getElementById('vouchSection').innerHTML = html;
 }
 
 function demoData() {
-    const now = Date.now()/1000;
+    const now = Date.now() / 1000;
     return {
-        verification: { valid:true, chain_length:3, root_human_ref:"sha256:e3b0c44\u2026", effective_trust_score:0.767,
+        verification: { valid: true, chain_length: 3, root_human_ref: 'sha256:e3b0c44\u2026', effective_trust_score: 0.767,
             chain: [
-                { token_id:"vat_root_demo_001", is_root:true, human_ref:"sha256:e3b0c4\u2026", trust_score:0.85, delegation_depth:0, verification_method:"multi_modal", issued_at:new Date(now*1000).toISOString(), expires_at:new Date((now+7200)*1000).toISOString(), chain_hash:"sha256:abc123def456\u2026" },
-                { token_id:"vat_child_demo_002", is_root:false, human_ref:"sha256:e3b0c4\u2026", trust_score:0.8075, delegation_depth:1, verification_method:"multi_modal", issued_at:new Date(now*1000).toISOString(), expires_at:new Date((now+7200)*1000).toISOString(), chain_hash:"sha256:def456ghi789\u2026" },
-                { token_id:"vat_child_demo_003", is_root:false, human_ref:"sha256:e3b0c4\u2026", trust_score:0.767, delegation_depth:2, verification_method:"multi_modal", issued_at:new Date(now*1000).toISOString(), expires_at:new Date((now+7200)*1000).toISOString(), chain_hash:"sha256:ghi789jkl012\u2026" },
-            ], errors:[], warnings:[] },
+                { token_id: 'vat_root_demo_001', is_root: true, human_ref: 'sha256:e3b0c4\u2026', trust_score: 0.85, delegation_depth: 0, verification_method: 'multi_modal', issued_at: new Date(now * 1000).toISOString(), expires_at: new Date((now + 7200) * 1000).toISOString(), chain_hash: 'sha256:abc123def456\u2026' },
+                { token_id: 'vat_child_demo_002', is_root: false, human_ref: 'sha256:e3b0c4\u2026', trust_score: 0.8075, delegation_depth: 1, verification_method: 'multi_modal', issued_at: new Date(now * 1000).toISOString(), expires_at: new Date((now + 7200) * 1000).toISOString(), chain_hash: 'sha256:def456ghi789\u2026' },
+                { token_id: 'vat_child_demo_003', is_root: false, human_ref: 'sha256:e3b0c4\u2026', trust_score: 0.767, delegation_depth: 2, verification_method: 'multi_modal', issued_at: new Date(now * 1000).toISOString(), expires_at: new Date((now + 7200) * 1000).toISOString(), chain_hash: 'sha256:ghi789jkl012\u2026' },
+            ], errors: [], warnings: [] },
         chain_display: [
-            { depth:0, agent_id:"coordinator-001", trust_score:0.85, scope_summary:{resources:5, actions:["read","write","send","summarise","draft"], exclusions:2}, verification_method:"multi_modal", is_root:true, status:"active", label:"Verified Human", icon:"person" },
-            { depth:1, agent_id:"researcher-007", trust_score:0.8075, scope_summary:{resources:2, actions:["read","summarise"], exclusions:2}, verification_method:"multi_modal", is_root:false, status:"active", label:"Agent (Depth 1)", icon:"agent" },
-            { depth:2, agent_id:"writer-003", trust_score:0.767, scope_summary:{resources:1, actions:["read","summarise"], exclusions:3}, verification_method:"multi_modal", is_root:false, status:"active", label:"Agent (Depth 2)", icon:"agent" },
+            { depth: 0, agent_id: 'coordinator-001', trust_score: 0.85, scope_summary: { resources: 5, actions: ['read', 'write', 'send', 'summarise', 'draft'], exclusions: 2 }, verification_method: 'multi_modal', is_root: true, status: 'active', label: 'Verified Human', icon: 'person' },
+            { depth: 1, agent_id: 'researcher-007', trust_score: 0.8075, scope_summary: { resources: 2, actions: ['read', 'summarise'], exclusions: 2 }, verification_method: 'multi_modal', is_root: false, status: 'active', label: 'Agent (Depth 1)', icon: 'agent' },
+            { depth: 2, agent_id: 'writer-003', trust_score: 0.767, scope_summary: { resources: 1, actions: ['read', 'summarise'], exclusions: 3 }, verification_method: 'multi_modal', is_root: false, status: 'active', label: 'Agent (Depth 2)', icon: 'agent' },
         ],
         claim_mapping: [
-            { claims:"1\u201315", description:"Core biometric binding + delegation chain", status:"demonstrated" },
-            { claims:"16\u201338", description:"Trust scoring + continuous decay", status:"demonstrated" },
-            { claims:"39\u201355", description:"Scope constraints + monotonic narrowing", status:"demonstrated" },
-            { claims:"56\u2013112", description:"Chain verification + cascade revocation", status:"demonstrated" },
-            { claims:"113\u2013134", description:"Multi-agent coordination + trust propagation", status:"demonstrated" },
-            { claims:"135\u2013167", description:"Cross-organisational delegation + federation", status:"referenced" },
-            { claims:"168\u2013241", description:"Collective governance (multi-party auth) + data sovereignty + physical systems", status:"referenced" },
-            { claims:"242\u2013271", description:"Agent spend controls + resource-scoped delegation", status:"referenced" },
-            { claims:"272\u2013285", description:"Trust graph + vouch network + identity bridging", status:"demonstrated" },
+            { claims: '1\u201315', description: 'Core biometric binding + delegation chain', status: 'demonstrated' },
+            { claims: '16\u201338', description: 'Trust scoring + continuous decay', status: 'demonstrated' },
+            { claims: '39\u201355', description: 'Scope constraints + monotonic narrowing', status: 'demonstrated' },
+            { claims: '56\u2013112', description: 'Chain verification + cascade revocation', status: 'demonstrated' },
+            { claims: '113\u2013134', description: 'Multi-agent coordination + trust propagation', status: 'demonstrated' },
+            { claims: '135\u2013167', description: 'Cross-organisational delegation + federation', status: 'referenced' },
+            { claims: '168\u2013241', description: 'Collective governance + data sovereignty + physical systems', status: 'referenced' },
+            { claims: '242\u2013271', description: 'Agent spend controls + resource-scoped delegation', status: 'referenced' },
+            { claims: '272\u2013285', description: 'Trust graph + vouch network + identity bridging', status: 'demonstrated' },
         ],
-        protocol_version:"0.1.0", issuer:"vacprotocol.org", key_id:"vac-key-demo",
+        protocol_version: '0.1.0', issuer: 'vacprotocol.org', key_id: 'vac-key-demo',
     };
 }
 
 async function init() {
     const jti = getJTI();
     _currentJTI = jti || '';
-    if (jti) {
-        const [c, v, vd] = await Promise.all([fetchChain(jti), fetchVerif(jti), fetchVouches(jti)]);
-        render(c, v, vd);
-    }
-    else { const d = demoData(); render(d, d.verification, {count:0,vouches:[]}); }
+    const params = new URLSearchParams(window.location.search);
 
-    // If ?vouch=email is present, user came from OTP email — skip straight to code entry
-    const vouchEmail = new URLSearchParams(window.location.search).get('vouch');
-    if (vouchEmail && jti) {
-        _vouchEmail = vouchEmail;
-        setTimeout(() => {
-            const btn = document.getElementById('vouchBtn');
-            const help = document.getElementById('vouchHelp');
-            if (btn) btn.style.display = 'none';
-            if (help) help.style.display = 'none';
-            showOtpStep();
-            setTimeout(() => {
-                const step = document.querySelector('.vouch-step');
-                if (step) step.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        }, 400);
+    if (jti) {
+        const [c, v] = await Promise.all([fetchChain(jti), fetchVerif(jti)]);
+        render(c, v);
+    } else {
+        render(demoData(), demoData().verification);
+        // Show theme picker in demo mode
+        document.getElementById('themeSelector').classList.add('show');
+        const pick = document.getElementById('themePicker');
+        pick.value = params.get('theme') || 'default';
+    }
+
+    // Auto-vouch from email link
+    if (params.get('vouch') === 'email') {
+        setTimeout(() => { const vs = document.getElementById('vouchSection'); if (vs) { vs.scrollIntoView({ behavior: 'smooth', block: 'center' }); startVouch(); } }, 800);
     }
 }
 init();

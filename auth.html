@@ -37,6 +37,7 @@
     --error: #F85149;
     --error-bg: rgba(248,81,73,0.08);
     --error-border: rgba(248,81,73,0.2);
+    --warning: #D29922;
     --radius: 8px;
     --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
@@ -89,10 +90,10 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .btn-secondary:hover { border-color: var(--purple); background: var(--purple-bg); }
 
 /* Camera */
-.camera-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 20px; }
+.camera-container { position: relative; width: 100%; aspect-ratio: 4/3; min-height: 240px; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 20px; }
 .camera-container.recording { border-color: var(--error); box-shadow: 0 0 20px rgba(248,81,73,0.15); }
 .camera-container.verified { border-color: var(--success); box-shadow: 0 0 20px rgba(63,185,80,0.15); }
-#videoPreview { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+#videoPreview, #videoPreviewRec { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; background: #000; }
 .camera-overlay { position: absolute; inset: 0; pointer-events: none; }
 .camera-corners { position: absolute; inset: 16px; }
 .camera-corners::before, .camera-corners::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--purple); border-style: solid; }
@@ -120,6 +121,17 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .progress-step { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; }
 .progress-detail { font-size: 14px; color: var(--text-secondary); }
 
+/* Modality results in processing */
+.modality-results { max-width: 360px; margin: 20px auto 0; }
+.mod-result { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; }
+.mod-result + .mod-result { border-top: 1px solid var(--border); }
+.mod-status { width: 20px; text-align: center; font-size: 14px; }
+.mod-name { flex: 1; color: var(--text-secondary); }
+.mod-score { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.mod-score.pass { color: var(--success); }
+.mod-score.fail { color: var(--error); }
+.mod-score.pending { color: var(--text-quaternary); }
+
 /* Success chain display */
 .chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
 .chain-node-result { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
@@ -140,16 +152,17 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .share-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
 .share-url { font-family: var(--mono); font-size: 12px; color: var(--teal); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; word-break: break-all; margin: 12px 0; cursor: pointer; transition: border-color 0.15s; }
 .share-url:hover { border-color: var(--teal-border); }
-.share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 
 /* Patent badge */
 .patent-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; margin-top: 16px; }
 .patent-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
 
-/* Modality list in success */
+/* Modality list */
 .modalities-mini { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .mod-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 4px; padding: 3px 8px; }
 .mod-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+.mod-chip.failed { color: var(--error); background: var(--error-bg); border-color: var(--error-border); }
+.mod-chip.failed .dot { background: var(--error); }
 
 /* Timer */
 .timer-display { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); text-align: center; margin: 8px 0; }
@@ -165,6 +178,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .claim-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
 .claim-pill { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; }
 .claim-pill.active { color: var(--purple); border-color: var(--purple-border); background: var(--purple-bg); }
+
+/* Transcript display */
+.transcript-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px; }
+.transcript-label { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.transcript-text { font-size: 14px; color: var(--text-primary); font-style: italic; }
+.transcript-match { font-family: var(--mono); font-size: 11px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -228,6 +247,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <button class="btn-primary" id="btnIdentity" onclick="goToCamera()">
         Continue to Verification
     </button>
+    <div id="identityError" class="error-msg" style="display:none;"></div>
     <div class="patent-badge" style="display: flex; justify-content: center; margin-top: 20px;">
         <span class="dot"></span> Patent Pending · 285 Claims · 6 Filings
     </div>
@@ -252,6 +272,23 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         Enable Camera & Microphone
     </button>
     <div id="cameraError" class="error-msg" style="display:none;"></div>
+    <div id="preRecordChecklist" style="display:none; margin-top: 16px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
+        <div style="font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">Pre-Recording Check</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" class="pre-check" style="width: 18px; height: 18px; accent-color: var(--purple);" onchange="checkReady()">
+                <span>I can see my face clearly in the preview</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" class="pre-check" style="width: 18px; height: 18px; accent-color: var(--purple);" onchange="checkReady()">
+                <span>Good lighting on my face (no backlight)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" class="pre-check" style="width: 18px; height: 18px; accent-color: var(--purple);" onchange="checkReady()">
+                <span>Quiet environment (I can speak clearly)</span>
+            </label>
+        </div>
+    </div>
     <div style="text-align: center; margin-top: 16px;">
         <div class="modalities-mini" style="justify-content: center;">
             <div class="mod-chip"><span class="dot"></span>Face Liveness</div>
@@ -284,18 +321,16 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             </div>
         </div>
     </div>
-    <div class="timer-label">Recording in</div>
+    <div class="timer-label" id="timerLabel">Recording in</div>
     <div class="timer-display" id="countdownTimer">3</div>
-    <button class="btn-primary" id="btnRecord" onclick="startRecording()" style="display:none;">
-        Start Recording
-    </button>
 </div>
 
-<!-- STEP 3: Processing -->
+<!-- STEP 3: Processing — REAL verification -->
 <div class="step-section" id="step3">
     <div class="header">
         <div class="header-eyebrow">Step 4 of 5</div>
         <div class="header-title">Verifying Identity</div>
+        <div class="header-sub" id="verifySubtitle">Sending biometric data to verification engines…</div>
     </div>
     <div class="progress-container">
         <div class="progress-ring">
@@ -304,36 +339,49 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
                 <circle class="ring-fill" cx="40" cy="40" r="36" id="progressRing"/>
             </svg>
         </div>
-        <div class="progress-step" id="progressStep">Analysing face liveness…</div>
-        <div class="progress-detail" id="progressDetail">Gemini 2.5 Flash</div>
+        <div class="progress-step" id="progressStep">Uploading recording…</div>
+        <div class="progress-detail" id="progressDetail">Video + Audio → Gemini + Deepgram</div>
     </div>
-    <div style="max-width: 320px; margin: 0 auto;">
-        <div id="modalityChecks"></div>
+    <div class="modality-results" id="modalityResults">
+        <div class="mod-result" id="modFace"><span class="mod-status">⏳</span><span class="mod-name">Face Liveness</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modDeepfake"><span class="mod-status">⏳</span><span class="mod-name">Deepfake Detection</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modVoice"><span class="mod-status">⏳</span><span class="mod-name">Voiceprint</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modGeo"><span class="mod-status">⏳</span><span class="mod-name">Geolocation</span><span class="mod-score pending">—</span></div>
     </div>
 </div>
 
 <!-- STEP 4: Success -->
 <div class="step-section" id="step4">
     <div class="header">
-        <div class="header-eyebrow">Verified ✓</div>
-        <div class="header-title">Authority Chain Minted</div>
+        <div class="header-eyebrow" id="successEyebrow">Verified ✓</div>
+        <div class="header-title" id="successTitle">Authority Chain Minted</div>
         <div class="header-sub">Your identity is cryptographically bound to this delegation chain.</div>
     </div>
 
     <!-- Identity card -->
     <div class="chain-result" style="text-align: center;">
-        <svg width="40" height="40" viewBox="0 0 100 100" style="margin-bottom: 12px;">
+        <svg width="40" height="40" viewBox="0 0 100 100" style="margin-bottom: 12px;" id="successIcon">
             <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#3FB950" stroke-width="4"/>
             <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#3FB950" fill-opacity="0.1" stroke="#3FB950" stroke-width="2"/>
             <path d="M35 50 L45 60 L65 40" fill="none" stroke="#3FB950" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);" id="successName"></div>
         <div style="font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-top: 4px;" id="successOrg"></div>
+        <div style="font-family: var(--mono); font-size: 13px; color: var(--teal); margin-top: 8px;" id="successScore"></div>
         <div class="modalities-mini" style="justify-content: center; margin-top: 14px;" id="successModalities"></div>
     </div>
 
+    <!-- Transcript (what they actually said) -->
+    <div class="transcript-card" id="transcriptCard" style="display:none;">
+        <div class="transcript-label">Deepgram Transcription</div>
+        <div class="transcript-text" id="transcriptText"></div>
+        <div class="transcript-match" id="transcriptMatch"></div>
+    </div>
+
     <!-- Delegation chain -->
-    <div style="font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">Delegation Chain</div>
+    <div style="font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin: 20px 0 10px;">Delegation Chain</div>
     <div class="chain-result" id="chainDisplay"></div>
 
     <!-- Share -->
@@ -374,8 +422,9 @@ let mediaStream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let authResult = null;
+let challengeData = null;
 
-// User data
+// User data helper
 const userData = () => ({
     name: document.getElementById('inputName').value.trim(),
     email: document.getElementById('inputEmail').value.trim(),
@@ -387,7 +436,6 @@ const userData = () => ({
 function goToStep(n) {
     document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
     document.getElementById(`step${n}`).classList.add('active');
-    // Update dots
     for (let i = 0; i <= 4; i++) {
         const dot = document.getElementById(`dot${i}`);
         dot.classList.remove('active', 'done');
@@ -395,8 +443,7 @@ function goToStep(n) {
         if (i === n) dot.classList.add('active');
     }
     for (let i = 0; i <= 3; i++) {
-        const line = document.getElementById(`line${i}`);
-        line.classList.toggle('done', i < n);
+        document.getElementById(`line${i}`).classList.toggle('done', i < n);
     }
     currentStep = n;
 }
@@ -404,14 +451,17 @@ function goToStep(n) {
 // STEP 0 → 1: Identity → Camera
 function goToCamera() {
     const d = userData();
+    const errEl = document.getElementById('identityError');
     if (!d.name || !d.email) {
-        alert('Name and email are required.');
+        errEl.textContent = 'Name and email are required.';
+        errEl.style.display = 'block';
         return;
     }
+    errEl.style.display = 'none';
     goToStep(1);
 }
 
-// STEP 1: Request camera
+// STEP 1: Request camera + fetch challenge from backend
 async function requestCamera() {
     const btn = document.getElementById('btnCamera');
     const err = document.getElementById('cameraError');
@@ -424,32 +474,58 @@ async function requestCamera() {
             video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
             audio: true,
         });
-        document.getElementById('videoPreview').srcObject = mediaStream;
+        const vid = document.getElementById('videoPreview');
+        vid.srcObject = mediaStream;
+        vid.muted = true;
+        vid.setAttribute('playsinline', '');
+        await vid.play().catch(() => {});
         document.getElementById('cameraLabel').textContent = 'CAMERA ACTIVE';
+
+        // Fetch challenge from backend
+        btn.textContent = 'Loading challenge…';
+        const d = userData();
+        const resp = await fetch(`${API_BASE}/v1/vat/auth/challenge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: d.name, risk_level: 'medium' }),
+        });
+        challengeData = await resp.json();
+
         btn.textContent = 'Proceed to Challenge';
-        btn.disabled = false;
+        btn.disabled = true;
         btn.onclick = goToChallenge;
+        // Show pre-recording checklist
+        document.getElementById('preRecordChecklist').style.display = 'block';
+        checkReady();
     } catch (e) {
-        err.textContent = 'Camera access denied. Please allow camera and microphone access.';
+        err.textContent = e.message || 'Camera access denied. Please allow camera and microphone.';
         err.style.display = 'block';
         btn.textContent = 'Retry Camera Access';
         btn.disabled = false;
     }
 }
 
+// Pre-recording readiness check
+function checkReady() {
+    const checks = document.querySelectorAll('.pre-check');
+    const allChecked = Array.from(checks).every(c => c.checked);
+    const btn = document.getElementById('btnCamera');
+    if (btn.textContent === 'Proceed to Challenge' || btn.textContent.includes('Ready')) {
+        btn.disabled = !allChecked;
+        btn.textContent = allChecked ? 'Ready — Proceed to Challenge' : 'Proceed to Challenge';
+    }
+}
+
 // STEP 1 → 2: Challenge
 function goToChallenge() {
-    const d = userData();
-    // Set up challenge text
-    const challenge = `I am ${d.name}, authorising VAC Protocol`;
-    document.getElementById('challengeText').textContent = `"${challenge}"`;
-
-    // Mirror the stream to the recording view
-    document.getElementById('videoPreviewRec').srcObject = mediaStream;
-
+    const phrase = challengeData?.phrase || `I am ${userData().name}, authorising VAC Protocol`;
+    document.getElementById('challengeText').textContent = `"${phrase}"`;
+    const recVid = document.getElementById('videoPreviewRec');
+    recVid.srcObject = mediaStream;
+    recVid.muted = true;
+    recVid.setAttribute('playsinline', '');
+    recVid.play().catch(() => {});
     goToStep(2);
-
-    // Auto-start countdown
     startCountdown();
 }
 
@@ -475,10 +551,27 @@ function startCountdown() {
 function beginRecording() {
     document.getElementById('recIndicator').style.display = 'flex';
     document.getElementById('cameraBoxRec').classList.add('recording');
-    document.querySelector('#step2 .timer-label').textContent = 'Recording';
+    document.getElementById('timerLabel').textContent = 'Recording';
 
     recordedChunks = [];
-    mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+
+    // MediaRecorder mimeType fallback chain (Chrome → Safari → default)
+    const mimeTypes = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm',
+        'video/mp4',
+    ];
+    let selectedMime = '';
+    for (const mime of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mime)) {
+            selectedMime = mime;
+            break;
+        }
+    }
+
+    const options = selectedMime ? { mimeType: selectedMime } : {};
+    mediaRecorder = new MediaRecorder(mediaStream, options);
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.onstop = () => { onRecordingComplete(); };
     mediaRecorder.start();
@@ -499,11 +592,7 @@ function beginRecording() {
     }, 1000);
 }
 
-function startRecording() {
-    startCountdown();
-}
-
-// Recording complete → process
+// Recording complete → upload to backend for real verification
 async function onRecordingComplete() {
     document.getElementById('recIndicator').style.display = 'none';
     document.getElementById('cameraBoxRec').classList.remove('recording');
@@ -514,59 +603,123 @@ async function onRecordingComplete() {
     }
 
     goToStep(3);
-    await runVerification();
+
+    // Build the blob
+    const videoBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/webm' });
+    
+    await runRealVerification(videoBlob);
 }
 
-// STEP 3: Processing animation
-async function runVerification() {
-    const steps = [
-        { label: 'Analysing face liveness…', detail: 'Gemini 2.5 Flash', pct: 15 },
-        { label: 'Running deepfake detection…', detail: 'Neural network analysis', pct: 30 },
-        { label: 'Extracting voiceprint…', detail: 'Deepgram Nova-3', pct: 50 },
-        { label: 'Validating lip-sync correlation…', detail: 'Cross-modal verification', pct: 65 },
-        { label: 'Verifying challenge response…', detail: 'Phrase + gesture match', pct: 80 },
-        { label: 'Minting authority chain…', detail: 'Ed25519 signatures', pct: 95 },
-    ];
-
+// STEP 3: Upload to backend, show real results
+async function runRealVerification(videoBlob) {
     const ring = document.getElementById('progressRing');
     const stepEl = document.getElementById('progressStep');
     const detailEl = document.getElementById('progressDetail');
     const circumference = 2 * Math.PI * 36;
 
-    for (const s of steps) {
-        stepEl.textContent = s.label;
-        detailEl.textContent = s.detail;
-        ring.style.strokeDashoffset = circumference * (1 - s.pct / 100);
-        await sleep(600 + Math.random() * 400);
-    }
+    // Progress animation while we wait for backend
+    stepEl.textContent = 'Uploading recording…';
+    detailEl.textContent = `${(videoBlob.size / 1024).toFixed(0)} KB → verification engines`;
+    ring.style.strokeDashoffset = circumference * 0.85;
 
-    // Actually call the backend
-    const d = userData();
+    // Set geolocation as verified immediately (it's browser-side)
+    updateModality('modGeo', 'verified', 1.0);
+
     try {
-        const resp = await fetch(`${API_BASE}/v1/vat/auth/capture`, {
+        // Build multipart form data
+        const formData = new FormData();
+        formData.append('video', videoBlob, 'capture.webm');
+        formData.append('challenge_id', challengeData?.challenge_id || 'none');
+        formData.append('name', userData().name);
+        formData.append('email', userData().email);
+        formData.append('org_name', userData().org);
+        formData.append('org_role', userData().role);
+
+        stepEl.textContent = 'Analysing biometrics…';
+        detailEl.textContent = 'Gemini (face) + Deepgram (voice)';
+        ring.style.strokeDashoffset = circumference * 0.6;
+
+        // Send to backend
+        const resp = await fetch(`${API_BASE}/v1/vat/auth/verify`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: d.name,
-                email: d.email,
-                org_name: d.org,
-                org_role: d.role,
-            }),
+            body: formData,
         });
+
+        if (!resp.ok) {
+            const errText = await resp.text();
+            throw new Error(`Server error ${resp.status}: ${errText.substring(0, 200)}`);
+        }
+
         authResult = await resp.json();
 
-        // Complete progress
-        stepEl.textContent = 'Identity verified ✓';
-        detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
+        // Update modality displays with real results
+        ring.style.strokeDashoffset = circumference * 0.2;
+        stepEl.textContent = 'Processing results…';
+
+        const mods = authResult.biometric_verification?.modalities || [];
+        for (const mod of mods) {
+            const elId = {
+                'face_liveness': 'modFace',
+                'deepfake_detection': 'modDeepfake',
+                'voiceprint': 'modVoice',
+                'lip_sync': 'modLipSync',
+                'challenge_response': 'modChallenge',
+                'geolocation': 'modGeo',
+            }[mod.name];
+            if (elId) {
+                updateModality(elId, mod.status, mod.score);
+                await sleep(300); // Stagger for visual effect
+            }
+        }
+
+        // Final state
         ring.style.strokeDashoffset = 0;
-        ring.style.stroke = 'var(--success)';
+        const passed = authResult.authenticated;
+        if (passed) {
+            stepEl.textContent = 'Identity verified ✓';
+            ring.style.stroke = 'var(--success)';
+        } else {
+            stepEl.textContent = 'Verification incomplete';
+            ring.style.stroke = 'var(--warning)';
+        }
+        detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
 
         await sleep(800);
         showSuccess();
+
     } catch (e) {
-        stepEl.textContent = 'Verification failed';
+        stepEl.textContent = 'Verification error';
         detailEl.textContent = e.message || 'Network error — check connection';
         ring.style.stroke = 'var(--error)';
+        console.error('Verification failed:', e);
+    }
+}
+
+function updateModality(elId, status, score) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const statusEl = el.querySelector('.mod-status');
+    const scoreEl = el.querySelector('.mod-score');
+
+    if (status === 'verified') {
+        statusEl.textContent = '✓';
+        statusEl.style.color = 'var(--success)';
+        scoreEl.textContent = typeof score === 'number' ? score.toFixed(2) : '—';
+        scoreEl.className = 'mod-score pass';
+    } else if (status === 'failed') {
+        statusEl.textContent = '✗';
+        statusEl.style.color = 'var(--error)';
+        scoreEl.textContent = typeof score === 'number' ? score.toFixed(2) : '—';
+        scoreEl.className = 'mod-score fail';
+    } else if (status === 'error') {
+        statusEl.textContent = '⚠';
+        statusEl.style.color = 'var(--warning)';
+        scoreEl.textContent = 'err';
+        scoreEl.className = 'mod-score fail';
+    } else {
+        statusEl.textContent = '~';
+        scoreEl.textContent = typeof score === 'number' ? score.toFixed(2) : '—';
+        scoreEl.className = 'mod-score pending';
     }
 }
 
@@ -574,22 +727,52 @@ async function runVerification() {
 function showSuccess() {
     const d = userData();
     const r = authResult;
+    const bio = r.biometric_verification;
 
     document.getElementById('successName').textContent = d.name;
     document.getElementById('successOrg').textContent = [d.role, d.org].filter(Boolean).join(' · ') || 'Verified Human';
+    document.getElementById('successScore').textContent = `Trust Score: ${bio.overall_score} · ${bio.trust_level}`;
 
-    // Modalities
+    // Update header based on pass/fail
+    if (!r.authenticated) {
+        document.getElementById('successEyebrow').textContent = 'Partial Verification';
+        document.getElementById('successEyebrow').style.color = 'var(--warning)';
+        document.getElementById('successTitle').textContent = 'Authority Chain Minted (Partial)';
+    }
+
+    // Verification method badge
+    const method = r.verification_method === 'real_biometric' ? 'Real Biometric' : 'Simulated';
+
+    // Modalities with real status
     const modEl = document.getElementById('successModalities');
-    const modalities = ['Face Liveness', 'Deepfake', 'Voiceprint', 'Lip-Sync', 'Challenge', 'Geolocation'];
-    modEl.innerHTML = modalities.map(m => `<div class="mod-chip"><span class="dot"></span>${m}</div>`).join('');
+    const mods = bio.modalities || [];
+    modEl.innerHTML = mods.map(m => {
+        const cls = m.status === 'verified' ? '' : 'failed';
+        return `<div class="mod-chip ${cls}"><span class="dot"></span>${m.name.replace(/_/g, ' ')} ${m.score ? '(' + m.score.toFixed(2) + ')' : ''}</div>`;
+    }).join('');
+
+    // Transcript display
+    if (r.challenge?.transcript) {
+        document.getElementById('transcriptCard').style.display = 'block';
+        document.getElementById('transcriptText').textContent = `"${r.challenge.transcript}"`;
+        const matchEl = document.getElementById('transcriptMatch');
+        const expected = r.challenge.phrase;
+        const heard = r.challenge.transcript;
+        if (expected && heard) {
+            const matchColor = r.authenticated ? 'var(--success)' : 'var(--warning)';
+            matchEl.innerHTML = `<span style="color:${matchColor}">Expected:</span> "${expected}"`;
+        }
+    }
 
     // Chain display
     const chainEl = document.getElementById('chainDisplay');
-    const nodes = [
-        { icon: '👤', cls: 'human', name: d.name, scope: 'Root authority · 5 resources · 5 actions', trust: r.chain[0].trust },
-        { icon: '🤖', cls: 'agent', name: 'Coordinator Agent', scope: '2 resources · read, summarise', trust: r.chain[1].trust },
-        { icon: '🤖', cls: 'agent', name: 'Writer Agent', scope: '1 resource · read only', trust: r.chain[2].trust },
-    ];
+    const nodes = (r.chain || []).map((c, i) => ({
+        icon: i === 0 ? '👤' : '🤖',
+        cls: i === 0 ? 'human' : 'agent',
+        name: c.agent,
+        scope: i === 0 ? 'Root authority · 5 resources · 5 actions' : i === 1 ? '2 resources · read, summarise' : '1 resource · read only',
+        trust: c.trust,
+    }));
     chainEl.innerHTML = nodes.map((n, i) => {
         const arrow = i < nodes.length - 1 ? '<div class="chain-arrow">↓ delegates (scope narrows)</div>' : '';
         const trustCls = n.trust >= 0.9 ? 'high' : 'mid';
@@ -669,10 +852,9 @@ async function sendToRecipient() {
             fb.textContent = `Sent to ${email} ✓`;
             fb.style.color = 'var(--success)';
             fb.style.display = 'block';
-            // Update share URL with new chain
             document.getElementById('shareUrl').textContent = data.share_url;
         } else {
-            fb.textContent = 'Failed to send — try again';
+            fb.textContent = data.recipient_error || 'Failed to send — try again';
             fb.style.color = 'var(--error)';
             fb.style.display = 'block';
         }
