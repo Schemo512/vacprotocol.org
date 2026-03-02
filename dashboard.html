@@ -159,13 +159,50 @@ h+=`<div class="quick-links"><a href="/auth" class="quick-link">Re-verify</a><a 
 
 // Agents
 h+='<div class="tab-content" id="tab-agents">';
-h+=`<div class="section-header"><div class="section-title">Active Agents · ${_data.agents_count}</div><a href="/auth" class="section-action">+ Create Agent</a></div>`;
+h+=`<div class="section-header"><div class="section-title">Agent Chains · ${_data.agents_count}</div><a href="/auth" class="section-action">+ Create Agent</a></div>`;
 if(!_data.agents.length){h+='<div class="card"><div class="card-body"><div class="empty">No active agents. <a href="/auth">Verify to create your first chain.</a></div></div></div>';}
-else _data.agents.forEach(a=>{const c=a.constraints||{};const acts=c.allowed_actions||['read','write','execute'];const excl=c.exclusions||[];
+else _data.agents.forEach(a=>{const c=a.constraints||{};const acts=c.allowed_actions||['read','write','execute'];const excl=c.exclusions||[];const dp=a.delegation_policy||{};
 const budgets=[];if(c.max_spend_usd)budgets.push({l:'USD',m:c.max_spend_usd,u:0,p:'$'});if(c.token_budget)budgets.push({l:'Tokens',m:c.token_budget,u:0,p:''});if(c.max_api_calls)budgets.push({l:'API',m:c.max_api_calls,u:0,p:''});
 h+=`<div class="card"><div class="card-body"><div class="agent-header"><div class="agent-icon active">⚡</div><div class="agent-name">${a.agent_id}</div><span class="agent-status active">Active</span></div><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);">Depth ${a.depth} · Trust ${(a.trust_score*100).toFixed(0)}%</div><div class="cap-chips">${acts.map(x=>`<span class="cap-chip allowed">${x}</span>`).join('')}${excl.map(x=>`<span class="cap-chip excluded">${x}</span>`).join('')}</div>`;
 if(budgets.length){h+='<div class="gauge-row">';budgets.forEach(b=>{const pct=b.m>0?Math.round(b.u/b.m*100):0;h+=`<div class="gauge"><div class="gauge-header"><span class="gauge-label">${b.l}</span><span class="gauge-value">${b.p}${b.u.toLocaleString()} / ${b.p}${b.m.toLocaleString()}</span></div><div class="gauge-bar"><div class="gauge-fill ${gc(pct)}" style="width:${pct}%"></div></div></div>`;});h+='</div>';}
-h+=`<div class="agent-actions"><button class="agent-btn" onclick="window.open('${a.verify_url}')">View Chain</button><button class="agent-btn" onclick="adjustBudget('${a.jti}')">Adjust Budget</button><button class="agent-btn danger" onclick="revokeAgent('${a.jti}')">Revoke</button></div></div></div>`;});
+// Delegation policy section
+h+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">';
+h+='<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Delegation Authority</div>';
+const canDelegate=dp.allowed!==false;
+const maxCh=dp.max_children||5;
+const childrenCanD=dp.children_can_delegate!==false;
+const needsApproval=dp.require_human_approval||false;
+h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">`;
+h+=`<span class="cap-chip ${canDelegate?'allowed':''}" style="${!canDelegate?'color:var(--error);border-color:var(--error-border);':''}">Can delegate: ${canDelegate?'Yes':'No'}</span>`;
+h+=`<span class="cap-chip">Max children: ${maxCh}</span>`;
+h+=`<span class="cap-chip">Used: ${a.children_count||0}/${maxCh}</span>`;
+h+=`<span class="cap-chip ${childrenCanD?'':'excluded'}">Sub-agents can delegate: ${childrenCanD?'Yes':'No'}</span>`;
+h+=`<span class="cap-chip ${needsApproval?'':'allowed'}">${needsApproval?'Requires human approval':'Auto-approved'}</span>`;
+h+=`</div>`;
+// Show children (sub-agents) as indented tree
+const children=a.children||[];
+if(children.length>0){
+h+='<div style="margin-top:6px;">';
+children.forEach(ch=>{
+const chTrust=(ch.trust_score*100).toFixed(0);
+const chStatus=ch.status==='revoked'?'<span style="color:var(--error);font-size:9px;">REVOKED</span>':'<span style="color:var(--success);font-size:9px;">ACTIVE</span>';
+const chDp=ch.delegation_policy||{};
+const chCanD=chDp.allowed!==false;
+h+=`<div style="margin-left:16px;padding:8px 10px;border-left:2px solid var(--purple-border);margin-bottom:4px;background:var(--surface-raised);border-radius:0 6px 6px 0;">`;
+h+=`<div style="display:flex;align-items:center;gap:8px;">`;
+h+=`<span style="font-family:var(--mono);font-size:9px;color:var(--purple);">↳</span>`;
+h+=`<span style="font-size:12px;font-weight:600;color:var(--text-primary);flex:1;">${ch.agent_id}</span>`;
+h+=chStatus;
+h+=`</div>`;
+h+=`<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:2px;">Depth ${ch.depth} · Trust ${chTrust}% · Can delegate: ${chCanD?'yes':'no'} · Sub-agents: ${ch.children_count||0}</div>`;
+h+=`<div style="display:flex;gap:4px;margin-top:4px;">`;
+h+=`<button class="agent-btn" style="flex:none;padding:2px 8px;font-size:9px;" onclick="window.open('${ch.verify_url}')">View</button>`;
+if(ch.status!=='revoked')h+=`<button class="agent-btn danger" style="flex:none;padding:2px 8px;font-size:9px;" onclick="revokeAgent('${ch.jti}')">Revoke</button>`;
+h+=`</div></div>`;
+});
+h+='</div>';}
+h+='</div>';
+h+=`<div class="agent-actions"><button class="agent-btn" onclick="window.open('${a.verify_url}')">View Full Chain</button><button class="agent-btn" onclick="adjustBudget('${a.jti}')">Adjust Budget</button><button class="agent-btn" onclick="toggleDelegation('${a.jti}',${!canDelegate})">Turn Delegation ${canDelegate?'Off':'On'}</button><button class="agent-btn danger" onclick="revokeAgent('${a.jti}')">Revoke All</button></div></div></div>`;});
 h+='</div>';
 
 // Contacts
@@ -196,6 +233,7 @@ function sinp(id,label,sub,val,pre){return`<div class="setting-row"><div><div cl
 
 async function revokeAgent(jti){if(!confirm('Revoke this agent and all downstream chains?'))return;try{await fetch(`${API}/v1/vat/revoke/${jti}?cascade=true`,{method:'POST'});location.reload();}catch(e){alert('Failed: '+e.message);}}
 function adjustBudget(jti){const n=prompt('New USD budget limit:','50');if(!n)return;alert('Budget adjust: POST /v1/vat/spend/'+jti+'/adjust → $'+n);}
+function toggleDelegation(jti, newState){if(!confirm(`${newState?'Enable':'Disable'} delegation for this agent${!newState?' and all its children':''}?`))return;alert(`Delegation ${newState?'enabled':'disabled'} for ${jti}.\n\nIn production: PATCH /v1/vat/${jti}/delegation-policy\n{"allowed": ${newState}}`);}
 async function saveDefaults(){const pd={ephemeral:document.getElementById('setEphemeral').checked,attention_gated:document.getElementById('setAttention').checked,geo_fenced:document.getElementById('setGeo').checked};const ab={max_spend_usd:parseFloat(document.getElementById('setSpend').value)||50,token_budget:parseInt(document.getElementById('setTokens').value)||500000,max_api_calls:parseInt(document.getElementById('setCalls').value)||1000};
 try{const r=await fetch(`${API}/v1/user/${enc(email)}/defaults`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({protection_defaults:pd,agent_budget_defaults:ab})});if(r.ok){const b=document.querySelector('.save-btn');b.textContent='Saved ✓';setTimeout(()=>b.textContent='Save Defaults',2000);}}catch(e){alert('Failed: '+e.message);}}
 init();
