@@ -462,7 +462,7 @@ function switchTheme(id) {
     }
 }
 
-function render(data, verif) {
+function render(data, verif, budgetData) {
     const app = document.getElementById('app');
     const theme = (typeof VACTheme !== 'undefined') ? VACTheme.current() : { meta: {} };
 
@@ -596,6 +596,33 @@ function render(data, verif) {
         <a href="/msg?from=${encodeURIComponent(v.email || '')}&name=${encodeURIComponent(v.subject || '')}" style="flex:1;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);color:var(--accent);cursor:pointer;letter-spacing:0.5px;text-decoration:none;text-align:center;display:block;">Send Verified Message</a>
     </div>`;
     h += '</div>';
+
+    // Budget / Spend Controls (patent claims 242-271)
+    if (budgetData && budgetData.budgets && budgetData.budgets.length > 0) {
+        h += '<div class="section"><div class="section-label">Spend Controls</div><div class="card" style="padding:20px;">';
+        h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Patent Claims 242–271 · Monotonic Budget Narrowing</div>';
+        budgetData.budgets.forEach(b => {
+            const pct = Math.min(b.utilisation_pct, 100);
+            const color = pct > 90 ? 'var(--error)' : pct > 60 ? 'var(--warning)' : 'var(--success)';
+            const prefix = b.unit === '$' ? '$' : '';
+            const suffix = b.unit !== '$' ? (' ' + b.unit) : '';
+            h += `<div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+                    <span style="font-size:13px;font-weight:600;color:var(--text-primary);">${b.label}</span>
+                    <span style="font-family:var(--mono);font-size:12px;color:${color};">${prefix}${b.spent.toLocaleString()}${suffix} / ${prefix}${b.budget.toLocaleString()}${suffix}</span>
+                </div>
+                <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+                    <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 1s ease;"></div>
+                </div>
+                ${b.narrowing ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:3px;">Parent: ${b.narrowing}</div>` : ''}
+            </div>`;
+        });
+        if (budgetData.time_window_minutes) {
+            h += `<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding-top:8px;border-top:1px solid var(--border);">Time window: ${budgetData.time_window_minutes} minutes</div>`;
+        }
+        h += `<div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-top:8px;">Budget exceeded → chain auto-revoked (hard stop, not alert)</div>`;
+        h += '</div></div>';
+    }
 
     // Token inspector
     if (verif && verif.chain) {
@@ -870,16 +897,20 @@ function demoData() {
     };
 }
 
+async function fetchBudget(jti) {
+    try { const r = await fetch(`${API_BASE}/v1/vat/budget/${jti}`); if (!r.ok) return null; return await r.json(); } catch { return null; }
+}
+
 async function init() {
     const jti = getJTI();
     _currentJTI = jti || '';
     const params = new URLSearchParams(window.location.search);
 
     if (jti) {
-        const [c, v] = await Promise.all([fetchChain(jti), fetchVerif(jti)]);
-        render(c, v);
+        const [c, v, b] = await Promise.all([fetchChain(jti), fetchVerif(jti), fetchBudget(jti)]);
+        render(c, v, b);
     } else {
-        render(demoData(), demoData().verification);
+        render(demoData(), demoData().verification, null);
         // Show theme picker in demo mode
         document.getElementById('themeSelector').classList.add('show');
         const pick = document.getElementById('themePicker');
