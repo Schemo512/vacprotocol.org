@@ -186,6 +186,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .mod-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
 .mod-chip.failed { color: var(--error); background: var(--error-bg); border-color: var(--error-border); }
 .mod-chip.failed .dot { background: var(--error); }
+.mod-chip.optional { opacity: 0.45; }
+.mod-chip.optional .dot { background: var(--text-quaternary); }
+.mod-chip.recommended { opacity: 0.7; border-style: dashed; }
+.adaptive-auth-bar { text-align: center; margin-bottom: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.5px; padding: 6px 12px; border-radius: 6px; }
+.adaptive-auth-bar.streamlined { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
+.adaptive-auth-bar.standard { color: var(--purple); background: var(--purple-bg); border: 1px solid var(--purple-border); }
 
 /* Timer */
 .timer-display { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); text-align: center; margin: 8px 0; }
@@ -323,13 +329,14 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
     </div>
     <div style="text-align: center; margin-top: 16px;">
-        <div class="modalities-mini" style="justify-content: center;">
-            <div class="mod-chip"><span class="dot"></span>Face Liveness</div>
-            <div class="mod-chip"><span class="dot"></span>Deepfake Detection</div>
-            <div class="mod-chip"><span class="dot"></span>Voiceprint</div>
-            <div class="mod-chip"><span class="dot"></span>Lip-Sync</div>
-            <div class="mod-chip"><span class="dot"></span>Challenge Response</div>
-            <div class="mod-chip"><span class="dot"></span>Geolocation</div>
+        <div id="adaptiveAuthBar" class="adaptive-auth-bar standard" style="display:none;"></div>
+        <div class="modalities-mini" style="justify-content: center;" id="modalityChips">
+            <div class="mod-chip" data-mod="video_liveness"><span class="dot"></span>Face Liveness</div>
+            <div class="mod-chip" data-mod="deepfake_detection"><span class="dot"></span>Deepfake Detection</div>
+            <div class="mod-chip" data-mod="voice_biometric"><span class="dot"></span>Voiceprint</div>
+            <div class="mod-chip" data-mod="lip_sync"><span class="dot"></span>Lip-Sync</div>
+            <div class="mod-chip" data-mod="otp_verification"><span class="dot"></span>Challenge Response</div>
+            <div class="mod-chip" data-mod="geolocation"><span class="dot"></span>Geolocation</div>
         </div>
     </div>
 </div>
@@ -597,6 +604,8 @@ async function requestCamera() {
         // Show pre-recording checklist
         document.getElementById('preRecordChecklist').style.display = 'block';
         checkReady();
+        // Fetch adaptive modality requirements
+        fetchModalityRequirements();
     } catch (e) {
         err.textContent = e.message || 'Camera access denied. Please allow camera and microphone.';
         err.style.display = 'block';
@@ -1083,6 +1092,43 @@ async function sendToRecipient() {
     }
     btn.disabled = false;
     btn.textContent = 'Send Verification Link';
+}
+
+// Fetch adaptive modality requirements based on trust relationship
+async function fetchModalityRequirements() {
+    const email = userData().email;
+    if (!email) return;
+    try {
+        const resp = await fetch(`${API_BASE}/v1/modality-requirements/${encodeURIComponent(email)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const policy = data.modality_policy;
+        if (!policy) return;
+
+        // Show adaptive bar
+        const bar = document.getElementById('adaptiveAuthBar');
+        const lvl = policy.label.toLowerCase();
+        bar.className = `adaptive-auth-bar ${lvl}`;
+        bar.textContent = `${policy.label}: ${policy.total_required} of ${policy.total_available} modalities required`;
+        bar.style.display = 'block';
+
+        // Update chips: dim optional/can-skip
+        const chips = document.querySelectorAll('#modalityChips .mod-chip');
+        chips.forEach(chip => {
+            const mod = chip.dataset.mod;
+            chip.classList.remove('optional', 'recommended');
+            if (policy.can_skip && policy.can_skip.includes(mod)) {
+                chip.classList.add('optional');
+            } else if (policy.optional && policy.optional.includes(mod)) {
+                chip.classList.add('optional');
+            } else if (policy.recommended && policy.recommended.includes(mod)) {
+                chip.classList.add('recommended');
+            }
+        });
+    } catch (e) {
+        // Silently fail — default to showing all modalities as required
+        console.warn('Could not fetch modality requirements:', e);
+    }
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
