@@ -126,7 +126,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-second
 </div></div>
 <div class="page" id="content"><div style="text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-quaternary);">Loading…</div></div>
 <script>
-const API='https://vac-system-production.up.railway.app';const params=new URLSearchParams(location.search);const email=params.get('email')||'';let _data=null,_freshness=null;
+const API='https://vac-system-production.up.railway.app';const params=new URLSearchParams(location.search);const email=params.get('email')||'';const isDemo=params.get('demo')==='true';let _data=null,_freshness=null;
 function switchTab(t){document.querySelectorAll('.nav-tab').forEach(n=>n.classList.remove('active'));document.querySelector(`.nav-tab[onclick*="${t}"]`).classList.add('active');document.querySelectorAll('.tab-content').forEach(n=>n.classList.remove('active'));const el=document.getElementById('tab-'+t);if(el)el.classList.add('active');}
 function timeAgo(iso){if(!iso)return'never';const ms=Date.now()-new Date(iso).getTime();const m=Math.floor(ms/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
 function gc(p){return p>90?'red':p>60?'amber':'green';}
@@ -136,7 +136,9 @@ function tierLabel(t){return{'inner-circle':'Inner Circle','trusted':'Trusted','
 function tierOrder(t){return{'inner-circle':0,'trusted':1,'verified':2,'invited':3,'expired':4}[t]??5;}
 
 async function init(){
-if(!email){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sign in required</div><div><a href="/auth">Verify your identity</a> to access your dashboard</div></div>';return;}
+if(isDemo){
+try{const r=await fetch(`${API}/v1/user/demo/dashboard-preview`);_data=await r.json();_data.protection_defaults=JSON.parse(_data.user.protection_defaults);_data.agent_budget_defaults=JSON.parse(_data.user.agent_budget_defaults);_freshness={freshness:'full',label:'Just Verified',color:'success',decay_factor:1.0,hours_since_verification:0.1,effective_trust_score:0.92,reverify_modality:'selfie_only',actions:{}};render();}catch(e){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;">Demo data failed to load. Check API.</div>';}return;}
+if(!email){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sign in required</div><div><a href="/auth">Verify your identity</a> to access your dashboard</div><div style="margin-top:12px;"><a href="/dashboard?demo=true" style="font-family:var(--mono);font-size:11px;color:var(--purple);">View demo dashboard →</a></div></div>';return;}
 try{const[ur,fr]=await Promise.all([fetch(`${API}/v1/user/${enc(email)}`),fetch(`${API}/v1/user/${enc(email)}/freshness`)]);if(!ur.ok)throw new Error();_data=await ur.json();_freshness=fr.ok?await fr.json():null;render();}
 catch(e){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Not verified yet</div><div><a href="/auth">Complete verification</a> to create your profile</div></div>';}}
 
