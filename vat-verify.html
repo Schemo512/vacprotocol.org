@@ -574,8 +574,8 @@ function render(data, verif, budgetData) {
     }
     h += '</div></div></div>';
 
-    // Chain
-    h += '<div class="section"><div class="section-label">Delegation Chain</div><div class="card"><div class="chain-container"><div class="chain-line"></div>';
+    // Chain (collapsible)
+    h += '<div class="section"><div class="collapse-trigger" onclick="togSection(this,\'chainBody\')"><span>Delegation Chain · ' + cd.length + ' nodes</span><span class="collapse-chevron">▼</span></div><div class="collapse-body" id="chainBody" style="display:none;"><div class="card"><div class="chain-container"><div class="chain-line"></div>';
     cd.forEach((n, i) => {
         const pct = (n.trust_score * 100).toFixed(1);
         const cls = n.trust_score > 0.7 ? 'high' : n.trust_score > 0.4 ? 'mid' : 'low';
@@ -595,7 +595,7 @@ function render(data, verif, budgetData) {
         <button onclick="revokeChain('${rootJti}')" style="flex:0 0 auto;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;border:1px solid var(--error-border);background:var(--error-bg);color:var(--error);cursor:pointer;letter-spacing:0.5px;">Revoke Chain</button>
         <a href="/msg?from=${encodeURIComponent(v.email || '')}&name=${encodeURIComponent(v.subject || '')}" style="flex:1;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);color:var(--accent);cursor:pointer;letter-spacing:0.5px;text-decoration:none;text-align:center;display:block;">Send Verified Message</a>
     </div>`;
-    h += '</div>';
+    h += '</div></div>';
 
     // Budget / Spend Controls (patent claims 242-271)
     if (budgetData && budgetData.budgets && budgetData.budgets.length > 0) {

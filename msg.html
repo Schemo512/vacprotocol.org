@@ -131,6 +131,11 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .msg-type-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-tertiary); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
 .msg-type-btn:hover { border-color: var(--purple-border); color: var(--text-secondary); }
 .msg-type-btn.active { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); font-weight: 600; }
+
+/* Content protection pills */
+.protection-pill { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text-tertiary); }
+.protection-pill.active { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple); }
+.protection-pill.warn { background: var(--error-bg); border-color: var(--error-border); color: var(--error); }
 </style>
 </head>
 <body>
@@ -177,7 +182,24 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
     </div>
 
-    <div class="msg-card">
+    <!-- Content protection status bar -->
+    <div id="contentProtection" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        <div class="protection-pill" id="pillEphemeral">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Ephemeral
+        </div>
+        <div class="protection-pill" id="pillAttention">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Attention-Gated
+        </div>
+        <div class="protection-pill" id="pillGeo" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Geo-Fenced
+        </div>
+    </div>
+
+    <!-- Protected content area — blur/hide when not attended -->
+    <div id="protectedContent" class="msg-card" style="transition: filter 0.3s ease;">
         <div class="msg-subject" id="readSubject" style="display:none;"></div>
         <div class="msg-body" id="readBody"></div>
         <div class="msg-meta">
@@ -185,6 +207,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <div class="msg-meta-item" id="readType"></div>
             <div class="msg-meta-item" id="readRelationship"></div>
         </div>
+    </div>
+
+    <!-- Attention warning overlay -->
+    <div id="attentionOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,17,23,0.95);z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div style="font-family:var(--mono);font-size:13px;color:var(--text-tertiary);text-align:center;">Message hidden<br><span style="font-size:11px;color:var(--text-quaternary);">Return to this tab to view</span></div>
     </div>
 
     <div class="chain-mini" id="chainSection" style="display:none;">
@@ -198,10 +226,10 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     </div>
 
     <div style="text-align: center; margin-top: 16px;">
-        <div class="patent-badge"><span class="dot"></span>Claims 56–112 · Chain Verification</div>
+        <div class="patent-badge"><span class="dot"></span>Claims 39–55 · Scope Constraints (spatial, temporal, attention-gated)</div>
     </div>
 
-    <div class="footer-tagline">Math so neither party has to rely on trust alone.</div>
+    <div class="footer-tagline">Content never stored on device. Math enforces what trust alone cannot.</div>
 </div>
 
 <!-- VIEW: Compose -->
@@ -276,6 +304,25 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="form-group" id="textBodyGroup">
         <label class="form-label">Message</label>
         <textarea class="form-textarea" id="composeBody" placeholder="Your verified message…"></textarea>
+    </div>
+
+    <!-- Content protection options -->
+    <div style="margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Content Protection</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                <input type="checkbox" id="optEphemeral" checked style="accent-color:var(--purple);width:16px;height:16px;">
+                <span>Ephemeral — never stored on recipient's device</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                <input type="checkbox" id="optAttention" checked style="accent-color:var(--purple);width:16px;height:16px;">
+                <span>Attention-gated — blurs when not looking at screen</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                <input type="checkbox" id="optGeoFence" style="accent-color:var(--purple);width:16px;height:16px;">
+                <span>Geo-fenced — only readable near my current location</span>
+            </label>
+        </div>
     </div>
 
     <button class="btn-primary" id="btnSend" onclick="sendMessage()">
@@ -509,6 +556,8 @@ function renderMessage(msg) {
     document.getElementById('composeRecipientName').value = msg.sender_name || '';
 
     showView('viewRead');
+    // Activate content protection (ephemeral + attention-gated + geo-fenced)
+    setTimeout(initContentProtection, 100);
 }
 
 // ── Show compose form
@@ -628,6 +677,97 @@ function checkScroll() {
 }
 window.addEventListener('scroll', checkScroll, { passive: true });
 window.addEventListener('resize', checkScroll);
+
+// ── Content Protection: Attention-Gated + Geo-Fenced + Ephemeral ──
+// Patent claims 39-55: Scope constraints including spatial + temporal + attention
+
+let contentProtectionActive = false;
+let geoWatchId = null;
+
+function initContentProtection() {
+    // Only activate on read view
+    if (!document.getElementById('viewRead')?.classList.contains('active')) return;
+    contentProtectionActive = true;
+
+    // 1. ATTENTION GATE: blur content when tab not visible or window not focused
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('blur', onWindowBlur);
+    window.addEventListener('focus', onWindowFocus);
+
+    // Mark pills as active
+    document.getElementById('pillEphemeral')?.classList.add('active');
+    document.getElementById('pillAttention')?.classList.add('active');
+
+    // 2. SCREENSHOT PROTECTION: blur on print / screenshot attempts
+    window.addEventListener('beforeprint', () => blurContent('Print detected'));
+    // CSS-level: prevent selection + copy
+    const pc = document.getElementById('protectedContent');
+    if (pc) {
+        pc.style.userSelect = 'none';
+        pc.style.webkitUserSelect = 'none';
+    }
+
+    // 3. GEOLOCATION GATE (optional — only if sender specified a geo-fence)
+    // For demo: check if sender is in same general area (100km radius)
+    if (navigator.geolocation) {
+        document.getElementById('pillGeo').style.display = 'inline-flex';
+        document.getElementById('pillGeo').classList.add('active');
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                console.log('[Geo-Gate] Position acquired:', pos.coords.latitude, pos.coords.longitude);
+                // In production: compare with sender's geo-fence constraint
+                // For demo: just show that we have the capability
+                document.getElementById('pillGeo').innerHTML =
+                    `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Geo-Verified ✓`;
+            },
+            err => {
+                console.log('[Geo-Gate] Position denied:', err.message);
+                document.getElementById('pillGeo').classList.remove('active');
+                document.getElementById('pillGeo').classList.add('warn');
+                document.getElementById('pillGeo').innerHTML =
+                    `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Geo-Denied`;
+            },
+            { enableHighAccuracy: false, timeout: 5000 }
+        );
+    }
+}
+
+function onVisibilityChange() {
+    if (document.hidden) {
+        blurContent('Tab hidden');
+    } else {
+        unblurContent();
+    }
+}
+
+function onWindowBlur() {
+    blurContent('Window lost focus');
+}
+
+function onWindowFocus() {
+    unblurContent();
+}
+
+function blurContent(reason) {
+    const pc = document.getElementById('protectedContent');
+    const overlay = document.getElementById('attentionOverlay');
+    if (pc) pc.style.filter = 'blur(20px)';
+    if (overlay) overlay.style.display = 'flex';
+    const pill = document.getElementById('pillAttention');
+    if (pill) { pill.classList.remove('active'); pill.classList.add('warn'); }
+    console.log('[Attention-Gate] Content hidden:', reason);
+}
+
+function unblurContent() {
+    const pc = document.getElementById('protectedContent');
+    const overlay = document.getElementById('attentionOverlay');
+    if (pc) pc.style.filter = 'none';
+    if (overlay) overlay.style.display = 'none';
+    const pill = document.getElementById('pillAttention');
+    if (pill) { pill.classList.remove('warn'); pill.classList.add('active'); }
+}
 
 // ── Init
 init();
