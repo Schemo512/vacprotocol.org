@@ -113,6 +113,10 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 /* Privacy statement */
 .privacy-statement { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
 .privacy-statement svg { flex-shrink: 0; margin-top: 1px; }
+
+/* Audio level indicator */
+.audio-level { position: absolute; bottom: 24px; right: 24px; display: flex; align-items: flex-end; gap: 2px; height: 24px; background: rgba(0,0,0,0.6); padding: 4px 6px; border-radius: 4px; }
+.audio-bar { width: 3px; background: var(--success); border-radius: 1px; transition: height 0.08s ease-out; min-height: 2px; }
 .camera-overlay { position: absolute; inset: 0; pointer-events: none; }
 .camera-corners { position: absolute; inset: 16px; }
 .camera-corners::before, .camera-corners::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--purple); border-style: solid; }
@@ -349,6 +353,13 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <div class="rec-indicator" id="recIndicator" style="display:none;">
                 <span class="rec-dot"></span>REC
             </div>
+            <div class="audio-level" id="audioLevel" style="display:none;">
+                <div class="audio-bar" id="ab0" style="height:2px;"></div>
+                <div class="audio-bar" id="ab1" style="height:2px;"></div>
+                <div class="audio-bar" id="ab2" style="height:2px;"></div>
+                <div class="audio-bar" id="ab3" style="height:2px;"></div>
+                <div class="audio-bar" id="ab4" style="height:2px;"></div>
+            </div>
             </div>
             <div class="camera-challenge">
                 <div class="camera-challenge-text" id="challengeText">Loading challenge…</div>
@@ -390,6 +401,21 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modGeo"><span class="mod-status">⏳</span><span class="mod-name">Geolocation</span><span class="mod-score pending">—</span></div>
+    </div>
+    <div id="retrySection" style="display:none; margin-top: 20px;">
+        <div id="failReasonCard" style="background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;">
+            <div style="font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--error); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">Why it failed</div>
+            <div id="failReasons" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;"></div>
+        </div>
+        <div id="retryTips" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;">
+            <div style="font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">Try this</div>
+            <div id="retryTipsList" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;"></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" onclick="retryVerification()" style="flex: 1;">Retry Verification</button>
+            <button class="btn-secondary" onclick="showSuccess()" id="btnContinueAnyway" style="flex: 0 0 auto; display: none;">Continue Anyway</button>
+        </div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); text-align: center; margin-top: 8px;" id="retryCount"></div>
     </div>
 </div>
 
@@ -464,6 +490,39 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let authResult = null;
 let challengeData = null;
+let retryAttempts = 0;
+const MAX_RETRIES = 3;
+let audioContext = null;
+let audioAnalyser = null;
+let audioAnimFrame = null;
+
+// Fail reason descriptions — specific, actionable (Veriff/iProov pattern)
+const FAIL_REASONS = {
+    face_liveness: {
+        reason: 'Face not detected or liveness check failed.',
+        tip: 'Make sure your face is clearly visible, well-lit, and centered in the oval. Remove sunglasses or hats.'
+    },
+    deepfake_detection: {
+        reason: 'Deepfake indicators detected in the video.',
+        tip: 'Use your device camera directly — screen sharing, virtual cameras, or recorded playback will be rejected.'
+    },
+    voiceprint: {
+        reason: 'Voice not captured clearly enough for analysis.',
+        tip: 'Speak the challenge phrase clearly and at normal volume. Reduce background noise if possible.'
+    },
+    lip_sync: {
+        reason: 'Lip movements did not match the spoken audio.',
+        tip: 'Look directly at the camera while speaking. Make sure your mouth is visible and well-lit.'
+    },
+    challenge_response: {
+        reason: 'Spoken words did not match the challenge phrase.',
+        tip: 'Read the challenge phrase exactly as shown — include the greeting and all digits.'
+    },
+    geolocation: {
+        reason: 'Location could not be determined.',
+        tip: 'Allow location access when prompted by your browser.'
+    },
+};
 
 // User data helper
 const userData = () => ({
@@ -596,8 +655,12 @@ function startCountdown() {
 
 function beginRecording() {
     document.getElementById('recIndicator').style.display = 'flex';
+    document.getElementById('audioLevel').style.display = 'flex';
     document.getElementById('cameraBoxRec').classList.add('recording');
     document.getElementById('timerLabel').textContent = 'Recording';
+
+    // Start audio level monitoring
+    startAudioMonitor();
 
     recordedChunks = [];
 
@@ -646,6 +709,7 @@ function beginRecording() {
 async function onRecordingComplete() {
     document.getElementById('recIndicator').style.display = 'none';
     document.getElementById('cameraBoxRec').classList.remove('recording');
+    stopAudioMonitor();
 
     // Stop camera
     if (mediaStream) {
@@ -728,20 +792,31 @@ async function runRealVerification(videoBlob) {
         if (passed) {
             stepEl.textContent = 'Identity verified ✓';
             ring.style.stroke = 'var(--success)';
+            detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
+            await sleep(800);
+            showSuccess();
         } else {
             stepEl.textContent = 'Verification incomplete';
             ring.style.stroke = 'var(--warning)';
+            detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
+            showRetry(authResult);
         }
-        detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
-
-        await sleep(800);
-        showSuccess();
 
     } catch (e) {
         stepEl.textContent = 'Verification error';
         detailEl.textContent = e.message || 'Network error — check connection';
         ring.style.stroke = 'var(--error)';
         console.error('Verification failed:', e);
+        // Show retry for network errors too
+        const retryEl = document.getElementById('retrySection');
+        retryEl.style.display = 'block';
+        document.getElementById('failReasons').textContent = e.message || 'Network error during verification.';
+        document.getElementById('retryTipsList').textContent = 'Check your internet connection and try again. If the problem persists, try a different browser.';
+        retryAttempts++;
+        document.getElementById('retryCount').textContent = `Attempt ${retryAttempts} of ${MAX_RETRIES}`;
+        if (retryAttempts >= MAX_RETRIES) {
+            document.getElementById('btnContinueAnyway').style.display = 'inline-flex';
+        }
     }
 }
 
@@ -771,6 +846,99 @@ function updateModality(elId, status, score) {
         scoreEl.textContent = typeof score === 'number' ? score.toFixed(2) : '—';
         scoreEl.className = 'mod-score pending';
     }
+}
+
+// Show retry with specific fail reasons
+function showRetry(result) {
+    retryAttempts++;
+    const retryEl = document.getElementById('retrySection');
+    retryEl.style.display = 'block';
+
+    // Collect failed modalities
+    const mods = result.biometric_verification?.modalities || [];
+    const failed = mods.filter(m => m.status === 'failed' || m.status === 'error');
+
+    if (failed.length > 0) {
+        const reasons = failed.map(m => {
+            const info = FAIL_REASONS[m.name] || { reason: `${m.name} check failed.`, tip: '' };
+            return info.reason;
+        });
+        const tips = failed.map(m => {
+            const info = FAIL_REASONS[m.name] || { reason: '', tip: 'Try again with better conditions.' };
+            return info.tip;
+        }).filter(Boolean);
+
+        document.getElementById('failReasons').innerHTML = reasons.map(r =>
+            `<div style="margin-bottom: 4px;">${r}</div>`
+        ).join('');
+        document.getElementById('retryTipsList').innerHTML = [...new Set(tips)].map(t =>
+            `<div style="margin-bottom: 4px;">${t}</div>`
+        ).join('');
+    } else {
+        document.getElementById('failReasons').textContent = 'Verification did not reach the required trust threshold.';
+        document.getElementById('retryTipsList').textContent = 'Ensure good lighting, speak clearly, and look directly at the camera.';
+    }
+
+    document.getElementById('retryCount').textContent = `Attempt ${retryAttempts} of ${MAX_RETRIES}`;
+
+    // After max retries, offer "continue anyway" (mints partial chain)
+    if (retryAttempts >= MAX_RETRIES) {
+        document.getElementById('btnContinueAnyway').style.display = 'inline-flex';
+    }
+}
+
+// Retry: go back to camera step with fresh challenge
+async function retryVerification() {
+    if (retryAttempts >= MAX_RETRIES) return;
+
+    // Reset modality displays
+    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modGeo'].forEach(id => {
+        updateModality(id, 'pending', null);
+    });
+
+    // Hide retry section
+    document.getElementById('retrySection').style.display = 'none';
+
+    // Re-request camera
+    try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: true,
+        });
+    } catch (e) {
+        // Camera may still be available from before
+    }
+
+    // Fetch fresh challenge
+    const d = userData();
+    try {
+        const resp = await fetch(`${API_BASE}/v1/vat/auth/challenge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: d.name, risk_level: 'medium' }),
+        });
+        challengeData = await resp.json();
+    } catch (e) {
+        console.error('Failed to fetch new challenge:', e);
+    }
+
+    // Set up recording preview
+    const phrase = challengeData?.phrase || `I am ${d.name}, authorising VAC Protocol`;
+    document.getElementById('challengeText').textContent = `"${phrase}"`;
+    const recVid = document.getElementById('videoPreviewRec');
+    recVid.srcObject = mediaStream;
+    recVid.muted = true;
+    recVid.setAttribute('playsinline', '');
+    recVid.play().catch(() => {});
+
+    // Reset countdown ring
+    const ringFill = document.getElementById('countdownRingFill');
+    ringFill.classList.remove('recording');
+    ringFill.style.strokeDashoffset = 0;
+
+    // Go to recording step
+    goToStep(2);
+    startCountdown();
 }
 
 // STEP 4: Success
@@ -918,6 +1086,43 @@ async function sendToRecipient() {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Audio level monitoring
+function startAudioMonitor() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        audioAnalyser = audioContext.createAnalyser();
+        audioAnalyser.fftSize = 256;
+        source.connect(audioAnalyser);
+
+        const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+        const bars = [0,1,2,3,4].map(i => document.getElementById(`ab${i}`));
+
+        function updateLevels() {
+            audioAnalyser.getByteFrequencyData(dataArray);
+            // Sample 5 frequency bands
+            const step = Math.floor(dataArray.length / 5);
+            for (let i = 0; i < 5; i++) {
+                const val = dataArray[i * step] / 255;
+                const h = Math.max(2, val * 20);
+                if (bars[i]) bars[i].style.height = h + 'px';
+            }
+            audioAnimFrame = requestAnimationFrame(updateLevels);
+        }
+        updateLevels();
+    } catch (e) {
+        console.warn('Audio monitor unavailable:', e);
+    }
+}
+
+function stopAudioMonitor() {
+    if (audioAnimFrame) cancelAnimationFrame(audioAnimFrame);
+    if (audioContext) audioContext.close().catch(() => {});
+    audioContext = null;
+    audioAnalyser = null;
+    document.getElementById('audioLevel').style.display = 'none';
+}
 </script>
 <script src="vac-themes.js"></script>
 <script>
