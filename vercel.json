@@ -15,6 +15,10 @@
     {
       "source": "/vat/verify/:jti",
       "destination": "/vat-verify.html?jti=:jti"
+    },
+    {
+      "source": "/groups",
+      "destination": "/groups.html"
     }
   ]
 }

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Groups</title>
+<style>
+:root { --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128; --border: #30363D; --text-primary: #F0F6FC; --text-secondary: #C9D1D9; --text-tertiary: #8B949E; --text-quaternary: #6E7681; --purple: #6C5CE7; --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25); --teal: #00CEC9; --teal-bg: rgba(0,206,201,0.08); --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2); --warning: #D29922; --warning-bg: rgba(210,153,34,0.08); --error: #F85149; --error-bg: rgba(248,81,73,0.08); --radius: 10px; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text-secondary); line-height: 1.6; }
+.nav { border-bottom: 1px solid var(--border); padding: 12px 20px; background: var(--bg); position: sticky; top: 0; z-index: 50; }
+.nav-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 8px; }
+.nav-brand { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.nav-brand span { font-weight: 400; color: var(--text-tertiary); }
+.page { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+.card-body { padding: 16px; }
+.section-title { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1.5px; text-transform: uppercase; margin: 20px 0 10px; }
+
+/* Quorum ring */
+.quorum-ring { position: relative; width: 120px; height: 120px; margin: 0 auto 12px; }
+.quorum-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.quorum-ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+.quorum-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.quorum-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.quorum-pct { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.quorum-label { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
+
+/* Member list */
+.member-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.member-row:last-child { border-bottom: none; }
+.member-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.member-dot.verified { background: var(--success); box-shadow: 0 0 4px var(--success); }
+.member-dot.pending { background: var(--text-quaternary); }
+.member-dot.present { background: var(--teal); box-shadow: 0 0 4px var(--teal); }
+.member-name { font-size: 13px; color: var(--text-primary); flex: 1; }
+.member-meta { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
+.member-vote { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+.member-vote.approve { background: var(--success-bg); color: var(--success); }
+.member-vote.deny { background: var(--error-bg); color: var(--error); }
+.member-vote.waiting { background: var(--surface-raised); color: var(--text-quaternary); }
+
+/* Live tree */
+.tree-container { padding: 16px 0; }
+.tree-node { position: relative; margin-left: 24px; padding: 8px 0; }
+.tree-node:before { content: ''; position: absolute; left: -16px; top: 0; bottom: 0; width: 2px; background: var(--purple-border); }
+.tree-node:last-child:before { bottom: 50%; }
+.tree-node:after { content: ''; position: absolute; left: -16px; top: 20px; width: 12px; height: 2px; background: var(--purple-border); }
+.tree-node-card { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+.tree-node-card.root { border-color: var(--purple-border); background: var(--purple-bg); }
+.tree-node-card.active { border-left: 3px solid var(--success); }
+.tree-node-card.revoked { border-left: 3px solid var(--error); opacity: 0.6; }
+.tree-node-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.tree-node-icon.human { background: var(--purple-bg); border: 1px solid var(--purple-border); }
+.tree-node-icon.agent { background: var(--teal-bg); border: 1px solid rgba(0,206,201,0.2); }
+.tree-node-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.tree-node-meta { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); }
+.tree-root { padding-left: 0; margin-left: 0; }
+.tree-root:before, .tree-root:after { display: none; }
+
+/* Presence map placeholder */
+.presence-map { height: 160px; background: var(--surface-raised); border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); margin: 12px 0; }
+
+/* Model selector */
+.model-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.model-chip { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-tertiary); cursor: pointer; }
+.model-chip:hover { border-color: var(--purple-border); color: var(--purple); }
+.model-chip.active { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); }
+.model-desc { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); padding: 8px 12px; background: var(--surface-raised); border-radius: 6px; margin-bottom: 12px; }
+
+.btn { font-family: var(--mono); font-size: 11px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; }
+.btn:hover { background: var(--purple); color: white; }
+.btn.secondary { background: transparent; color: var(--text-tertiary); border-color: var(--border); }
+input,select { font-family: var(--mono); font-size: 12px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; color: var(--text-primary); width: 100%; }
+label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+.form-row { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="nav"><div class="nav-inner">
+    <a href="/" class="nav-brand">
+        <svg width="18" height="18" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
+        VAC <span>GROUPS</span>
+    </a>
+</div></div>
+<div class="page" id="content"></div>
+<script>
+const API='https://vac-system-production.up.railway.app';
+const params=new URLSearchParams(location.search);
+const sessionId=params.get('session');
+const groupId=params.get('group');
+const demo=params.get('demo')==='true';
+
+const MODELS={
+    majority:{name:'Majority',desc:'More than 50% of verified members must approve. Remote voting allowed.',icon:'🗳️',threshold:50,presence:false},
+    supermajority:{name:'Supermajority',desc:'At least 67% of verified members must approve. Remote voting allowed.',icon:'⚖️',threshold:67,presence:false},
+    unanimous:{name:'Unanimous',desc:'Every member must verify and approve. One objection blocks the decision.',icon:'🤝',threshold:100,presence:false},
+    n_of_m:{name:'N-of-M',desc:'A specific number (N) of the total members (M) must approve.',icon:'🔢',threshold:null,presence:false},
+    cultural_hui:{name:'Cultural Hui',desc:'Requires physical co-presence within a defined location. Supermajority of those present must approve. Inspired by Māori hui protocol — kanohi ki te kanohi (face to face).',icon:'🏛️',threshold:67,presence:true},
+};
+
+function init(){
+    if(sessionId)return loadSession(sessionId);
+    if(groupId)return loadGroup(groupId);
+    if(demo)return showDemo();
+    showCreate();
+}
+
+function showDemo(){
+    const demoGroup={name:'VAC Protocol Council',description:'Core governance body',members:['rob@vacprotocol.org','shan@folioai.com','jason@investor.com','alex@techcorp.io'],quorum_model:'cultural_hui',require_presence:true,presence_radius_km:0.5,presence_location:{lat:-33.8688,lng:151.2093,name:'Sydney CBD'},vote_threshold_pct:67};
+    const demoSession={session_id:'gsess-demo',group_id:'grp-demo',group_name:'VAC Protocol Council',action:'Approve Series A term sheet',description:'$2M raise at $15M post-money from LAUNCH Fund',quorum_model:'cultural_hui',require_presence:true,presence_location:{lat:-33.8688,lng:151.2093,name:'Sydney CBD'},votes:[
+        {email:'rob@vacprotocol.org',vote:'approve',verified:true,trust_score:0.92,is_present:true,voted_at:new Date().toISOString()},
+        {email:'shan@folioai.com',vote:'approve',verified:true,trust_score:0.95,is_present:true,voted_at:new Date().toISOString()},
+        {email:'jason@investor.com',vote:'approve',verified:true,trust_score:0.88,is_present:false,voted_at:new Date().toISOString()},
+    ],present_members:['rob@vacprotocol.org','shan@folioai.com'],status:'open'};
+    const demoTree={tree:{jti:'vat_root_001',agent_id:'coordinator-001',depth:0,trust_score:0.92,status:'active',delegation_policy:{allowed:true,max_children:5,current_children:2},children:[
+        {jti:'vat_c_res',agent_id:'researcher-007',depth:1,trust_score:0.78,status:'active',delegation_policy:{allowed:true,max_children:3,current_children:1},children:[
+            {jti:'vat_c_dc',agent_id:'data-collector-003',depth:2,trust_score:0.65,status:'active',delegation_policy:{allowed:false},children:[]},
+        ]},
+        {jti:'vat_c_wr',agent_id:'writer-003',depth:1,trust_score:0.71,status:'active',delegation_policy:{allowed:false},children:[]},
+    ]}};
+    renderAll(demoGroup,demoSession,demoTree);
+}
+
+function renderAll(group,session,tree){
+    let h='';
+    // Live delegation tree
+    h+=`<div class="section-title">Live Delegation Tree</div>`;
+    h+=`<div class="card"><div class="card-body"><div class="tree-container">`;
+    h+=renderTreeNode(tree.tree,true);
+    h+=`</div></div></div>`;
+
+    // Group governance session
+    h+=`<div class="section-title">Group Governance · ${group.name}</div>`;
+    h+=`<div class="card"><div class="card-body">`;
+    h+=`<div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">${session.action}</div>`;
+    h+=`<div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px;">${session.description}</div>`;
+    // Model badge
+    const m=MODELS[group.quorum_model]||MODELS.majority;
+    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:16px;">${m.icon}</span><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--purple);">${m.name}</span></div>`;
+    h+=`<div class="model-desc">${m.desc}</div>`;
+    // Presence requirement
+    if(group.require_presence){
+        h+=`<div class="presence-map">📍 ${group.presence_location?.name||'Meeting point'} · Within ${group.presence_radius_km}km radius required</div>`;
+    }
+    // Quorum ring
+    const votes=session.votes||[];
+    const approvals=votes.filter(v=>v.vote==='approve'&&v.verified);
+    const presentApprovals=approvals.filter(v=>v.is_present);
+    const total=group.members.length;
+    const votePct=total>0?Math.round(approvals.length/total*100):0;
+    const presentPct=total>0?Math.round(presentApprovals.length/total*100):0;
+    const effectivePct=group.require_presence?presentPct:votePct;
+    const threshPct=group.vote_threshold_pct;
+    const met=effectivePct>=threshPct;
+    const ringColor=met?'var(--success)':effectivePct>threshPct/2?'var(--warning)':'var(--error)';
+    const circ=2*Math.PI*52;
+    const dashOff=circ-(effectivePct/100)*circ;
+
+    h+=`<div style="display:flex;align-items:center;gap:24px;margin:16px 0;">`;
+    h+=`<div class="quorum-ring"><svg viewBox="0 0 120 120"><circle class="quorum-ring-bg" cx="60" cy="60" r="52"/><circle class="quorum-ring-fill" cx="60" cy="60" r="52" stroke="${ringColor}" stroke-dasharray="${circ}" stroke-dashoffset="${dashOff}"/></svg><div class="quorum-ring-text"><div class="quorum-pct">${effectivePct}%</div><div class="quorum-label">${group.require_presence?'Present+Approved':'Approved'}</div></div></div>`;
+    h+=`<div style="flex:1;">`;
+    h+=`<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:6px;">THRESHOLD: ${threshPct}%</div>`;
+    h+=`<div style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);">${approvals.length} of ${total} verified approvals</div>`;
+    if(group.require_presence){h+=`<div style="font-family:var(--mono);font-size:12px;color:var(--teal);">${presentApprovals.length} of ${total} physically present</div>`;}
+    h+=`<div style="margin-top:8px;font-family:var(--mono);font-size:11px;font-weight:600;color:${met?'var(--success)':'var(--warning)'};">${met?'✓ Quorum Met':'⏳ Quorum Not Yet Met'}</div>`;
+    h+=`</div></div>`;
+
+    // Member votes
+    h+=`<div style="margin-top:12px;">`;
+    group.members.forEach(email=>{
+        const vote=votes.find(v=>v.email===email);
+        const isPresent=(session.present_members||[]).includes(email);
+        const name=email.split('@')[0].replace(/\./g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+        const dotClass=vote?.verified?(isPresent?'present':'verified'):'pending';
+        const voteClass=vote?vote.vote:'waiting';
+        const voteLabel=vote?vote.vote.toUpperCase():'WAITING';
+        const trustStr=vote?.trust_score?` · ${(vote.trust_score*100).toFixed(0)}%`:'';
+        const presenceStr=group.require_presence?(isPresent?' · 📍 Present':' · Remote'):'';
+        h+=`<div class="member-row"><div class="member-dot ${dotClass}"></div><div class="member-name">${name}</div><div class="member-meta">${email}${trustStr}${presenceStr}</div><span class="member-vote ${voteClass}">${voteLabel}</span></div>`;
+    });
+    h+=`</div></div></div>`;
+
+    // Quorum models reference
+    h+=`<div class="section-title">Governance Models</div>`;
+    h+=`<div class="model-chips">`;
+    Object.entries(MODELS).forEach(([k,v])=>{
+        const isActive=k===group.quorum_model;
+        h+=`<div class="model-chip ${isActive?'active':''}">${v.icon} ${v.name}${v.presence?' · Presence':''}${v.threshold?` · ${v.threshold}%`:''}</div>`;
+    });
+    h+=`</div>`;
+
+    document.getElementById('content').innerHTML=h;
+}
+
+function renderTreeNode(node,isRoot){
+    if(!node)return'';
+    const isHuman=node.depth===0;
+    const statusClass=node.status==='revoked'?'revoked':'active';
+    const iconClass=isHuman?'human':'agent';
+    const icon=isHuman?'👤':'🤖';
+    const dp=node.delegation_policy||{};
+    const childSlots=dp.allowed!==false?`${dp.current_children||0}/${dp.max_children||'∞'} children`:'delegation off';
+    let h=`<div class="tree-node ${isRoot?'tree-root':''}"><div class="tree-node-card ${isRoot?'root':statusClass}"><div class="tree-node-icon ${iconClass}">${icon}</div><div style="flex:1;"><div class="tree-node-name">${node.agent_id}</div><div class="tree-node-meta">d${node.depth} · ${(node.trust_score*100).toFixed(0)}% · ${childSlots}</div></div><span style="font-family:var(--mono);font-size:9px;color:${node.status==='active'?'var(--success)':'var(--error)'};">${node.status.toUpperCase()}</span></div>`;
+    if(node.children&&node.children.length>0){
+        node.children.forEach(c=>{h+=renderTreeNode(c,false);});
+    }
+    h+=`</div>`;
+    return h;
+}
+
+function showCreate(){
+    document.getElementById('content').innerHTML=`<div style="text-align:center;margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Groups & Governance</div><div style="font-size:13px;color:var(--text-quaternary);margin-bottom:16px;">Collective decisions with verified identity + physical presence.</div><a href="/groups?demo=true" style="font-family:var(--mono);font-size:11px;color:var(--purple);">View demo →</a></div>`;
+}
+
+async function loadSession(id){try{const r=await fetch(`${API}/v1/groups/session/${id}`);const s=await r.json();const g=await(await fetch(`${API}/v1/groups/${s.group_id}`)).json();renderAll(g,s,{tree:{}});}catch(e){showDemo();}}
+async function loadGroup(id){try{const g=await(await fetch(`${API}/v1/groups/${id}`)).json();renderAll(g,{votes:[],present_members:[],status:'no session'},null);}catch(e){showDemo();}}
+
+init();
+</script>
+</body>
+</html>
