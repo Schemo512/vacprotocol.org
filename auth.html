@@ -480,7 +480,8 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
     <!-- Secondary actions -->
     <div style="display: flex; gap: 10px; margin-top: 12px;">
-        <button class="btn-secondary" onclick="openMessage()" style="flex: 1;">Send Verified Message</button>
+        <button class="btn-secondary" onclick="openMessage()" style="flex: 1;">Send Message</button>
+        <button class="btn-secondary" onclick="openDashboard()" style="flex: 1;">My Dashboard</button>
     </div>
 
     <!-- Collapsible detail sections -->
@@ -1225,6 +1226,12 @@ function openMessage() {
     const email = userData().email;
     const name = userData().name;
     const url = `/msg?compose=1&from=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+}
+function openDashboard() {
+    const email = userData().email;
+    window.open(`/dashboard?email=${encodeURIComponent(email)}`, '_blank');
+}
     window.open(url, '_blank');
 }
 </script>
