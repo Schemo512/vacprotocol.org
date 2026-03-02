@@ -119,7 +119,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-second
     </a>
     <div class="nav-tabs">
         <div class="nav-tab active" onclick="switchTab('overview')">Overview</div>
-        <div class="nav-tab" onclick="switchTab('agents')">Agents</div>
+        <div class="nav-tab" onclick="switchTab('agents')" id="nav-agents">Agents</div>
         <div class="nav-tab" onclick="switchTab('contacts')">Contacts</div>
         <div class="nav-tab" onclick="switchTab('settings')">Settings</div>
     </div>
@@ -203,6 +203,32 @@ h+=`</div></div>`;
 h+='</div>';}
 h+='</div>';
 h+=`<div class="agent-actions"><button class="agent-btn" onclick="window.open('${a.verify_url}')">View Chain</button><button class="agent-btn" onclick="adjustBudget('${a.jti}')">Budget</button><button class="agent-btn" onclick="adjustMaxChildren('${a.jti}')">Max Children</button><button class="agent-btn" onclick="adjustDelegationDepth('${a.jti}')">Max Depth</button><button class="agent-btn" onclick="toggleDelegation('${a.jti}',${canDelegate})">Delegation ${canDelegate?'Off':'Off'}</button><button class="agent-btn danger" onclick="revokeAgent('${a.jti}')">Revoke</button></div></div></div>`;});
+// Pending escalation requests
+const escalations=_data.pending_escalations||[];
+if(escalations.length>0){
+h+=`<div class="section-header"><div class="section-title" style="color:var(--warning);">⚠ Pending Approvals · ${escalations.length}</div></div>`;
+escalations.forEach(e=>{
+const typeLabels={'budget_increase':'Budget Increase','scope_expansion':'Scope Expansion','depth_extension':'Depth Extension','delegation_enable':'Enable Delegation','time_extension':'Time Extension'};
+const typeColors={'budget_increase':'var(--warning)','scope_expansion':'var(--purple)','depth_extension':'var(--teal)','delegation_enable':'var(--purple)','time_extension':'var(--teal)'};
+h+=`<div class="card" style="border-color:var(--warning-border);"><div class="card-body">`;
+h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`;
+h+=`<span style="font-size:16px;">🔔</span>`;
+h+=`<span style="font-size:13px;font-weight:600;color:var(--text-primary);flex:1;">${e.requesting_agent} requests ${typeLabels[e.escalation_type]||e.escalation_type}</span>`;
+h+=`<span style="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border);">PENDING</span>`;
+h+=`</div>`;
+h+=`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">${e.reason}</div>`;
+h+=`<div style="display:flex;gap:12px;font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:4px;">`;
+h+=`<span>Current: ${JSON.stringify(e.current_value)}</span>`;
+h+=`<span style="color:${typeColors[e.escalation_type]||'var(--text-tertiary)'};">Requested: ${JSON.stringify(e.requested_value)}</span>`;
+h+=`</div>`;
+if(e.context){h+=`<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:6px;">Context: ${typeof e.context==='string'?e.context:JSON.stringify(e.context)}</div>`;}
+h+=`<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-bottom:8px;">Chain: ${e.chain.map(c=>(c.agent_id||c.email)+'(d'+c.depth+')').join(' → ')}</div>`;
+h+=`<div style="display:flex;gap:4px;">`;
+h+=`<button class="agent-btn" style="flex:1;background:var(--success-bg);color:var(--success);border-color:var(--success-border);" onclick="resolveEscalation('${e.id}',true)">Approve</button>`;
+h+=`<button class="agent-btn" style="flex:1;" onclick="resolveEscalation('${e.id}',false)">Deny</button>`;
+h+=`</div></div></div>`;
+});
+}
 h+='</div>';
 
 // Contacts
@@ -226,12 +252,16 @@ h+=`<div class="setting-row"><span class="setting-label">Last verified</span><sp
 h+=`<div class="setting-row"><span class="setting-label">Total verifications</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);">${u.total_verifications}</span></div>`;
 h+=`<div class="setting-row"><span class="setting-label">Method</span><span style="font-family:var(--mono);font-size:12px;color:var(--teal);">${(u.verification_method||'none').replace(/_/g,' ')}</span></div>`;
 h+='</div></div></div>';
-document.getElementById('content').innerHTML=h;}
+document.getElementById('content').innerHTML=h;
+// Show escalation badge on Agents tab
+const escCount=(_data.pending_escalations||[]).length;
+if(escCount>0){const navAgents=document.getElementById('nav-agents');if(navAgents)navAgents.innerHTML=`Agents <span style="background:var(--warning);color:var(--bg);font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;">${escCount}</span>`;}}
 
 function stog(id,label,sub,checked){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><label class="setting-toggle"><input type="checkbox" id="${id}" ${checked?'checked':''}><span class="slider"></span></label></div>`;}
 function sinp(id,label,sub,val,pre){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><div style="display:flex;align-items:center;gap:4px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text-quaternary);">${pre}</span><input class="setting-input" type="number" id="${id}" value="${val}"></div></div>`;}
 
 async function revokeAgent(jti){if(!confirm('Revoke this agent and all downstream chains?'))return;try{await fetch(`${API}/v1/vat/revoke/${jti}?cascade=true`,{method:'POST'});location.reload();}catch(e){alert('Failed: '+e.message);}}
+async function resolveEscalation(escId,approved){const note=approved?prompt('Approval note (optional):','Approved'):prompt('Denial reason:','Not needed for this task');try{const r=await fetch(`${API}/v1/vat/escalations/${escId}/resolve`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved,note:note||undefined})});if(r.ok){const d=await r.json();alert(`${d.status.toUpperCase()}: ${d.resolution_note}`);location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
 function adjustBudget(jti){const n=prompt('New USD budget limit:','50');if(!n||isNaN(n))return;fetch(`${API}/v1/vat/spend/${jti}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_spend_usd:parseFloat(n)})}).then(r=>r.json()).then(d=>{alert('Budget updated to $'+n);location.reload();}).catch(e=>alert('Failed: '+e.message));}
 async function adjustDelegationDepth(jti){const n=prompt('Max delegation depth from this agent (current children keep existing depth):','3');if(!n||isNaN(n))return;try{const r=await fetch(`${API}/v1/vat/${jti}/delegation-policy`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_depth_from_here:parseInt(n)})});if(r.ok){const d=await r.json();alert(d.changes.join('\n')||'Updated');location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
 async function adjustMaxChildren(jti){const n=prompt('Max number of sub-agents this agent can create:','5');if(!n||isNaN(n))return;try{const r=await fetch(`${API}/v1/vat/${jti}/delegation-policy`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_children:parseInt(n)})});if(r.ok){const d=await r.json();alert(d.changes.join('\n')||'Updated');location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
