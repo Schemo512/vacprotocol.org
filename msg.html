@@ -527,14 +527,35 @@ async function sendMessage() {
     const recipientEmail = document.getElementById('composeRecipientEmail').value.trim();
     const content = document.getElementById('composeBody').value.trim();
 
-    if (!senderEmail || !recipientEmail || !content) {
-        errEl.textContent = 'Sender email, recipient email, and message are required.';
+    if (!senderEmail || !recipientEmail) {
+        errEl.textContent = 'Sender and recipient emails are required.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    // For text messages, require body. For voice/video, require recording OR body.
+    const hasRecording = msgChunks.length > 0;
+    if (currentMsgType === 'text' && !content) {
+        errEl.textContent = 'Please type a message.';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (currentMsgType !== 'text' && !hasRecording && !content) {
+        errEl.textContent = currentMsgType === 'voice_note' ? 'Please record a voice note or type a message.' : 'Please record a video or type a message.';
         errEl.style.display = 'block';
         return;
     }
 
     btn.disabled = true;
     btn.textContent = 'Sending…';
+
+    // Build content — for voice/video with recording, note that media was attached
+    let finalContent = content;
+    if (hasRecording) {
+        const dur = ((Date.now() - msgRecordStart) / 1000).toFixed(0);
+        const mediaLabel = currentMsgType === 'voice_note' ? '🎙️ Voice note' : '🎥 Video message';
+        finalContent = `${mediaLabel} (${dur}s)${content ? '\n\n' + content : ''}`;
+    }
 
     try {
         const resp = await fetch(`${API_BASE}/v1/msg/send`, {
@@ -545,7 +566,7 @@ async function sendMessage() {
                 sender_name: document.getElementById('composeSenderName').value.trim(),
                 recipient_email: recipientEmail,
                 recipient_name: document.getElementById('composeRecipientName').value.trim(),
-                content: content,
+                content: finalContent,
                 subject: document.getElementById('composeSubject').value.trim(),
                 message_type: currentMsgType,
             }),
