@@ -388,6 +388,13 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </svg>
         <div class="countdown-number" id="countdownTimer">3</div>
     </div>
+    <!-- Combined capture explanation (visible during recording) -->
+    <div id="combinedCaptureInfo" style="display:none; margin-top: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+        <div style="font-family: var(--mono); font-size: 10px; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">One action, six signals</div>
+        <div style="font-size: 12px; color: var(--text-tertiary); line-height: 1.6;">
+            Speaking the challenge phrase simultaneously captures your face, voice, lip movements, and the challenge response — a single natural gesture that produces six independent biometric signals. Longer phrases yield stronger verification.
+        </div>
+    </div>
 </div>
 
 <!-- STEP 3: Processing — REAL verification -->
@@ -728,6 +735,9 @@ function beginRecording() {
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.onstop = () => { onRecordingComplete(); };
     mediaRecorder.start();
+
+    // Show combined capture info
+    document.getElementById('combinedCaptureInfo').style.display = 'block';
 
     // Record for 5 seconds
     let remaining = 5;

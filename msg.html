@@ -306,9 +306,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <textarea class="form-textarea" id="composeBody" placeholder="Your verified message…"></textarea>
     </div>
 
-    <!-- Content protection options -->
+    <!-- Content protection options (auto-adjusted by trust relationship) -->
     <div style="margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Content Protection</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;">Content Protection</div>
+            <div id="protectionAutoLabel" style="font-family:var(--mono);font-size:10px;color:var(--purple);display:none;">Auto-adjusted for trust level</div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
                 <input type="checkbox" id="optEphemeral" checked style="accent-color:var(--purple);width:16px;height:16px;">
@@ -770,6 +773,55 @@ function unblurContent() {
 }
 
 // ── Init
+// Auto-adjust content protection based on trust relationship (Claims 16-38)
+const recipientEmailInput = document.getElementById('composeRecipientEmail');
+if (recipientEmailInput) {
+    let _debounce = null;
+    recipientEmailInput.addEventListener('input', () => {
+        clearTimeout(_debounce);
+        _debounce = setTimeout(checkTrustForProtection, 600);
+    });
+}
+
+async function checkTrustForProtection() {
+    const senderEmail = document.getElementById('composeSenderEmail')?.value?.trim();
+    const recipientEmail = document.getElementById('composeRecipientEmail')?.value?.trim();
+    if (!senderEmail || !recipientEmail || !recipientEmail.includes('@')) return;
+
+    try {
+        const r = await fetch(`${API}/v1/modality-requirements/${encodeURIComponent(senderEmail)}?counterparty_email=${encodeURIComponent(recipientEmail)}`);
+        if (!r.ok) return;
+        const data = await r.json();
+
+        const label = document.getElementById('protectionAutoLabel');
+        const ephemeral = document.getElementById('optEphemeral');
+        const attention = document.getElementById('optAttention');
+        const geoFence = document.getElementById('optGeoFence');
+
+        if (data.edge_state === 'mutual') {
+            // Mutual vouch = trusted relationship → lighter protection
+            ephemeral.checked = true;
+            attention.checked = false;
+            geoFence.checked = false;
+            if (label) { label.style.display = 'block'; label.textContent = 'Mutual vouch detected — lighter protection'; label.style.color = 'var(--success)'; }
+        } else if (data.edge_state === 'vouched' || data.edge_state === 'invited_back') {
+            // One-way vouch = partial trust
+            ephemeral.checked = true;
+            attention.checked = true;
+            geoFence.checked = false;
+            if (label) { label.style.display = 'block'; label.textContent = 'Partial trust — standard protection'; label.style.color = 'var(--teal)'; }
+        } else {
+            // No relationship = maximum protection
+            ephemeral.checked = true;
+            attention.checked = true;
+            geoFence.checked = true;
+            if (label) { label.style.display = 'block'; label.textContent = 'No trust relationship — maximum protection'; label.style.color = 'var(--warning)'; }
+        }
+    } catch (e) {
+        console.log('[Adaptive Protection] Could not check trust:', e);
+    }
+}
+
 init();
 </script>
 <script src="vac-themes.js"></script>
