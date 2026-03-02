@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — Secure Message</title>
+<meta name="description" content="Cryptographically verified message. Sender identity bound to VAC authority chain.">
+<meta property="og:title" content="VAC Protocol — Secure Message">
+<meta property="og:description" content="You received a verified message. Sender identity is cryptographically bound and immutable.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://vacprotocol.org/og-image.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+/* ─── Theme defaults (overridden by vac-themes.js at runtime) ─── */
+:root {
+    --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128;
+    --border: #30363D; --border-light: #3D444D;
+    --text-primary: #F0F6FC; --text-secondary: #C9D1D9;
+    --text-tertiary: #8B949E; --text-quaternary: #6E7681;
+    --purple: #6C5CE7; --purple-dim: #5A4BD1;
+    --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25);
+    --teal: #00CEC9; --teal-bg: rgba(0,206,201,0.08); --teal-border: rgba(0,206,201,0.2);
+    --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2);
+    --error: #F85149; --error-bg: rgba(248,81,73,0.08); --error-border: rgba(248,81,73,0.2);
+    --warning: #D29922;
+    --radius: 8px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); color: var(--text-secondary); background: var(--bg); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+
+.page { max-width: 600px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* Nav */
+.nav { border-bottom: 1px solid var(--border); padding: 0 20px; background: rgba(13,17,23,0.95); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+.nav-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+.nav-left { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.nav-icon { width: 22px; height: 22px; }
+.nav-wordmark { font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 1.5px; }
+.nav-wordmark span { font-weight: 400; color: var(--text-tertiary); letter-spacing: 1px; }
+.nav-mode { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; font-weight: 600; }
+
+/* Views */
+.view { display: none; animation: fadeIn 0.3s ease-out; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Header */
+.header { text-align: center; padding: 32px 0 24px; }
+.header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.header-title { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.header-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 8px; max-width: 440px; margin-left: auto; margin-right: auto; }
+
+/* Trust badge — the hero element */
+.trust-badge { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; }
+.trust-badge.verified { background: var(--success-bg); border: 1px solid var(--success-border); }
+.trust-badge.partial { background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.2); }
+.trust-badge.unverified { background: var(--surface); border: 1px solid var(--border); }
+.trust-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.trust-badge.verified .trust-icon { background: rgba(63,185,80,0.15); }
+.trust-badge.partial .trust-icon { background: rgba(210,153,34,0.15); }
+.trust-badge.unverified .trust-icon { background: var(--surface-raised); }
+.trust-info { flex: 1; }
+.trust-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.trust-detail { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
+
+/* Message content */
+.msg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.msg-subject { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.msg-body { font-size: 15px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; }
+.msg-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.msg-meta-item { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); }
+
+/* Chain display (mini) */
+.chain-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.chain-mini-title { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+.chain-node { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.chain-node + .chain-node { border-top: 1px solid var(--border); }
+.chain-node-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.chain-node-icon.human { background: var(--teal-bg); border: 1px solid var(--teal-border); }
+.chain-node-icon.agent { background: var(--purple-bg); border: 1px solid var(--purple-border); }
+.chain-node-name { font-size: 13px; color: var(--text-secondary); flex: 1; }
+.chain-node-score { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--success); }
+
+/* Compose form */
+.form-group { margin-bottom: 16px; }
+.form-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+.form-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--purple); }
+.form-input::placeholder { color: var(--text-quaternary); }
+.form-textarea { width: 100%; min-height: 120px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none; resize: vertical; transition: border-color 0.15s; line-height: 1.6; }
+.form-textarea:focus { border-color: var(--purple); }
+.form-textarea::placeholder { color: var(--text-quaternary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--purple); color: #fff; font-family: var(--font); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: var(--radius); border: none; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; width: 100%; min-height: 48px; }
+.btn-primary:hover { background: var(--purple-dim); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,92,231,0.25); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+.btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); color: var(--text-primary); font-family: var(--font); font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; min-height: 44px; width: 100%; }
+.btn-secondary:hover { border-color: var(--purple); background: var(--purple-bg); }
+
+/* Sent confirmation */
+.sent-card { text-align: center; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 12px; padding: 32px 24px; margin-bottom: 20px; }
+.sent-icon { font-size: 40px; margin-bottom: 12px; }
+.sent-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.sent-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 6px; }
+
+/* Error */
+.error-msg { font-size: 13px; color: var(--error); text-align: center; margin-top: 12px; font-family: var(--mono); }
+
+/* Footer */
+.footer-tagline { text-align: center; padding: 24px 0; font-size: 13px; font-style: italic; color: var(--text-quaternary); border-top: 1px solid var(--border); margin-top: 24px; }
+
+/* Patent badge */
+.patent-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; }
+.patent-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
+
+/* Scroll hint */
+.scroll-hint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 90; opacity: 0.7; transition: opacity 0.3s; pointer-events: none; }
+.scroll-hint.hidden { opacity: 0; }
+.scroll-hint svg { animation: bounce-down 1.5s ease-in-out infinite; }
+@keyframes bounce-down { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+/* Loading */
+.loader { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 40px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+<div class="nav-inner">
+    <a href="/" class="nav-left">
+        <svg class="nav-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="4"/>
+            <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.15" stroke="#6C5CE7" stroke-width="2"/>
+            <circle cx="50" cy="44" r="10" fill="none" stroke="#00CEC9" stroke-width="2.5"/>
+            <path d="M35 68 Q50 56 65 68" fill="none" stroke="#00CEC9" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
+    </a>
+    <div class="nav-mode" id="navMode" style="color: var(--purple); background: var(--purple-bg); border: 1px solid var(--purple-border);">SECURE MESSAGE</div>
+</div>
+</div>
+
+<div class="page">
+
+<!-- VIEW: Loading -->
+<div class="view active" id="viewLoading">
+    <div class="header">
+        <div class="header-eyebrow">Secure Message</div>
+        <div class="header-title">Loading…</div>
+    </div>
+    <div class="loader"></div>
+</div>
+
+<!-- VIEW: Read message -->
+<div class="view" id="viewRead">
+    <div class="header">
+        <div class="header-eyebrow">Verified Message</div>
+        <div class="header-title" id="readTitle">Secure Message</div>
+    </div>
+
+    <div id="trustBadge" class="trust-badge verified">
+        <div class="trust-icon" id="trustIcon">✓</div>
+        <div class="trust-info">
+            <div class="trust-name" id="trustName">Sender</div>
+            <div class="trust-detail" id="trustDetail">Verified · Trust Score: 0.95</div>
+        </div>
+    </div>
+
+    <div class="msg-card">
+        <div class="msg-subject" id="readSubject" style="display:none;"></div>
+        <div class="msg-body" id="readBody"></div>
+        <div class="msg-meta">
+            <div class="msg-meta-item" id="readTime"></div>
+            <div class="msg-meta-item" id="readType"></div>
+            <div class="msg-meta-item" id="readRelationship"></div>
+        </div>
+    </div>
+
+    <div class="chain-mini" id="chainSection" style="display:none;">
+        <div class="chain-mini-title">Sender's Authority Chain</div>
+        <div id="chainNodes"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button class="btn-secondary" onclick="showCompose()" style="flex: 1;">Reply with Verified Message</button>
+        <button class="btn-secondary" onclick="window.location.href='/auth'" style="flex: 1;">Verify My Identity</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 16px;">
+        <div class="patent-badge"><span class="dot"></span>Claims 56–112 · Chain Verification</div>
+    </div>
+
+    <div class="footer-tagline">Math so neither party has to rely on trust alone.</div>
+</div>
+
+<!-- VIEW: Compose -->
+<div class="view" id="viewCompose">
+    <div class="header">
+        <div class="header-eyebrow">Compose</div>
+        <div class="header-title">Send Verified Message</div>
+        <div class="header-sub">Your message is cryptographically bound to your VAC authority chain. The recipient sees your trust score and verification status.</div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input class="form-input" id="composeSenderName" type="text" placeholder="Rob Zagarella">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Your Email</label>
+            <input class="form-input" id="composeSenderEmail" type="email" placeholder="rob@violetshores.com">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Recipient Name</label>
+            <input class="form-input" id="composeRecipientName" type="text" placeholder="Jason Calacanis">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Recipient Email</label>
+            <input class="form-input" id="composeRecipientEmail" type="email" placeholder="jason@launch.co">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Subject</label>
+        <input class="form-input" id="composeSubject" type="text" placeholder="Re: VAC Protocol Demo">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Message</label>
+        <textarea class="form-textarea" id="composeBody" placeholder="Your verified message…"></textarea>
+    </div>
+
+    <button class="btn-primary" id="btnSend" onclick="sendMessage()">
+        Send Verified Message
+    </button>
+    <div id="composeError" class="error-msg" style="display:none;"></div>
+
+    <div style="text-align: center; margin-top: 16px;">
+        <div class="patent-badge"><span class="dot"></span>Claims 56–112 + 272–285</div>
+    </div>
+</div>
+
+<!-- VIEW: Sent confirmation -->
+<div class="view" id="viewSent">
+    <div class="header">
+        <div class="header-eyebrow">Delivered</div>
+    </div>
+    <div class="sent-card">
+        <div class="sent-icon">✓</div>
+        <div class="sent-title">Message Sent</div>
+        <div class="sent-sub" id="sentDetail">Recipient notified via email.</div>
+    </div>
+    <div class="msg-card">
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Message Details</div>
+        <div id="sentSummary" style="font-size: 14px; color: var(--text-secondary);"></div>
+        <div id="sentTrust" style="font-family: var(--mono); font-size: 12px; color: var(--teal); margin-top: 8px;"></div>
+        <div id="sentUrl" style="font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); margin-top: 8px; word-break: break-all; cursor: pointer;" onclick="copyUrl()"></div>
+        <div id="copyFeedback" style="font-family: var(--mono); font-size: 11px; color: var(--success); text-align: center; height: 16px;"></div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-primary" onclick="showCompose()" style="flex: 1;">Send Another</button>
+        <button class="btn-secondary" onclick="window.location.href='/auth'" style="flex: 1;">Verify My Identity</button>
+    </div>
+    <div class="footer-tagline">Math so neither party has to rely on trust alone.</div>
+</div>
+
+</div><!-- .page -->
+
+<div class="scroll-hint" id="scrollHint">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-tertiary);"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
+
+<script>
+const API_BASE = 'https://vac-system-production.up.railway.app';
+let sentResult = null;
+
+// ── Route: ?id=xxx shows message, ?compose opens form, default = compose
+function init() {
+    const params = new URLSearchParams(window.location.search);
+    const msgId = params.get('id');
+    const replyTo = params.get('reply');
+    const toEmail = params.get('to');
+
+    if (msgId) {
+        loadMessage(msgId);
+    } else {
+        showCompose();
+        // Pre-fill from params
+        const fromEmail = params.get('from');
+        const fromName = params.get('name');
+        if (fromEmail) document.getElementById('composeSenderEmail').value = fromEmail;
+        if (fromName) document.getElementById('composeSenderName').value = fromName;
+        if (replyTo) document.getElementById('composeRecipientEmail').value = replyTo;
+        if (toEmail) document.getElementById('composeRecipientEmail').value = toEmail;
+    }
+}
+
+function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    setTimeout(checkScroll, 100);
+}
+
+// ── Load message for reading
+async function loadMessage(msgId) {
+    showView('viewLoading');
+    try {
+        const resp = await fetch(`${API_BASE}/v1/msg/${msgId}`);
+        if (!resp.ok) throw new Error('Message not found');
+        const msg = await resp.json();
+        renderMessage(msg);
+    } catch (e) {
+        document.getElementById('readTitle').textContent = 'Message Not Found';
+        document.getElementById('readBody').textContent = e.message;
+        showView('viewRead');
+    }
+}
+
+function renderMessage(msg) {
+    // Title
+    document.getElementById('readTitle').textContent = msg.subject || 'Secure Message';
+
+    // Trust badge
+    const badge = document.getElementById('trustBadge');
+    const icon = document.getElementById('trustIcon');
+    const name = document.getElementById('trustName');
+    const detail = document.getElementById('trustDetail');
+
+    name.textContent = msg.sender_name || msg.sender_email;
+
+    if (msg.trust_level === 'high' || msg.trust_level === 'maximum' || msg.sender_trust_score >= 0.8) {
+        badge.className = 'trust-badge verified';
+        icon.textContent = '✓';
+        detail.textContent = `Verified · Trust Score: ${(msg.sender_trust_score || 0).toFixed(2)} · Chain Depth: ${msg.chain_depth || 0}`;
+    } else if (msg.sender_currently_verified || msg.sender_trust_score > 0) {
+        badge.className = 'trust-badge partial';
+        icon.textContent = '◐';
+        detail.textContent = `Partially verified · Score: ${(msg.sender_trust_score || 0).toFixed(2)}`;
+    } else {
+        badge.className = 'trust-badge unverified';
+        icon.textContent = '○';
+        detail.textContent = 'Sender not yet verified with VAC Protocol';
+    }
+
+    // Subject
+    const subEl = document.getElementById('readSubject');
+    if (msg.subject) {
+        subEl.textContent = msg.subject;
+        subEl.style.display = 'block';
+    }
+
+    // Body
+    document.getElementById('readBody').textContent = msg.content;
+
+    // Meta
+    const created = msg.created_at ? new Date(msg.created_at).toLocaleString() : '—';
+    document.getElementById('readTime').textContent = `Sent: ${created}`;
+    document.getElementById('readType').textContent = `Type: ${msg.message_type || 'text'}`;
+    document.getElementById('readRelationship').textContent = msg.relationship ? `Relationship: ${msg.relationship}` : '';
+
+    // Chain display
+    if (msg.sender_chain && msg.sender_chain.length > 0) {
+        const chainEl = document.getElementById('chainNodes');
+        chainEl.innerHTML = msg.sender_chain.map((c, i) => {
+            const cls = i === 0 ? 'human' : 'agent';
+            const icon = i === 0 ? '👤' : '🤖';
+            return `
+                <div class="chain-node">
+                    <div class="chain-node-icon ${cls}">${icon}</div>
+                    <div class="chain-node-name">${c.agent || c.name || 'Unknown'}</div>
+                    <div class="chain-node-score">${(c.trust || 0).toFixed(2)}</div>
+                </div>`;
+        }).join('');
+        document.getElementById('chainSection').style.display = 'block';
+    }
+
+    // Pre-fill reply
+    document.getElementById('composeRecipientEmail').value = msg.sender_email || '';
+    document.getElementById('composeRecipientName').value = msg.sender_name || '';
+
+    showView('viewRead');
+}
+
+// ── Show compose form
+function showCompose() {
+    showView('viewCompose');
+    document.getElementById('navMode').textContent = 'COMPOSE';
+}
+
+// ── Send message
+async function sendMessage() {
+    const btn = document.getElementById('btnSend');
+    const errEl = document.getElementById('composeError');
+    errEl.style.display = 'none';
+
+    const senderEmail = document.getElementById('composeSenderEmail').value.trim();
+    const recipientEmail = document.getElementById('composeRecipientEmail').value.trim();
+    const content = document.getElementById('composeBody').value.trim();
+
+    if (!senderEmail || !recipientEmail || !content) {
+        errEl.textContent = 'Sender email, recipient email, and message are required.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+        const resp = await fetch(`${API_BASE}/v1/msg/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sender_email: senderEmail,
+                sender_name: document.getElementById('composeSenderName').value.trim(),
+                recipient_email: recipientEmail,
+                recipient_name: document.getElementById('composeRecipientName').value.trim(),
+                content: content,
+                subject: document.getElementById('composeSubject').value.trim(),
+                message_type: 'text',
+            }),
+        });
+
+        if (!resp.ok) {
+            const errText = await resp.text();
+            throw new Error(`Server error: ${errText.substring(0, 200)}`);
+        }
+
+        sentResult = await resp.json();
+        showSent(sentResult);
+    } catch (e) {
+        errEl.textContent = e.message || 'Failed to send message.';
+        errEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send Verified Message';
+}
+
+function showSent(result) {
+    document.getElementById('navMode').textContent = 'DELIVERED';
+
+    const recipientEmail = document.getElementById('composeRecipientEmail').value;
+    document.getElementById('sentDetail').textContent = result.recipient_notified
+        ? `Notification sent to ${recipientEmail}`
+        : `Message saved. Email delivery pending.`;
+
+    document.getElementById('sentSummary').textContent =
+        `To: ${recipientEmail}\nSubject: ${document.getElementById('composeSubject').value || '(none)'}`;
+
+    const trustText = result.sender_verified
+        ? `Sender verified · Trust: ${result.trust_score.toFixed(2)} · Level: ${result.trust_level}`
+        : 'Sender not yet verified — verify at /auth to strengthen messages';
+    document.getElementById('sentTrust').textContent = trustText;
+
+    document.getElementById('sentUrl').textContent = result.view_url;
+
+    showView('viewSent');
+}
+
+function copyUrl() {
+    if (!sentResult?.view_url) return;
+    navigator.clipboard.writeText(sentResult.view_url).then(() => {
+        const fb = document.getElementById('copyFeedback');
+        fb.textContent = 'Copied ✓';
+        setTimeout(() => fb.textContent = '', 2000);
+    });
+}
+
+// ── Scroll indicator
+function checkScroll() {
+    const hint = document.getElementById('scrollHint');
+    if (!hint) return;
+    const scrollable = document.documentElement.scrollHeight > window.innerHeight + 50;
+    const nearBottom = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 60;
+    hint.classList.toggle('hidden', !scrollable || nearBottom);
+}
+window.addEventListener('scroll', checkScroll, { passive: true });
+window.addEventListener('resize', checkScroll);
+
+// ── Init
+init();
+</script>
+<script src="vac-themes.js"></script>
+<script>
+if (typeof VACTheme !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('theme');
+    if (t) VACTheme.apply(t);
+}
+</script>
+</body>
+</html>

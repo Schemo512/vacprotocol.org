@@ -490,6 +490,11 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     </div>
 
     <div class="footer-tagline">Math so neither party has to rely on trust alone.</div>
+
+    <!-- Post-verification actions -->
+    <div style="display: flex; gap: 10px; margin-top: -8px; margin-bottom: 24px;">
+        <button class="btn-secondary" onclick="openMessage()" style="flex: 1;">Send Verified Message</button>
+    </div>
 </div>
 
 </div><!-- .page -->
@@ -1186,6 +1191,13 @@ function stopAudioMonitor() {
     audioContext = null;
     audioAnalyser = null;
     document.getElementById('audioLevel').style.display = 'none';
+}
+
+function openMessage() {
+    const email = userData().email;
+    const name = userData().name;
+    const url = `/msg?compose=1&from=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
 }
 </script>
 <script src="vac-themes.js"></script>

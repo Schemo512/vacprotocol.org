@@ -5,6 +5,10 @@
       "destination": "/auth.html"
     },
     {
+      "source": "/msg",
+      "destination": "/msg.html"
+    },
+    {
       "source": "/vat/verify/:jti",
       "destination": "/vat-verify.html?jti=:jti"
     }
