@@ -126,6 +126,11 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 /* Loading */
 .loader { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 40px auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Message type buttons */
+.msg-type-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-tertiary); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.msg-type-btn:hover { border-color: var(--purple-border); color: var(--text-secondary); }
+.msg-type-btn.active { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -232,6 +237,43 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <input class="form-input" id="composeSubject" type="text" placeholder="Re: VAC Protocol Demo">
     </div>
     <div class="form-group">
+        <label class="form-label">Message Type</label>
+        <div style="display:flex;gap:8px;">
+            <button class="msg-type-btn active" id="typeText" onclick="setMsgType('text')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                Text
+            </button>
+            <button class="msg-type-btn" id="typeVoice" onclick="setMsgType('voice_note')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                Voice Note
+            </button>
+            <button class="msg-type-btn" id="typeVideo" onclick="setMsgType('video_clip')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                Video
+            </button>
+        </div>
+    </div>
+
+    <!-- Voice/video recording UI (hidden by default) -->
+    <div id="mediaRecordSection" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <video id="msgVideoPreview" autoplay playsinline muted style="width:100%;border-radius:6px;max-height:200px;object-fit:cover;display:none;transform:scaleX(-1);"></video>
+            <div id="msgAudioViz" style="display:none;height:60px;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:8px 0;">
+            </div>
+            <div style="text-align:center;margin-top:10px;">
+                <div style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);margin-bottom:8px;" id="msgRecordStatus">Ready to record</div>
+                <button class="btn-primary" id="btnStartRecord" onclick="startMsgRecord()" style="max-width:200px;margin:0 auto;">
+                    Record
+                </button>
+                <button class="btn-secondary" id="btnStopRecord" onclick="stopMsgRecord()" style="max-width:200px;margin:0 auto;display:none;">
+                    Stop Recording
+                </button>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:6px;" id="msgRecordTimer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group" id="textBodyGroup">
         <label class="form-label">Message</label>
         <textarea class="form-textarea" id="composeBody" placeholder="Your verified message…"></textarea>
     </div>
@@ -279,6 +321,88 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 <script>
 const API_BASE = 'https://vac-system-production.up.railway.app';
 let sentResult = null;
+let currentMsgType = 'text';
+let msgStream = null;
+let msgRecorder = null;
+let msgChunks = [];
+let msgRecordStart = 0;
+let msgRecordInterval = null;
+
+function setMsgType(type) {
+    currentMsgType = type;
+    document.querySelectorAll('.msg-type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('type' + (type === 'text' ? 'Text' : type === 'voice_note' ? 'Voice' : 'Video')).classList.add('active');
+
+    const mediaSection = document.getElementById('mediaRecordSection');
+    const textGroup = document.getElementById('textBodyGroup');
+    const videoPreview = document.getElementById('msgVideoPreview');
+    const audioViz = document.getElementById('msgAudioViz');
+
+    if (type === 'text') {
+        mediaSection.style.display = 'none';
+        textGroup.style.display = 'block';
+    } else {
+        mediaSection.style.display = 'block';
+        textGroup.querySelector('.form-label').textContent = 'Caption (optional)';
+        textGroup.querySelector('.form-textarea').placeholder = 'Add a text caption to your recording…';
+        videoPreview.style.display = type === 'video_clip' ? 'block' : 'none';
+        audioViz.style.display = type === 'voice_note' ? 'flex' : 'none';
+        initMsgMedia(type);
+    }
+}
+
+async function initMsgMedia(type) {
+    try {
+        const constraints = type === 'video_clip'
+            ? { video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } }, audio: { noiseSuppression: true, echoCancellation: true } }
+            : { audio: { noiseSuppression: true, echoCancellation: true } };
+        msgStream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (type === 'video_clip') {
+            const vid = document.getElementById('msgVideoPreview');
+            vid.srcObject = msgStream;
+            vid.muted = true;
+            await vid.play();
+        }
+        document.getElementById('msgRecordStatus').textContent = 'Ready — tap Record';
+    } catch (e) {
+        document.getElementById('msgRecordStatus').textContent = 'Permission denied: ' + e.message;
+    }
+}
+
+function startMsgRecord() {
+    if (!msgStream) return;
+    msgChunks = [];
+    const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'audio/webm'];
+    let mime = '';
+    for (const mt of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mt)) { mime = mt; break; }
+    }
+    msgRecorder = new MediaRecorder(msgStream, mime ? { mimeType: mime } : undefined);
+    msgRecorder.ondataavailable = e => { if (e.data.size > 0) msgChunks.push(e.data); };
+    msgRecorder.onstop = () => {
+        document.getElementById('btnStartRecord').style.display = 'inline-flex';
+        document.getElementById('btnStopRecord').style.display = 'none';
+        document.getElementById('btnStartRecord').textContent = 'Re-record';
+        const dur = ((Date.now() - msgRecordStart) / 1000).toFixed(1);
+        document.getElementById('msgRecordStatus').textContent = `Recorded ${dur}s — ready to send`;
+        clearInterval(msgRecordInterval);
+    };
+    msgRecorder.start(100);
+    msgRecordStart = Date.now();
+    document.getElementById('btnStartRecord').style.display = 'none';
+    document.getElementById('btnStopRecord').style.display = 'inline-flex';
+    document.getElementById('msgRecordStatus').textContent = 'Recording…';
+    msgRecordInterval = setInterval(() => {
+        const elapsed = ((Date.now() - msgRecordStart) / 1000).toFixed(0);
+        document.getElementById('msgRecordTimer').textContent = `${elapsed}s / 30s max`;
+        if (elapsed >= 30) stopMsgRecord();
+    }, 200);
+}
+
+function stopMsgRecord() {
+    if (msgRecorder && msgRecorder.state === 'recording') msgRecorder.stop();
+    clearInterval(msgRecordInterval);
+}
 
 // ── Route: ?id=xxx shows message, ?compose opens form, default = compose
 function init() {
@@ -423,7 +547,7 @@ async function sendMessage() {
                 recipient_name: document.getElementById('composeRecipientName').value.trim(),
                 content: content,
                 subject: document.getElementById('composeSubject').value.trim(),
-                message_type: 'text',
+                message_type: currentMsgType,
             }),
         });
 

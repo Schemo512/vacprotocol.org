@@ -201,7 +201,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
 /* Timer */
 .timer-display { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); text-align: center; margin: 8px 0; }
-.timer-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+.timer-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
 
 /* Footer tagline */
 .footer-tagline { text-align: center; padding: 24px 0; font-size: 13px; font-style: italic; color: var(--text-quaternary); border-top: 1px solid var(--border); margin-top: 24px; }
@@ -280,7 +280,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
     </div>
     <div style="text-align:center;margin-bottom:16px;">
-        <button onclick="document.getElementById('optionalFields').style.display=document.getElementById('optionalFields').style.display==='none'?'block':'none'" style="background:none;border:none;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;">+ Add organisation details</button>
+        <button id="toggleOrgBtn" onclick="toggleOrgFields()" style="background:none;border:none;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;">+ Add organisation details</button>
     </div>
     <button class="btn-primary" id="btnIdentity" onclick="goToCamera()">
         Continue
@@ -527,6 +527,14 @@ const MAX_RETRIES = 3;
 let audioContext = null;
 let audioAnalyser = null;
 let audioAnimFrame = null;
+
+function toggleOrgFields() {
+    const el = document.getElementById('optionalFields');
+    const btn = document.getElementById('toggleOrgBtn');
+    const showing = el.style.display === 'none';
+    el.style.display = showing ? 'block' : 'none';
+    btn.textContent = showing ? '− Hide organisation details' : '+ Add organisation details';
+}
 
 // Fail reason descriptions — specific, actionable (Veriff/iProov pattern)
 const FAIL_REASONS = {
