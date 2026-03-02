@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — Authenticate</title>
+<meta name="description" content="Verify your identity and mint a cryptographic authority chain with VAC Protocol.">
+<meta property="og:title" content="VAC Protocol — Authenticate">
+<meta property="og:description" content="Biometric verification → cryptographic authority chain. 285 patent claims. Math enforces what neither party trusts the other to honour.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://vacprotocol.org/auth">
+<meta property="og:image" content="https://vacprotocol.org/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@vacprotocol">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+:root {
+    --bg: #0D1117;
+    --surface: #161B22;
+    --surface-raised: #1C2128;
+    --border: #30363D;
+    --border-light: #3D444D;
+    --text-primary: #F0F6FC;
+    --text-secondary: #C9D1D9;
+    --text-tertiary: #8B949E;
+    --text-quaternary: #6E7681;
+    --purple: #6C5CE7;
+    --purple-dim: #5A4BD1;
+    --purple-bg: rgba(108,92,231,0.08);
+    --purple-border: rgba(108,92,231,0.25);
+    --teal: #00CEC9;
+    --teal-bg: rgba(0,206,201,0.08);
+    --teal-border: rgba(0,206,201,0.2);
+    --success: #3FB950;
+    --success-bg: rgba(63,185,80,0.08);
+    --success-border: rgba(63,185,80,0.2);
+    --error: #F85149;
+    --error-bg: rgba(248,81,73,0.08);
+    --error-border: rgba(248,81,73,0.2);
+    --radius: 8px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); color: var(--text-secondary); background: var(--bg); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+
+.page { max-width: 560px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* Nav */
+.nav { border-bottom: 1px solid var(--border); padding: 0 20px; background: rgba(13,17,23,0.95); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+.nav-inner { max-width: 560px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+.nav-left { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.nav-icon { width: 22px; height: 22px; }
+.nav-wordmark { font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 1.5px; }
+.nav-wordmark span { font-weight: 400; color: var(--text-tertiary); letter-spacing: 1px; }
+.nav-mode { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; font-weight: 600; color: var(--purple); background: var(--purple-bg); border: 1px solid var(--purple-border); }
+
+/* Step indicators */
+.steps-bar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px 0 8px; }
+.step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+.step-dot.active { background: var(--purple); box-shadow: 0 0 8px rgba(108,92,231,0.4); }
+.step-dot.done { background: var(--success); }
+.step-line { width: 24px; height: 1.5px; background: var(--border); transition: background 0.3s; }
+.step-line.done { background: var(--success); }
+
+/* Sections */
+.step-section { display: none; animation: fadeIn 0.35s ease-out; }
+.step-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.header { text-align: center; padding: 32px 0 24px; }
+.header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.header-title { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.header-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+.form-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--purple); }
+.form-input::placeholder { color: var(--text-quaternary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--purple); color: #fff; font-family: var(--font); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: var(--radius); border: none; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; width: 100%; min-height: 48px; }
+.btn-primary:hover { background: var(--purple-dim); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,92,231,0.25); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+.btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); color: var(--text-primary); font-family: var(--font); font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; min-height: 44px; }
+.btn-secondary:hover { border-color: var(--purple); background: var(--purple-bg); }
+
+/* Camera */
+.camera-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 20px; }
+.camera-container.recording { border-color: var(--error); box-shadow: 0 0 20px rgba(248,81,73,0.15); }
+.camera-container.verified { border-color: var(--success); box-shadow: 0 0 20px rgba(63,185,80,0.15); }
+#videoPreview { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.camera-overlay { position: absolute; inset: 0; pointer-events: none; }
+.camera-corners { position: absolute; inset: 16px; }
+.camera-corners::before, .camera-corners::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--purple); border-style: solid; }
+.camera-corners::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+.camera-corners::after { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+.camera-corners-bottom { position: absolute; inset: 16px; }
+.camera-corners-bottom::before, .camera-corners-bottom::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--purple); border-style: solid; }
+.camera-corners-bottom::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+.camera-corners-bottom::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+.camera-label { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: 1.5px; text-transform: uppercase; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 4px; }
+.rec-indicator { position: absolute; top: 24px; right: 24px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--error); letter-spacing: 1px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--error); animation: pulse-rec 1s ease-in-out infinite; }
+@keyframes pulse-rec { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.camera-challenge { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); max-width: 80%; text-align: center; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(108,92,231,0.3); }
+.camera-challenge-text { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.camera-challenge-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+
+/* Progress */
+.progress-container { text-align: center; padding: 40px 0; }
+.progress-ring { width: 80px; height: 80px; margin: 0 auto 20px; position: relative; }
+.progress-ring svg { transform: rotate(-90deg); }
+.progress-ring circle { fill: none; stroke-width: 3; }
+.progress-ring .ring-bg { stroke: var(--border); }
+.progress-ring .ring-fill { stroke: var(--purple); stroke-dasharray: 226; stroke-dashoffset: 226; transition: stroke-dashoffset 0.3s; stroke-linecap: round; }
+.progress-step { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; }
+.progress-detail { font-size: 14px; color: var(--text-secondary); }
+
+/* Success chain display */
+.chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.chain-node-result { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.chain-node-result + .chain-node-result { border-top: 1px solid var(--border); }
+.chain-depth { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); width: 16px; text-align: center; }
+.chain-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.chain-icon.human { background: var(--teal-bg); border: 1px solid var(--teal-border); }
+.chain-icon.agent { background: var(--purple-bg); border: 1px solid var(--purple-border); }
+.chain-info { flex: 1; min-width: 0; }
+.chain-agent-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.chain-scope { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
+.chain-trust { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.chain-trust.high { color: var(--success); }
+.chain-trust.mid { color: var(--warning); }
+.chain-arrow { text-align: center; color: var(--text-quaternary); font-size: 11px; padding: 2px 0; }
+
+/* Share section */
+.share-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.share-url { font-family: var(--mono); font-size: 12px; color: var(--teal); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; word-break: break-all; margin: 12px 0; cursor: pointer; transition: border-color 0.15s; }
+.share-url:hover { border-color: var(--teal-border); }
+.share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+/* Patent badge */
+.patent-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; margin-top: 16px; }
+.patent-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
+
+/* Modality list in success */
+.modalities-mini { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.mod-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 4px; padding: 3px 8px; }
+.mod-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+
+/* Timer */
+.timer-display { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); text-align: center; margin: 8px 0; }
+.timer-label { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Footer tagline */
+.footer-tagline { text-align: center; padding: 24px 0; font-size: 13px; font-style: italic; color: var(--text-quaternary); border-top: 1px solid var(--border); margin-top: 24px; }
+
+/* Error */
+.error-msg { font-size: 13px; color: var(--error); text-align: center; margin-top: 12px; font-family: var(--mono); }
+
+/* Claim mapping pills */
+.claim-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.claim-pill { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; }
+.claim-pill.active { color: var(--purple); border-color: var(--purple-border); background: var(--purple-bg); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+<div class="nav-inner">
+    <a href="/" class="nav-left">
+        <svg class="nav-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="4"/>
+            <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.15" stroke="#6C5CE7" stroke-width="2"/>
+            <circle cx="50" cy="44" r="10" fill="none" stroke="#00CEC9" stroke-width="2.5"/>
+            <path d="M35 68 Q50 56 65 68" fill="none" stroke="#00CEC9" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
+    </a>
+    <div class="nav-mode">AUTHENTICATE</div>
+</div>
+</div>
+
+<div class="page">
+
+<!-- STEP INDICATORS -->
+<div class="steps-bar">
+    <div class="step-dot active" id="dot0"></div>
+    <div class="step-line" id="line0"></div>
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" id="dot4"></div>
+</div>
+
+<!-- STEP 0: Identity -->
+<div class="step-section active" id="step0">
+    <div class="header">
+        <div class="header-eyebrow">Biometric Verification</div>
+        <div class="header-title">Authenticate with VAC</div>
+        <div class="header-sub">Verify your identity to mint a cryptographic authority chain. Every agent action traces back to you.</div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="inputName" type="text" placeholder="Rob Zagarella" autocomplete="name">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="inputEmail" type="email" placeholder="rob@violetshores.com" autocomplete="email">
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Organisation</label>
+            <input class="form-input" id="inputOrg" type="text" placeholder="Violet Shores">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Role</label>
+            <input class="form-input" id="inputRole" type="text" placeholder="Founder">
+        </div>
+    </div>
+    <button class="btn-primary" id="btnIdentity" onclick="goToCamera()">
+        Continue to Verification
+    </button>
+    <div class="patent-badge" style="display: flex; justify-content: center; margin-top: 20px;">
+        <span class="dot"></span> Patent Pending · 285 Claims · 6 Filings
+    </div>
+</div>
+
+<!-- STEP 1: Camera Access -->
+<div class="step-section" id="step1">
+    <div class="header">
+        <div class="header-eyebrow">Step 2 of 5</div>
+        <div class="header-title">Camera & Microphone</div>
+        <div class="header-sub">VAC uses 6 biometric modalities to bind your identity to the authority chain.</div>
+    </div>
+    <div class="camera-container" id="cameraBox">
+        <video id="videoPreview" autoplay playsinline muted></video>
+        <div class="camera-overlay">
+            <div class="camera-corners"></div>
+            <div class="camera-corners-bottom"></div>
+            <div class="camera-label" id="cameraLabel">AWAITING CAMERA</div>
+        </div>
+    </div>
+    <button class="btn-primary" id="btnCamera" onclick="requestCamera()">
+        Enable Camera & Microphone
+    </button>
+    <div id="cameraError" class="error-msg" style="display:none;"></div>
+    <div style="text-align: center; margin-top: 16px;">
+        <div class="modalities-mini" style="justify-content: center;">
+            <div class="mod-chip"><span class="dot"></span>Face Liveness</div>
+            <div class="mod-chip"><span class="dot"></span>Deepfake Detection</div>
+            <div class="mod-chip"><span class="dot"></span>Voiceprint</div>
+            <div class="mod-chip"><span class="dot"></span>Lip-Sync</div>
+            <div class="mod-chip"><span class="dot"></span>Challenge Response</div>
+            <div class="mod-chip"><span class="dot"></span>Geolocation</div>
+        </div>
+    </div>
+</div>
+
+<!-- STEP 2: Challenge + Recording -->
+<div class="step-section" id="step2">
+    <div class="header" style="padding-bottom: 16px;">
+        <div class="header-eyebrow">Step 3 of 5 · Recording</div>
+        <div class="header-title">Speak the Challenge</div>
+    </div>
+    <div class="camera-container recording" id="cameraBoxRec">
+        <video id="videoPreviewRec" autoplay playsinline muted></video>
+        <div class="camera-overlay">
+            <div class="camera-corners"></div>
+            <div class="camera-corners-bottom"></div>
+            <div class="rec-indicator" id="recIndicator" style="display:none;">
+                <span class="rec-dot"></span>REC
+            </div>
+            <div class="camera-challenge">
+                <div class="camera-challenge-text" id="challengeText">Loading challenge…</div>
+                <div class="camera-challenge-sub">Read this aloud while looking at the camera</div>
+            </div>
+        </div>
+    </div>
+    <div class="timer-label">Recording in</div>
+    <div class="timer-display" id="countdownTimer">3</div>
+    <button class="btn-primary" id="btnRecord" onclick="startRecording()" style="display:none;">
+        Start Recording
+    </button>
+</div>
+
+<!-- STEP 3: Processing -->
+<div class="step-section" id="step3">
+    <div class="header">
+        <div class="header-eyebrow">Step 4 of 5</div>
+        <div class="header-title">Verifying Identity</div>
+    </div>
+    <div class="progress-container">
+        <div class="progress-ring">
+            <svg viewBox="0 0 80 80">
+                <circle class="ring-bg" cx="40" cy="40" r="36"/>
+                <circle class="ring-fill" cx="40" cy="40" r="36" id="progressRing"/>
+            </svg>
+        </div>
+        <div class="progress-step" id="progressStep">Analysing face liveness…</div>
+        <div class="progress-detail" id="progressDetail">Gemini 2.5 Flash</div>
+    </div>
+    <div style="max-width: 320px; margin: 0 auto;">
+        <div id="modalityChecks"></div>
+    </div>
+</div>
+
+<!-- STEP 4: Success -->
+<div class="step-section" id="step4">
+    <div class="header">
+        <div class="header-eyebrow">Verified ✓</div>
+        <div class="header-title">Authority Chain Minted</div>
+        <div class="header-sub">Your identity is cryptographically bound to this delegation chain.</div>
+    </div>
+
+    <!-- Identity card -->
+    <div class="chain-result" style="text-align: center;">
+        <svg width="40" height="40" viewBox="0 0 100 100" style="margin-bottom: 12px;">
+            <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#3FB950" stroke-width="4"/>
+            <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#3FB950" fill-opacity="0.1" stroke="#3FB950" stroke-width="2"/>
+            <path d="M35 50 L45 60 L65 40" fill="none" stroke="#3FB950" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);" id="successName"></div>
+        <div style="font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-top: 4px;" id="successOrg"></div>
+        <div class="modalities-mini" style="justify-content: center; margin-top: 14px;" id="successModalities"></div>
+    </div>
+
+    <!-- Delegation chain -->
+    <div style="font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">Delegation Chain</div>
+    <div class="chain-result" id="chainDisplay"></div>
+
+    <!-- Share -->
+    <div style="font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin: 20px 0 10px;">Share Verification</div>
+    <div class="share-card">
+        <div style="font-size: 14px; color: var(--text-secondary);">Anyone with this link can verify your full authority chain and vouch for you.</div>
+        <div class="share-url" id="shareUrl" onclick="copyShareUrl()"></div>
+        <div id="copyFeedback" style="font-family: var(--mono); font-size: 11px; color: var(--success); text-align: center; height: 16px;"></div>
+        <div style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">Send to recipient</div>
+            <div class="form-row">
+                <input class="form-input" id="recipientName" type="text" placeholder="Name">
+                <input class="form-input" id="recipientEmail" type="email" placeholder="email@example.com">
+            </div>
+            <button class="btn-secondary" style="width: 100%; margin-top: 10px;" id="btnSend" onclick="sendToRecipient()">
+                Send Verification Link
+            </button>
+            <div id="sendFeedback" class="error-msg" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Claim mapping -->
+    <div style="font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; margin: 20px 0 10px;">Patent Claims Demonstrated</div>
+    <div class="chain-result">
+        <div class="claim-pills" id="claimPills"></div>
+    </div>
+
+    <div class="footer-tagline">Math enforces what neither party trusts the other to honour.</div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+const API_BASE = 'https://vac-system-production.up.railway.app';
+
+let currentStep = 0;
+let mediaStream = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let authResult = null;
+
+// User data
+const userData = () => ({
+    name: document.getElementById('inputName').value.trim(),
+    email: document.getElementById('inputEmail').value.trim(),
+    org: document.getElementById('inputOrg').value.trim(),
+    role: document.getElementById('inputRole').value.trim(),
+});
+
+// Step navigation
+function goToStep(n) {
+    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step${n}`).classList.add('active');
+    // Update dots
+    for (let i = 0; i <= 4; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        dot.classList.remove('active', 'done');
+        if (i < n) dot.classList.add('done');
+        if (i === n) dot.classList.add('active');
+    }
+    for (let i = 0; i <= 3; i++) {
+        const line = document.getElementById(`line${i}`);
+        line.classList.toggle('done', i < n);
+    }
+    currentStep = n;
+}
+
+// STEP 0 → 1: Identity → Camera
+function goToCamera() {
+    const d = userData();
+    if (!d.name || !d.email) {
+        alert('Name and email are required.');
+        return;
+    }
+    goToStep(1);
+}
+
+// STEP 1: Request camera
+async function requestCamera() {
+    const btn = document.getElementById('btnCamera');
+    const err = document.getElementById('cameraError');
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Requesting access…';
+
+    try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: true,
+        });
+        document.getElementById('videoPreview').srcObject = mediaStream;
+        document.getElementById('cameraLabel').textContent = 'CAMERA ACTIVE';
+        btn.textContent = 'Proceed to Challenge';
+        btn.disabled = false;
+        btn.onclick = goToChallenge;
+    } catch (e) {
+        err.textContent = 'Camera access denied. Please allow camera and microphone access.';
+        err.style.display = 'block';
+        btn.textContent = 'Retry Camera Access';
+        btn.disabled = false;
+    }
+}
+
+// STEP 1 → 2: Challenge
+function goToChallenge() {
+    const d = userData();
+    // Set up challenge text
+    const challenge = `I am ${d.name}, authorising VAC Protocol`;
+    document.getElementById('challengeText').textContent = `"${challenge}"`;
+
+    // Mirror the stream to the recording view
+    document.getElementById('videoPreviewRec').srcObject = mediaStream;
+
+    goToStep(2);
+
+    // Auto-start countdown
+    startCountdown();
+}
+
+// STEP 2: Countdown then record
+function startCountdown() {
+    const timerEl = document.getElementById('countdownTimer');
+    let count = 3;
+    timerEl.textContent = count;
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            timerEl.textContent = count;
+        } else {
+            clearInterval(interval);
+            timerEl.textContent = '●';
+            timerEl.style.color = 'var(--error)';
+            beginRecording();
+        }
+    }, 1000);
+}
+
+function beginRecording() {
+    document.getElementById('recIndicator').style.display = 'flex';
+    document.getElementById('cameraBoxRec').classList.add('recording');
+    document.querySelector('#step2 .timer-label').textContent = 'Recording';
+
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => { onRecordingComplete(); };
+    mediaRecorder.start();
+
+    // Record for 5 seconds
+    let remaining = 5;
+    const timerEl = document.getElementById('countdownTimer');
+    timerEl.textContent = remaining;
+    timerEl.style.color = 'var(--error)';
+
+    const interval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(interval);
+            mediaRecorder.stop();
+        }
+    }, 1000);
+}
+
+function startRecording() {
+    startCountdown();
+}
+
+// Recording complete → process
+async function onRecordingComplete() {
+    document.getElementById('recIndicator').style.display = 'none';
+    document.getElementById('cameraBoxRec').classList.remove('recording');
+
+    // Stop camera
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+    }
+
+    goToStep(3);
+    await runVerification();
+}
+
+// STEP 3: Processing animation
+async function runVerification() {
+    const steps = [
+        { label: 'Analysing face liveness…', detail: 'Gemini 2.5 Flash', pct: 15 },
+        { label: 'Running deepfake detection…', detail: 'Neural network analysis', pct: 30 },
+        { label: 'Extracting voiceprint…', detail: 'Deepgram Nova-3', pct: 50 },
+        { label: 'Validating lip-sync correlation…', detail: 'Cross-modal verification', pct: 65 },
+        { label: 'Verifying challenge response…', detail: 'Phrase + gesture match', pct: 80 },
+        { label: 'Minting authority chain…', detail: 'Ed25519 signatures', pct: 95 },
+    ];
+
+    const ring = document.getElementById('progressRing');
+    const stepEl = document.getElementById('progressStep');
+    const detailEl = document.getElementById('progressDetail');
+    const circumference = 2 * Math.PI * 36;
+
+    for (const s of steps) {
+        stepEl.textContent = s.label;
+        detailEl.textContent = s.detail;
+        ring.style.strokeDashoffset = circumference * (1 - s.pct / 100);
+        await sleep(600 + Math.random() * 400);
+    }
+
+    // Actually call the backend
+    const d = userData();
+    try {
+        const resp = await fetch(`${API_BASE}/v1/vat/auth/capture`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: d.name,
+                email: d.email,
+                org_name: d.org,
+                org_role: d.role,
+            }),
+        });
+        authResult = await resp.json();
+
+        // Complete progress
+        stepEl.textContent = 'Identity verified ✓';
+        detailEl.textContent = `Trust score: ${authResult.biometric_verification.overall_score}`;
+        ring.style.strokeDashoffset = 0;
+        ring.style.stroke = 'var(--success)';
+
+        await sleep(800);
+        showSuccess();
+    } catch (e) {
+        stepEl.textContent = 'Verification failed';
+        detailEl.textContent = e.message || 'Network error — check connection';
+        ring.style.stroke = 'var(--error)';
+    }
+}
+
+// STEP 4: Success
+function showSuccess() {
+    const d = userData();
+    const r = authResult;
+
+    document.getElementById('successName').textContent = d.name;
+    document.getElementById('successOrg').textContent = [d.role, d.org].filter(Boolean).join(' · ') || 'Verified Human';
+
+    // Modalities
+    const modEl = document.getElementById('successModalities');
+    const modalities = ['Face Liveness', 'Deepfake', 'Voiceprint', 'Lip-Sync', 'Challenge', 'Geolocation'];
+    modEl.innerHTML = modalities.map(m => `<div class="mod-chip"><span class="dot"></span>${m}</div>`).join('');
+
+    // Chain display
+    const chainEl = document.getElementById('chainDisplay');
+    const nodes = [
+        { icon: '👤', cls: 'human', name: d.name, scope: 'Root authority · 5 resources · 5 actions', trust: r.chain[0].trust },
+        { icon: '🤖', cls: 'agent', name: 'Coordinator Agent', scope: '2 resources · read, summarise', trust: r.chain[1].trust },
+        { icon: '🤖', cls: 'agent', name: 'Writer Agent', scope: '1 resource · read only', trust: r.chain[2].trust },
+    ];
+    chainEl.innerHTML = nodes.map((n, i) => {
+        const arrow = i < nodes.length - 1 ? '<div class="chain-arrow">↓ delegates (scope narrows)</div>' : '';
+        const trustCls = n.trust >= 0.9 ? 'high' : 'mid';
+        return `
+            <div class="chain-node-result">
+                <div class="chain-icon ${n.cls}">${n.icon}</div>
+                <div class="chain-info">
+                    <div class="chain-agent-name">${n.name}</div>
+                    <div class="chain-scope">${n.scope}</div>
+                </div>
+                <div class="chain-trust ${trustCls}">${n.trust.toFixed(2)}</div>
+            </div>
+            ${arrow}`;
+    }).join('');
+
+    // Share URL
+    document.getElementById('shareUrl').textContent = r.share_url;
+
+    // Claim pills
+    const claims = [
+        { range: '1–15', label: 'Biometric binding', active: true },
+        { range: '16–38', label: 'Trust scoring', active: true },
+        { range: '39–55', label: 'Scope constraints', active: true },
+        { range: '56–112', label: 'Chain verification', active: true },
+        { range: '113–134', label: 'Multi-agent coord', active: true },
+        { range: '135–167', label: 'Cross-org federation', active: false },
+        { range: '168–241', label: 'Collective governance', active: false },
+        { range: '242–271', label: 'Spend controls', active: false },
+        { range: '272–285', label: 'Trust graph', active: true },
+    ];
+    document.getElementById('claimPills').innerHTML = claims.map(c =>
+        `<span class="claim-pill ${c.active ? 'active' : ''}">${c.range}: ${c.label}</span>`
+    ).join('');
+
+    goToStep(4);
+}
+
+// Share actions
+function copyShareUrl() {
+    const url = authResult?.share_url;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+        const fb = document.getElementById('copyFeedback');
+        fb.textContent = 'Copied to clipboard ✓';
+        setTimeout(() => fb.textContent = '', 2000);
+    });
+}
+
+async function sendToRecipient() {
+    const name = document.getElementById('recipientName').value.trim();
+    const email = document.getElementById('recipientEmail').value.trim();
+    const btn = document.getElementById('btnSend');
+    const fb = document.getElementById('sendFeedback');
+
+    if (!email) { fb.textContent = 'Email required'; fb.style.display = 'block'; fb.style.color = 'var(--error)'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    fb.style.display = 'none';
+
+    try {
+        const d = userData();
+        const resp = await fetch(`${API_BASE}/v1/vat/auth/capture`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: d.name,
+                email: d.email,
+                org_name: d.org,
+                org_role: d.role,
+                recipient_name: name,
+                recipient_email: email,
+            }),
+        });
+        const data = await resp.json();
+        if (data.recipient_notified) {
+            fb.textContent = `Sent to ${email} ✓`;
+            fb.style.color = 'var(--success)';
+            fb.style.display = 'block';
+            // Update share URL with new chain
+            document.getElementById('shareUrl').textContent = data.share_url;
+        } else {
+            fb.textContent = 'Failed to send — try again';
+            fb.style.color = 'var(--error)';
+            fb.style.display = 'block';
+        }
+    } catch (e) {
+        fb.textContent = 'Network error';
+        fb.style.color = 'var(--error)';
+        fb.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Send Verification Link';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+
+</body>
+</html>

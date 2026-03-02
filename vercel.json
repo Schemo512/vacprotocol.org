@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/auth",
+      "destination": "/auth.html"
+    },
+    {
       "source": "/vat/verify/:jti",
       "destination": "/vat-verify.html?jti=:jti"
     }
