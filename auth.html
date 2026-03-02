@@ -6,7 +6,7 @@
 <title>VAC Protocol — Authenticate</title>
 <meta name="description" content="Verify your identity and mint a cryptographic authority chain with VAC Protocol.">
 <meta property="og:title" content="VAC Protocol — Authenticate">
-<meta property="og:description" content="Biometric verification → cryptographic authority chain. 285 patent claims. Math enforces what neither party trusts the other to honour.">
+<meta property="og:description" content="Biometric verification → cryptographic authority chain. 285 patent claims. Math so neither party has to rely on trust alone.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vacprotocol.org/auth">
 <meta property="og:image" content="https://vacprotocol.org/og-image.png">
@@ -14,6 +14,7 @@
 <meta name="twitter:site" content="@vacprotocol">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
+/* ─── Theme defaults (overridden by vac-themes.js at runtime) ─── */
 :root {
     --bg: #0D1117;
     --surface: #161B22;
@@ -94,6 +95,24 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .camera-container.recording { border-color: var(--error); box-shadow: 0 0 20px rgba(248,81,73,0.15); }
 .camera-container.verified { border-color: var(--success); box-shadow: 0 0 20px rgba(63,185,80,0.15); }
 #videoPreview, #videoPreviewRec { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; background: #000; }
+
+/* Face oval guide */
+.face-oval { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 180px; height: 240px; pointer-events: none; }
+.face-oval-ring { fill: none; stroke: var(--purple); stroke-width: 2; stroke-dasharray: 8 4; opacity: 0.6; transition: all 0.3s; }
+.camera-container.face-detected .face-oval-ring { stroke: var(--success); stroke-dasharray: none; opacity: 0.8; }
+.face-oval-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 10px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 3px; }
+
+/* Countdown ring */
+.countdown-ring-wrap { width: 100px; height: 100px; margin: 8px auto; position: relative; }
+.countdown-ring-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.countdown-ring-wrap .ring-bg { fill: none; stroke: var(--border); stroke-width: 3; }
+.countdown-ring-wrap .ring-fill { fill: none; stroke: var(--purple); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 245; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
+.countdown-ring-wrap .ring-fill.recording { stroke: var(--error); }
+.countdown-number { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--text-primary); }
+
+/* Privacy statement */
+.privacy-statement { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
+.privacy-statement svg { flex-shrink: 0; margin-top: 1px; }
 .camera-overlay { position: absolute; inset: 0; pointer-events: none; }
 .camera-corners { position: absolute; inset: 16px; }
 .camera-corners::before, .camera-corners::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--purple); border-style: solid; }
@@ -265,8 +284,18 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="camera-overlay">
             <div class="camera-corners"></div>
             <div class="camera-corners-bottom"></div>
+            <div class="face-oval" id="faceOval">
+                <svg viewBox="0 0 180 240" width="180" height="240">
+                    <ellipse class="face-oval-ring" cx="90" cy="120" rx="75" ry="105"/>
+                </svg>
+                <div class="face-oval-label" id="faceOvalLabel">Position face in oval</div>
+            </div>
             <div class="camera-label" id="cameraLabel">AWAITING CAMERA</div>
         </div>
+    </div>
+    <div class="privacy-statement">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L2 4v4c0 3.5 2.6 6.8 6 7.5 3.4-.7 6-4 6-7.5V4L8 1z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 8l1.5 1.5L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Your biometric data is processed in real-time for verification only. Video is not stored after analysis. VAC Protocol does not retain facial images or voice recordings.</span>
     </div>
     <button class="btn-primary" id="btnCamera" onclick="requestCamera()">
         Enable Camera & Microphone
@@ -312,8 +341,14 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="camera-overlay">
             <div class="camera-corners"></div>
             <div class="camera-corners-bottom"></div>
+            <div class="face-oval">
+                <svg viewBox="0 0 180 240" width="180" height="240">
+                    <ellipse class="face-oval-ring" cx="90" cy="120" rx="75" ry="105"/>
+                </svg>
+            </div>
             <div class="rec-indicator" id="recIndicator" style="display:none;">
                 <span class="rec-dot"></span>REC
+            </div>
             </div>
             <div class="camera-challenge">
                 <div class="camera-challenge-text" id="challengeText">Loading challenge…</div>
@@ -322,7 +357,13 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
     </div>
     <div class="timer-label" id="timerLabel">Recording in</div>
-    <div class="timer-display" id="countdownTimer">3</div>
+    <div class="countdown-ring-wrap" id="countdownRingWrap">
+        <svg viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="39"/>
+            <circle class="ring-fill" cx="50" cy="50" r="39" id="countdownRingFill" style="stroke-dasharray: 245; stroke-dashoffset: 0;"/>
+        </svg>
+        <div class="countdown-number" id="countdownTimer">3</div>
+    </div>
 </div>
 
 <!-- STEP 3: Processing — REAL verification -->
@@ -409,7 +450,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="claim-pills" id="claimPills"></div>
     </div>
 
-    <div class="footer-tagline">Math enforces what neither party trusts the other to honour.</div>
+    <div class="footer-tagline">Math so neither party has to rely on trust alone.</div>
 </div>
 
 </div><!-- .page -->
@@ -532,17 +573,22 @@ function goToChallenge() {
 // STEP 2: Countdown then record
 function startCountdown() {
     const timerEl = document.getElementById('countdownTimer');
+    const ringFill = document.getElementById('countdownRingFill');
+    const circumference = 2 * Math.PI * 39;
     let count = 3;
     timerEl.textContent = count;
+    ringFill.style.strokeDashoffset = 0;
 
     const interval = setInterval(() => {
         count--;
         if (count > 0) {
             timerEl.textContent = count;
+            ringFill.style.strokeDashoffset = circumference * ((3 - count) / 3);
         } else {
             clearInterval(interval);
             timerEl.textContent = '●';
-            timerEl.style.color = 'var(--error)';
+            ringFill.classList.add('recording');
+            ringFill.style.strokeDashoffset = 0;
             beginRecording();
         }
     }, 1000);
@@ -579,14 +625,18 @@ function beginRecording() {
     // Record for 5 seconds
     let remaining = 5;
     const timerEl = document.getElementById('countdownTimer');
+    const ringFill = document.getElementById('countdownRingFill');
+    const circumference = 2 * Math.PI * 39;
     timerEl.textContent = remaining;
-    timerEl.style.color = 'var(--error)';
+    ringFill.classList.add('recording');
+    ringFill.style.strokeDashoffset = 0;
 
-    const interval = setInterval(() => {
+    const recInterval = setInterval(() => {
         remaining--;
         timerEl.textContent = remaining;
+        ringFill.style.strokeDashoffset = circumference * ((5 - remaining) / 5);
         if (remaining <= 0) {
-            clearInterval(interval);
+            clearInterval(recInterval);
             mediaRecorder.stop();
         }
     }, 1000);
@@ -868,6 +918,25 @@ async function sendToRecipient() {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+<script src="vac-themes.js"></script>
+<script>
+// Apply theme from URL param or auto-detect from email
+if (typeof VACTheme !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const urlTheme = params.get('theme');
+    if (urlTheme) {
+        VACTheme.apply(urlTheme);
+    }
+    // Also auto-detect when email is entered
+    const emailInput = document.getElementById('inputEmail');
+    if (emailInput) {
+        emailInput.addEventListener('blur', () => {
+            const theme = VACTheme.detectFromEmail(emailInput.value);
+            if (theme !== 'default') VACTheme.apply(theme);
+        });
+    }
+}
 </script>
 
 </body>
