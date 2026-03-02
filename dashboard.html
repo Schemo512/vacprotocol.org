@@ -6,282 +6,198 @@
 <title>VAC Dashboard</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
-:root { --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128; --border: #30363D; --border-light: #484F58; --text-primary: #F0F6FC; --text-secondary: #C9D1D9; --text-tertiary: #8B949E; --text-quaternary: #6E7681; --purple: #6C5CE7; --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25); --teal: #00CEC9; --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2); --warning: #D29922; --warning-bg: rgba(210,153,34,0.08); --error: #F85149; --error-bg: rgba(248,81,73,0.08); --radius: 10px; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
+:root { --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128; --border: #30363D; --border-light: #484F58; --text-primary: #F0F6FC; --text-secondary: #C9D1D9; --text-tertiary: #8B949E; --text-quaternary: #6E7681; --purple: #6C5CE7; --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25); --teal: #00CEC9; --teal-bg: rgba(0,206,201,0.08); --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2); --warning: #D29922; --warning-bg: rgba(210,153,34,0.08); --warning-border: rgba(210,153,34,0.2); --error: #F85149; --error-bg: rgba(248,81,73,0.08); --error-border: rgba(248,81,73,0.2); --radius: 10px; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: var(--font); background: var(--bg); color: var(--text-secondary); line-height: 1.6; }
 .nav { border-bottom: 1px solid var(--border); padding: 12px 20px; background: var(--bg); position: sticky; top: 0; z-index: 50; }
-.nav-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-.nav-brand { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; }
+.nav-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+.nav-brand { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .nav-brand span { font-weight: 400; color: var(--text-tertiary); }
-.nav-mode { font-family: var(--mono); font-size: 10px; color: var(--purple); background: var(--purple-bg); border: 1px solid var(--purple-border); padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
-.page { max-width: 900px; margin: 0 auto; padding: 24px 20px 80px; }
-
-/* Profile header */
-.profile-header { display: flex; align-items: center; gap: 16px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; }
-.profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--purple-bg); border: 2px solid var(--purple); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
-.profile-info { flex: 1; }
-.profile-name { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-.profile-meta { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); }
-.profile-score { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--teal); text-align: right; }
-.profile-score-label { font-size: 10px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
-
-/* Stat cards */
-.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
-.stat-value { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text-primary); }
-.stat-label { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
-
-/* Section headers */
-.section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
-.section-title { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 1.5px; text-transform: uppercase; }
-.section-action { font-family: var(--mono); font-size: 11px; color: var(--purple); cursor: pointer; text-decoration: none; }
-
-/* Cards */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
-.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.card-meta { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); }
-
-/* Agent cards */
-.agent-card { display: flex; align-items: center; gap: 12px; }
-.agent-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--purple-bg); border: 1px solid var(--purple-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.agent-info { flex: 1; }
-.agent-actions { display: flex; gap: 6px; }
-.agent-actions button { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--text-tertiary); cursor: pointer; }
-.agent-actions button:hover { border-color: var(--purple-border); color: var(--purple); }
-.agent-actions button.danger { border-color: var(--error-bg); color: var(--error); }
-.agent-actions button.danger:hover { background: var(--error-bg); }
-
-/* Contact cards */
-.contact-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.nav-tabs { display: flex; gap: 0; }
+.nav-tab { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); padding: 6px 14px; cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 0.5px; transition: all 0.15s; }
+.nav-tab:hover { color: var(--text-tertiary); }
+.nav-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+.page { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.freshness-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid; }
+.freshness-banner.success { background: var(--success-bg); border-color: var(--success-border); }
+.freshness-banner.teal { background: var(--teal-bg); border-color: rgba(0,206,201,0.2); }
+.freshness-banner.warning { background: var(--warning-bg); border-color: var(--warning-border); }
+.freshness-banner.error { background: var(--error-bg); border-color: var(--error-border); }
+.freshness-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.freshness-dot.success { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.freshness-dot.teal { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+.freshness-dot.warning { background: var(--warning); box-shadow: 0 0 6px var(--warning); animation: pulse 2s infinite; }
+.freshness-dot.error { background: var(--error); box-shadow: 0 0 6px var(--error); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.freshness-info { flex: 1; }
+.freshness-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.freshness-detail { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
+.freshness-action { font-family: var(--mono); font-size: 11px; padding: 5px 12px; border-radius: 4px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; text-decoration: none; white-space: nowrap; }
+.profile-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.profile-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--purple-bg); border: 2px solid var(--purple); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
+.profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.profile-meta { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); }
+.profile-score { font-family: var(--mono); font-size: 20px; font-weight: 700; text-align: right; }
+.profile-score-sub { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; text-align: center; }
+.stat-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.stat-label { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
+.section-title { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 1.5px; text-transform: uppercase; }
+.section-action { font-family: var(--mono); font-size: 10px; color: var(--purple); cursor: pointer; text-decoration: none; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+.card-body { padding: 14px 16px; }
+.agent-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.agent-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+.agent-icon.active { background: var(--success-bg); border: 1px solid var(--success-border); }
+.agent-name { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
+.agent-status { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; }
+.agent-status.active { background: var(--success-bg); color: var(--success); }
+.cap-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.cap-chip { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-quaternary); }
+.cap-chip.allowed { color: var(--teal); border-color: rgba(0,206,201,0.2); background: var(--teal-bg); }
+.cap-chip.excluded { color: var(--error); border-color: var(--error-border); background: var(--error-bg); text-decoration: line-through; }
+.gauge-row { display: flex; gap: 8px; margin: 8px 0; }
+.gauge { flex: 1; }
+.gauge-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.gauge-label { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 0.5px; text-transform: uppercase; }
+.gauge-value { font-family: var(--mono); font-size: 9px; color: var(--text-tertiary); }
+.gauge-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.gauge-fill { height: 100%; border-radius: 2px; }
+.gauge-fill.green { background: var(--success); }
+.gauge-fill.amber { background: var(--warning); }
+.gauge-fill.red { background: var(--error); }
+.agent-actions { display: flex; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.agent-btn { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-tertiary); cursor: pointer; flex: 1; text-align: center; }
+.agent-btn:hover { border-color: var(--purple-border); color: var(--purple); }
+.agent-btn.danger { color: var(--error); }
+.agent-btn.danger:hover { background: var(--error-bg); border-color: var(--error-border); }
+.tier-label { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px 4px; }
+.contact-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
 .contact-row:last-child { border-bottom: none; }
-.contact-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-raised); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-tertiary); flex-shrink: 0; }
-.contact-info { flex: 1; }
-.contact-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-.contact-email { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); }
-.badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; }
-.badge.mutual { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
-.badge.one-way { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
-.badge.invited { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(210,153,34,0.2); }
-
-/* Settings */
-.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.contact-ring { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.contact-ring.inner-circle { border: 2px solid var(--success); color: var(--success); background: var(--success-bg); }
+.contact-ring.trusted { border: 2px dashed var(--success); color: var(--success); }
+.contact-ring.verified { border: 2px solid var(--teal); color: var(--teal); }
+.contact-ring.invited { border: 2px dotted var(--text-quaternary); color: var(--text-quaternary); }
+.contact-ring.expired { border: 2px solid var(--error); color: var(--error); opacity: 0.5; }
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-meta { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
+.contact-actions a { font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 3px; text-decoration: none; border: 1px solid var(--border); color: var(--text-tertiary); }
+.contact-actions a:hover { border-color: var(--purple-border); color: var(--purple); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .setting-row:last-child { border-bottom: none; }
 .setting-label { font-size: 13px; color: var(--text-secondary); }
-.setting-value { font-family: var(--mono); font-size: 12px; color: var(--teal); }
-.setting-input { font-family: var(--mono); font-size: 12px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--text-primary); width: 100px; text-align: right; }
-
-/* Budget bar */
-.budget-row { margin-bottom: 10px; }
-.budget-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
-.budget-label { font-size: 12px; color: var(--text-secondary); }
-.budget-value { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
-.budget-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-.budget-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
-
-/* Loading */
-.loading { text-align: center; padding: 40px; font-family: var(--mono); font-size: 12px; color: var(--text-quaternary); }
-
-/* Empty state */
-.empty { text-align: center; padding: 24px; font-size: 13px; color: var(--text-quaternary); }
+.setting-sub { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
+.setting-input { font-family: var(--mono); font-size: 12px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--text-primary); width: 90px; text-align: right; }
+.setting-toggle { position: relative; width: 36px; height: 20px; display: inline-block; }
+.setting-toggle input { opacity: 0; width: 0; height: 0; }
+.setting-toggle .slider { position: absolute; inset: 0; background: var(--border); border-radius: 10px; cursor: pointer; transition: 0.2s; }
+.setting-toggle .slider:before { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--text-tertiary); left: 2px; top: 2px; transition: 0.2s; }
+.setting-toggle input:checked + .slider { background: var(--purple); }
+.setting-toggle input:checked + .slider:before { transform: translateX(16px); background: white; }
+.save-btn { font-family: var(--mono); font-size: 11px; padding: 6px 16px; border-radius: 4px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; margin-top: 12px; }
+.save-btn:hover { background: var(--purple); color: white; }
+.empty { text-align: center; padding: 20px; font-size: 13px; color: var(--text-quaternary); }
 .empty a { color: var(--purple); text-decoration: none; }
-
-/* Responsive */
-@media (max-width: 600px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+.quick-links { display: flex; gap: 8px; margin-top: 16px; }
+.quick-link { flex: 1; text-align: center; font-family: var(--mono); font-size: 11px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-tertiary); text-decoration: none; }
+.quick-link:hover { border-color: var(--purple-border); color: var(--purple); }
+.quick-link.primary { border-color: var(--purple-border); background: var(--purple-bg); color: var(--purple); }
+@media (max-width: 600px) { .stat-row { grid-template-columns: repeat(2, 1fr); } .gauge-row { flex-direction: column; } .nav-tabs { gap: 0; } .nav-tab { padding: 6px 8px; font-size: 10px; } }
 </style>
 </head>
 <body>
 <div class="nav"><div class="nav-inner">
-    <div class="nav-brand">
-        <svg width="20" height="20" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
-        VAC <span>DASHBOARD</span>
+    <a href="/" class="nav-brand">
+        <svg width="18" height="18" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
+        VAC <span>PROTOCOL</span>
+    </a>
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('overview')">Overview</div>
+        <div class="nav-tab" onclick="switchTab('agents')">Agents</div>
+        <div class="nav-tab" onclick="switchTab('contacts')">Contacts</div>
+        <div class="nav-tab" onclick="switchTab('settings')">Settings</div>
     </div>
-    <div class="nav-mode">CONTROL PLANE</div>
 </div></div>
-
-<div class="page" id="content">
-    <div class="loading" id="loadingState">Loading dashboard…</div>
-</div>
-
+<div class="page" id="content"><div style="text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-quaternary);">Loading…</div></div>
 <script>
-const API = 'https://vac-system-production.up.railway.app';
-const params = new URLSearchParams(window.location.search);
-const email = params.get('email') || '';
+const API='https://vac-system-production.up.railway.app';const params=new URLSearchParams(location.search);const email=params.get('email')||'';let _data=null,_freshness=null;
+function switchTab(t){document.querySelectorAll('.nav-tab').forEach(n=>n.classList.remove('active'));document.querySelector(`.nav-tab[onclick*="${t}"]`).classList.add('active');document.querySelectorAll('.tab-content').forEach(n=>n.classList.remove('active'));const el=document.getElementById('tab-'+t);if(el)el.classList.add('active');}
+function timeAgo(iso){if(!iso)return'never';const ms=Date.now()-new Date(iso).getTime();const m=Math.floor(ms/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+function gc(p){return p>90?'red':p>60?'amber':'green';}
+function enc(s){return encodeURIComponent(s||'');}
+function getContactTier(c){if(c.state==='mutual')return c.trust_score>0.8?'inner-circle':'trusted';if(['vouched','invited_back','verified'].includes(c.state))return'verified';if(c.state==='invited')return'invited';return'expired';}
+function tierLabel(t){return{'inner-circle':'Inner Circle','trusted':'Trusted','verified':'Verified','invited':'Invited','expired':'Needs Re-verification'}[t]||t;}
+function tierOrder(t){return{'inner-circle':0,'trusted':1,'verified':2,'invited':3,'expired':4}[t]??5;}
 
-async function init() {
-    if (!email) {
-        document.getElementById('content').innerHTML = `
-            <div class="empty" style="margin-top:80px;">
-                <svg width="48" height="48" viewBox="0 0 100 100" style="margin-bottom:16px;"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="var(--border-light)" stroke-width="4"/></svg>
-                <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No user specified</div>
-                <div>Complete verification first: <a href="/auth">vacprotocol.org/auth</a></div>
-            </div>`;
-        return;
-    }
+async function init(){
+if(!email){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sign in required</div><div><a href="/auth">Verify your identity</a> to access your dashboard</div></div>';return;}
+try{const[ur,fr]=await Promise.all([fetch(`${API}/v1/user/${enc(email)}`),fetch(`${API}/v1/user/${enc(email)}/freshness`)]);if(!ur.ok)throw new Error();_data=await ur.json();_freshness=fr.ok?await fr.json():null;render();}
+catch(e){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Not verified yet</div><div><a href="/auth">Complete verification</a> to create your profile</div></div>';}}
 
-    try {
-        const r = await fetch(`${API}/v1/user/${encodeURIComponent(email)}`);
-        if (!r.ok) throw new Error('User not found');
-        const data = await r.json();
-        render(data);
-    } catch (e) {
-        document.getElementById('content').innerHTML = `
-            <div class="empty" style="margin-top:80px;">
-                <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">User not found</div>
-                <div>Verify your identity first: <a href="/auth">vacprotocol.org/auth</a></div>
-                <div style="font-family:var(--mono);font-size:11px;color:var(--text-quaternary);margin-top:8px;">${email}</div>
-            </div>`;
-    }
-}
+function render(){const u=_data.user,f=_freshness,pd=_data.protection_defaults,ab=_data.agent_budget_defaults;
+const initials=u.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+const contacts=(_data.contacts||[]).map(c=>({...c,_tier:getContactTier(c)})).sort((a,b)=>{const d=tierOrder(a._tier)-tierOrder(b._tier);return d!==0?d:(b.last_interaction||'').localeCompare(a.last_interaction||'');});
+let h='';
+// Freshness
+if(f){const col=f.color;const stale=f.freshness==='aging'||f.freshness==='stale';
+h+=`<div class="freshness-banner ${col}"><div class="freshness-dot ${col}"></div><div class="freshness-info"><div class="freshness-label">${f.label}</div><div class="freshness-detail">Verified ${f.hours_since_verification<1?'just now':Math.round(f.hours_since_verification)+'h ago'} · Effective trust: ${(f.effective_trust_score*100).toFixed(0)}% · Re-verify: ${f.reverify_modality.replace(/_/g,' ')}</div></div>${stale?'<a href="/auth" class="freshness-action">Re-verify</a>':''}</div>`;}
 
-function render(data) {
-    const u = data.user;
-    const initials = u.name.split(' ').map(n => n[0]).join('').toUpperCase();
-    const scorePct = (u.trust_score * 100).toFixed(0);
-    const pd = data.protection_defaults;
-    const ab = data.agent_budget_defaults;
+const es=f?(f.effective_trust_score*100).toFixed(0):(u.trust_score*100).toFixed(0);
+const sc=es>80?'var(--success)':es>50?'var(--teal)':'var(--warning)';
 
-    let h = '';
+// Overview
+h+='<div class="tab-content active" id="tab-overview">';
+h+=`<div class="profile-row"><div class="profile-avatar">${initials}</div><div style="flex:1;"><div class="profile-name">${u.name}</div><div class="profile-meta">${u.org?u.org+' · ':''}${u.email}</div></div><div><div class="profile-score" style="color:${sc}">${es}%</div><div class="profile-score-sub">Trust Score</div></div></div>`;
+h+=`<div class="stat-row"><div class="stat-card"><div class="stat-value">${_data.contacts_count}</div><div class="stat-label">Contacts</div></div><div class="stat-card"><div class="stat-value">${_data.agents_count}</div><div class="stat-label">Agents</div></div><div class="stat-card"><div class="stat-value">${_data.messages.sent}</div><div class="stat-label">Sent</div></div><div class="stat-card"><div class="stat-value">${u.total_verifications}</div><div class="stat-label">Verifications</div></div></div>`;
+h+=`<div class="quick-links"><a href="/auth" class="quick-link">Re-verify</a><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}" class="quick-link primary">New Message</a></div></div>`;
 
-    // Profile header
-    h += `<div class="profile-header">
-        <div class="profile-avatar">${initials}</div>
-        <div class="profile-info">
-            <div class="profile-name">${u.name}</div>
-            <div class="profile-meta">${u.org ? u.org + ' · ' : ''}${u.email}</div>
-            <div class="profile-meta">${u.total_verifications} verification${u.total_verifications !== 1 ? 's' : ''} · Last: ${u.last_verified_at ? timeAgo(u.last_verified_at) : 'never'}</div>
-        </div>
-        <div style="text-align:right;">
-            <div class="profile-score">${scorePct}%</div>
-            <div class="profile-score-label">Trust Score</div>
-        </div>
-    </div>`;
+// Agents
+h+='<div class="tab-content" id="tab-agents">';
+h+=`<div class="section-header"><div class="section-title">Active Agents · ${_data.agents_count}</div><a href="/auth" class="section-action">+ Create Agent</a></div>`;
+if(!_data.agents.length){h+='<div class="card"><div class="card-body"><div class="empty">No active agents. <a href="/auth">Verify to create your first chain.</a></div></div></div>';}
+else _data.agents.forEach(a=>{const c=a.constraints||{};const acts=c.allowed_actions||['read','write','execute'];const excl=c.exclusions||[];
+const budgets=[];if(c.max_spend_usd)budgets.push({l:'USD',m:c.max_spend_usd,u:0,p:'$'});if(c.token_budget)budgets.push({l:'Tokens',m:c.token_budget,u:0,p:''});if(c.max_api_calls)budgets.push({l:'API',m:c.max_api_calls,u:0,p:''});
+h+=`<div class="card"><div class="card-body"><div class="agent-header"><div class="agent-icon active">⚡</div><div class="agent-name">${a.agent_id}</div><span class="agent-status active">Active</span></div><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);">Depth ${a.depth} · Trust ${(a.trust_score*100).toFixed(0)}%</div><div class="cap-chips">${acts.map(x=>`<span class="cap-chip allowed">${x}</span>`).join('')}${excl.map(x=>`<span class="cap-chip excluded">${x}</span>`).join('')}</div>`;
+if(budgets.length){h+='<div class="gauge-row">';budgets.forEach(b=>{const pct=b.m>0?Math.round(b.u/b.m*100):0;h+=`<div class="gauge"><div class="gauge-header"><span class="gauge-label">${b.l}</span><span class="gauge-value">${b.p}${b.u.toLocaleString()} / ${b.p}${b.m.toLocaleString()}</span></div><div class="gauge-bar"><div class="gauge-fill ${gc(pct)}" style="width:${pct}%"></div></div></div>`;});h+='</div>';}
+h+=`<div class="agent-actions"><button class="agent-btn" onclick="window.open('${a.verify_url}')">View Chain</button><button class="agent-btn" onclick="adjustBudget('${a.jti}')">Adjust Budget</button><button class="agent-btn danger" onclick="revokeAgent('${a.jti}')">Revoke</button></div></div></div>`;});
+h+='</div>';
 
-    // Stats
-    h += `<div class="stat-row">
-        <div class="stat-card"><div class="stat-value">${data.contacts_count}</div><div class="stat-label">Contacts</div></div>
-        <div class="stat-card"><div class="stat-value">${data.agents_count}</div><div class="stat-label">Active Agents</div></div>
-        <div class="stat-card"><div class="stat-value">${data.messages.sent}</div><div class="stat-label">Sent</div></div>
-        <div class="stat-card"><div class="stat-value">${data.messages.received}</div><div class="stat-label">Received</div></div>
-    </div>`;
+// Contacts
+h+='<div class="tab-content" id="tab-contacts">';
+h+=`<div class="section-header"><div class="section-title">Authenticated Contacts · ${contacts.length}</div><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}" class="section-action">+ Message</a></div>`;
+if(!contacts.length){h+='<div class="card"><div class="card-body"><div class="empty">No contacts yet. Share your <a href="/auth">verification link</a> to grow your trust network.</div></div></div>';}
+else{h+='<div class="card">';let ct=null;contacts.forEach(c=>{if(c._tier!==ct){ct=c._tier;h+=`<div class="tier-label">${tierLabel(ct)}</div>`;}const ci=(c.name||c.email.split('@')[0]).substring(0,2).toUpperCase();const sc2=c.trust_score?(c.trust_score*100).toFixed(0)+'%':'';
+h+=`<div class="contact-row"><div class="contact-ring ${c._tier}">${ci}</div><div class="contact-info"><div class="contact-name">${c.name||c.email}</div><div class="contact-meta">${sc2?sc2+' · ':''}${timeAgo(c.last_interaction)}</div></div><div class="contact-actions"><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}&to=${enc(c.email)}">MSG</a></div></div>`;});h+='</div>';}
+h+='</div>';
 
-    // Active agents
-    h += `<div class="section-header"><div class="section-title">Active Agents</div><a href="/auth" class="section-action">+ New Agent</a></div>`;
-    if (data.agents.length === 0) {
-        h += '<div class="card"><div class="empty">No active agents. <a href="/auth">Verify to create your first chain.</a></div></div>';
-    } else {
-        data.agents.forEach(a => {
-            const constraints = a.constraints || {};
-            const budgetItems = [];
-            if (constraints.max_spend_usd) budgetItems.push({ label: 'USD', max: constraints.max_spend_usd, unit: '$' });
-            if (constraints.token_budget) budgetItems.push({ label: 'Tokens', max: constraints.token_budget, unit: '' });
-            if (constraints.max_api_calls) budgetItems.push({ label: 'API Calls', max: constraints.max_api_calls, unit: '' });
+// Settings
+h+='<div class="tab-content" id="tab-settings">';
+h+='<div class="section-header"><div class="section-title">Message Protection Defaults</div></div><div class="card"><div class="card-body">';
+h+=stog('setEphemeral','Ephemeral','Never stored on device',pd.ephemeral);h+=stog('setAttention','Attention-gated','Blurs when not looking',pd.attention_gated);h+=stog('setGeo','Geo-fenced','Location restricted',pd.geo_fenced||false);
+h+='</div></div>';
+h+='<div class="section-header"><div class="section-title">Agent Budget Defaults</div></div><div class="card"><div class="card-body">';
+h+=sinp('setSpend','Max spend per agent','USD limit',ab.max_spend_usd||50,'$');h+=sinp('setTokens','Token budget','Per agent',ab.token_budget||500000,'');h+=sinp('setCalls','API calls limit','Per agent',ab.max_api_calls||1000,'');
+h+='<div style="text-align:right;"><button class="save-btn" onclick="saveDefaults()">Save Defaults</button></div></div></div>';
+h+='<div class="section-header"><div class="section-title">Verification History</div></div><div class="card"><div class="card-body">';
+h+=`<div class="setting-row"><span class="setting-label">Last verified</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);">${timeAgo(u.last_verified_at)}</span></div>`;
+h+=`<div class="setting-row"><span class="setting-label">Total verifications</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);">${u.total_verifications}</span></div>`;
+h+=`<div class="setting-row"><span class="setting-label">Method</span><span style="font-family:var(--mono);font-size:12px;color:var(--teal);">${(u.verification_method||'none').replace(/_/g,' ')}</span></div>`;
+h+='</div></div></div>';
+document.getElementById('content').innerHTML=h;}
 
-            h += `<div class="card"><div class="agent-card">
-                <div class="agent-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><circle cx="12" cy="5" r="4"/></svg></div>
-                <div class="agent-info">
-                    <div class="card-title">${a.agent_id}</div>
-                    <div class="card-meta">Depth ${a.depth} · Trust ${(a.trust_score * 100).toFixed(0)}%</div>
-                </div>
-                <div class="agent-actions">
-                    <button onclick="window.open('${a.verify_url}')">View</button>
-                    <button class="danger" onclick="revokeAgent('${a.jti}')">Revoke</button>
-                </div>
-            </div>`;
-            // Budget bars
-            if (budgetItems.length > 0) {
-                h += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">';
-                budgetItems.forEach(b => {
-                    // We don't have spend totals here, show max budget
-                    h += `<div class="budget-row">
-                        <div class="budget-header"><span class="budget-label">${b.label}</span><span class="budget-value">${b.unit}${b.max.toLocaleString()} max</span></div>
-                        <div class="budget-bar"><div class="budget-fill" style="width:0%;background:var(--success);"></div></div>
-                    </div>`;
-                });
-                h += '</div>';
-            }
-            h += '</div>';
-        });
-    }
+function stog(id,label,sub,checked){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><label class="setting-toggle"><input type="checkbox" id="${id}" ${checked?'checked':''}><span class="slider"></span></label></div>`;}
+function sinp(id,label,sub,val,pre){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><div style="display:flex;align-items:center;gap:4px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text-quaternary);">${pre}</span><input class="setting-input" type="number" id="${id}" value="${val}"></div></div>`;}
 
-    // Contacts / Authenticated Parties
-    h += `<div class="section-header"><div class="section-title">Authenticated Contacts</div><a href="/msg?from=${encodeURIComponent(email)}&name=${encodeURIComponent(u.name)}" class="section-action">+ Send Message</a></div>`;
-    if (data.contacts.length === 0) {
-        h += '<div class="card"><div class="empty">No contacts yet. Share your verification link to build your trust network.</div></div>';
-    } else {
-        h += '<div class="card">';
-        data.contacts.forEach(c => {
-            const badgeClass = c.state === 'mutual' ? 'mutual' : (c.state === 'vouched' || c.state === 'invited_back') ? 'one-way' : 'invited';
-            const badgeText = c.state === 'mutual' ? 'Mutual' : c.state === 'invited' ? 'Invited' : 'Vouched';
-            const ci = (c.name || c.email.split('@')[0]).substring(0, 2).toUpperCase();
-            h += `<div class="contact-row">
-                <div class="contact-avatar">${ci}</div>
-                <div class="contact-info">
-                    <div class="contact-name">${c.name || c.email}</div>
-                    <div class="contact-email">${c.email}</div>
-                </div>
-                <span class="badge ${badgeClass}">${badgeText}</span>
-                <a href="/msg?from=${encodeURIComponent(email)}&name=${encodeURIComponent(u.name)}&to=${encodeURIComponent(c.email)}" style="font-family:var(--mono);font-size:10px;color:var(--teal);text-decoration:none;">MSG</a>
-            </div>`;
-        });
-        h += '</div>';
-    }
-
-    // Default settings
-    h += `<div class="section-header"><div class="section-title">Default Settings</div></div>`;
-    h += '<div class="card">';
-    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Message Protection Defaults</div>';
-    h += `<div class="setting-row"><span class="setting-label">Ephemeral (no device storage)</span><span class="setting-value">${pd.ephemeral ? 'On' : 'Off'}</span></div>`;
-    h += `<div class="setting-row"><span class="setting-label">Attention-gated (blur when not looking)</span><span class="setting-value">${pd.attention_gated ? 'On' : 'Off'}</span></div>`;
-    h += `<div class="setting-row"><span class="setting-label">Geo-fenced (location restricted)</span><span class="setting-value">${pd.geo_fenced ? 'On' : 'Off'}</span></div>`;
-    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:12px;">Agent Budget Defaults</div>';
-    h += `<div class="setting-row"><span class="setting-label">Max spend per agent (USD)</span><input class="setting-input" type="number" value="${ab.max_spend_usd || 50}" id="setSpend"></div>`;
-    h += `<div class="setting-row"><span class="setting-label">Token budget per agent</span><input class="setting-input" type="number" value="${ab.token_budget || 500000}" id="setTokens"></div>`;
-    h += `<div class="setting-row"><span class="setting-label">Max API calls per agent</span><input class="setting-input" type="number" value="${ab.max_api_calls || 1000}" id="setCalls"></div>`;
-    h += '<div style="margin-top:12px;text-align:right;"><button onclick="saveDefaults()" style="font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:4px;border:1px solid var(--purple-border);background:var(--purple-bg);color:var(--purple);cursor:pointer;">Save Defaults</button></div>';
-    h += '</div>';
-
-    // Quick links
-    h += `<div style="display:flex;gap:8px;margin-top:20px;">
-        <a href="/auth" style="flex:1;text-align:center;font-family:var(--mono);font-size:11px;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-tertiary);text-decoration:none;">Re-verify</a>
-        <a href="/msg?from=${encodeURIComponent(email)}&name=${encodeURIComponent(u.name)}" style="flex:1;text-align:center;font-family:var(--mono);font-size:11px;padding:10px;border-radius:6px;border:1px solid var(--purple-border);background:var(--purple-bg);color:var(--purple);text-decoration:none;">New Message</a>
-    </div>`;
-
-    document.getElementById('content').innerHTML = h;
-}
-
-function timeAgo(iso) {
-    const ms = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(ms / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return mins + 'm ago';
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return hrs + 'h ago';
-    return Math.floor(hrs / 24) + 'd ago';
-}
-
-async function revokeAgent(jti) {
-    if (!confirm('Revoke this agent and all downstream chains? This cannot be undone.')) return;
-    try {
-        await fetch(`${API}/v1/vat/revoke/${jti}?cascade=true`, { method: 'POST' });
-        alert('Agent revoked.');
-        location.reload();
-    } catch (e) { alert('Revocation failed: ' + e.message); }
-}
-
-async function saveDefaults() {
-    const spend = parseFloat(document.getElementById('setSpend').value) || 50;
-    const tokens = parseInt(document.getElementById('setTokens').value) || 500000;
-    const calls = parseInt(document.getElementById('setCalls').value) || 1000;
-    try {
-        await fetch(`${API}/v1/user/${encodeURIComponent(email)}/defaults`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ agent_budget_defaults: { max_spend_usd: spend, token_budget: tokens, max_api_calls: calls } }),
-        });
-        alert('Defaults saved.');
-    } catch (e) { alert('Save failed: ' + e.message); }
-}
-
+async function revokeAgent(jti){if(!confirm('Revoke this agent and all downstream chains?'))return;try{await fetch(`${API}/v1/vat/revoke/${jti}?cascade=true`,{method:'POST'});location.reload();}catch(e){alert('Failed: '+e.message);}}
+function adjustBudget(jti){const n=prompt('New USD budget limit:','50');if(!n)return;alert('Budget adjust: POST /v1/vat/spend/'+jti+'/adjust → $'+n);}
+async function saveDefaults(){const pd={ephemeral:document.getElementById('setEphemeral').checked,attention_gated:document.getElementById('setAttention').checked,geo_fenced:document.getElementById('setGeo').checked};const ab={max_spend_usd:parseFloat(document.getElementById('setSpend').value)||50,token_budget:parseInt(document.getElementById('setTokens').value)||500000,max_api_calls:parseInt(document.getElementById('setCalls').value)||1000};
+try{const r=await fetch(`${API}/v1/user/${enc(email)}/defaults`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({protection_defaults:pd,agent_budget_defaults:ab})});if(r.ok){const b=document.querySelector('.save-btn');b.textContent='Saved ✓';setTimeout(()=>b.textContent='Save Defaults',2000);}}catch(e){alert('Failed: '+e.message);}}
 init();
 </script>
 </body>
