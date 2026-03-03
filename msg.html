@@ -222,7 +222,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
     <div style="display: flex; gap: 10px; margin-top: 16px;">
         <button class="btn-secondary" onclick="showCompose()" style="flex: 1;">Reply with Verified Message</button>
-        <button class="btn-secondary" onclick="window.location.href='/auth'" style="flex: 1;">Verify My Identity</button>
+        <button class="btn-secondary" id="readActionBtn" onclick="window.location.href='/auth'" style="flex: 1;">Get Verified</button>
     </div>
 
     <div style="text-align: center; margin-top: 16px;">
@@ -646,6 +646,19 @@ function renderMessage(msg) {
     // Pre-fill reply
     document.getElementById('composeRecipientEmail').value = msg.sender_email || '';
     document.getElementById('composeRecipientName').value = msg.sender_name || '';
+
+    // Context-aware action button: sender sees "My Dashboard", recipient sees "Get Verified"
+    const actionBtn = document.getElementById('readActionBtn');
+    if (actionBtn) {
+        const viewerEmail = new URLSearchParams(window.location.search).get('from') || '';
+        const isSender = viewerEmail && viewerEmail.toLowerCase() === (msg.sender_email || '').toLowerCase();
+        const isRecipientVerified = msg.sender_currently_verified; // if we can see the chain, viewer likely verified too
+        
+        if (isSender) {
+            actionBtn.textContent = 'My Dashboard';
+            actionBtn.onclick = () => { window.location.href = '/dashboard?email=' + encodeURIComponent(msg.sender_email); };
+        }
+    }
 
     showView('viewRead');
     // Activate content protection (ephemeral + attention-gated + geo-fenced)
