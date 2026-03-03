@@ -549,12 +549,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <details style="margin-top:10px"><summary style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;letter-spacing:1px">HOW WE AUTHENTICATED YOU</summary><div id="proofContent" style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:8px">Loading...</div></details>
 
     <!-- Share card -->
-    <div class="share-card">
-        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Your Verification Link</div>
+    <div class="share-card" style="border-color:var(--teal);border-width:1.5px">
+        <div style="font-family: var(--mono); font-size: 13px; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Share your proof</div>
         <div class="share-url" id="shareUrl" onclick="copyShareUrl()"></div>
         <div id="copyFeedback" style="font-family: var(--mono); font-size: 11px; color: var(--success); text-align: center; height: 16px;"></div>
         <div style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">Email it to someone</div>
+            <div style="font-family: var(--mono); font-size: 12px; color: var(--text-secondary); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; font-weight: 600;">Invite someone to vouch for you</div><div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 10px;">A vouch from another verified human upgrades your trust level.</div>
             <div class="form-row">
                 <input class="form-input" id="recipientName" type="text" placeholder="Their name">
                 <input class="form-input" id="recipientEmail" type="email" placeholder="email@example.com">
