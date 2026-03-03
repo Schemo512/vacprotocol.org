@@ -225,6 +225,8 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
 /* Modality list */
 .modalities-mini { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.modalities-mini.open { max-height: 200px !important; opacity: 1 !important; }
+.dd-arrow.open { transform: rotate(180deg); }
 .mod-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 4px; padding: 3px 8px; }
 .mod-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
 .mod-chip.failed { color: var(--error); background: var(--error-bg); border-color: var(--error-border); }
@@ -522,7 +524,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="header">
         <div class="header-eyebrow" id="successEyebrow">AUTHENTICATED ✓</div>
         <div class="header-title" id="successTitle">You're Authenticated</div>
-        <div class="header-sub">Your identity is cryptographically bound. Share your credential or get vouched to reach Verified status.</div>
+        <div class="header-sub">Your identity is cryptographically bound. Get vouched by another authenticated human to become Verified.</div>
     </div>
 
     <!-- Identity card — compact -->
@@ -535,7 +537,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);" id="successName"></div>
         <div style="font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-top: 4px;" id="successOrg"></div>
         <div style="font-family: var(--mono); font-size: 13px; color: var(--teal); margin-top: 8px;" id="successScore"></div>
-        <div class="modalities-mini" style="justify-content: center; margin-top: 14px;" id="successModalities"></div>
+        <div style="margin-top: 12px;">
+            <button onclick="document.getElementById('successModalities').classList.toggle('open');this.querySelector('.dd-arrow').classList.toggle('open')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--text-tertiary);font-family:var(--mono);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color 0.2s">
+                View modalities <span class="dd-arrow" style="display:inline-block;transition:transform 0.2s;font-size:8px">&#9660;</span>
+            </button>
+            <div class="modalities-mini" style="justify-content:center;margin-top:10px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,opacity 0.3s;opacity:0" id="successModalities"></div>
+        </div>
     </div>
 
     <!-- Primary CTA: Share -->
@@ -608,6 +615,7 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let authResult = null;
 let challengeData = null;
+let fingerFallback = 'none'; // 'none' = fingers, 'voice' = voice only
 let retryAttempts = 0;
 const MAX_RETRIES = 5;
 let audioContext = null;
@@ -1015,9 +1023,17 @@ function retryAVSetup() {
 function goToChallenge() {
     stopAVChecks(); // Clean up audio context and animation frame
     const phrase = challengeData?.phrase || `I am ${userData().name}, authorising VAC Protocol`;
-    const digits = challengeData?.digits || [];
+    const digits = (fingerFallback === 'voice') ? [] : (challengeData?.digits || []);
     const digitStr = digits.join(', ');
     document.getElementById('challengeText').innerHTML = `"${phrase}"<br><span style="font-size:12px;opacity:0.5;margin-top:6px;display:inline-block">Then show fingers: ${digitStr}</span>`;
+    // Accessibility fallback link
+    if (!document.getElementById('fingerFallback')) {
+        const fb = document.createElement('div');
+        fb.id = 'fingerFallback';
+        fb.style.cssText = 'text-align:center;margin-top:8px';
+        fb.innerHTML = '<button onclick="setFingerFallback()" style="background:none;border:none;color:var(--text-quaternary);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;padding:4px">Can\'t show fingers? Voice-only mode</button>';
+        document.getElementById('challengeText').parentElement.appendChild(fb);
+    }
     const recVid = document.getElementById('videoPreviewRec');
     recVid.srcObject = mediaStream;
     recVid.muted = true;
@@ -1025,6 +1041,23 @@ function goToChallenge() {
     recVid.play().catch(() => {});
     goToStep(2);
     startCountdown();
+}
+
+function setFingerFallback() {
+    if (fingerFallback === 'none') {
+        fingerFallback = 'voice';
+        const fb = document.getElementById('fingerFallback');
+        if (fb) fb.querySelector('button').textContent = 'Switch back to finger mode';
+        const phrase = challengeData?.phrase || '';
+        document.getElementById('challengeText').innerHTML = '"' + phrase + '"<br><span style="font-size:12px;color:var(--warning);margin-top:6px;display:inline-block">Voice-only mode (reduced trust score)</span>';
+    } else {
+        fingerFallback = 'none';
+        const fb = document.getElementById('fingerFallback');
+        if (fb) fb.querySelector('button').textContent = "Can't show fingers? Voice-only mode";
+        const phrase = challengeData?.phrase || '';
+        const digits = challengeData?.digits || [];
+        document.getElementById('challengeText').innerHTML = '"' + phrase + '"<br><span style="font-size:12px;opacity:0.5;margin-top:6px;display:inline-block">Then show fingers: ' + digits.join(', ') + '</span>';
+    }
 }
 
 // STEP 2: Countdown then record
@@ -1529,7 +1562,7 @@ function showSuccess() {
     document.getElementById('successName').textContent = d.name;
     document.getElementById('successOrg').textContent = [d.role, d.org].filter(Boolean).join(' · ') || 'Authenticated Human';
     // Map trust level to state label
-    const trustLabel = {'high': 'authenticated', 'medium': 'partial', 'low': 'low confidence'}[bio.trust_level] || bio.trust_level;
+    const trustLabel = {'high': 'authenticated', 'medium': 'authenticated', 'low': 'partial'}[bio.trust_level] || bio.trust_level;
     document.getElementById('successScore').textContent = `Trust Score: ${bio.overall_score} · ${trustLabel}`;
 
     // Update header based on pass/fail
