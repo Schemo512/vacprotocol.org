@@ -741,8 +741,8 @@ async function requestCamera() {
             err.style.display = 'block';
         }
 
-        btn.textContent = 'Proceed to Challenge';
-        btn.disabled = true; // updateAVReady will enable when checks pass
+        btn.textContent = 'Ready — Proceed to Challenge';
+        btn.disabled = false;
         btn.onclick = goToChallenge;
         // Fetch adaptive modality requirements
         fetchModalityRequirements();
