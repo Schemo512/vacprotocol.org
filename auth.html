@@ -1273,15 +1273,31 @@ async function runRealVerification(videoBlob) {
         }
 
     } catch (e) {
+        var msg = e.message || 'Network error';
+        var tip = '';
+        if (msg.indexOf('expired challenge') >= 0 || msg.indexOf('Invalid or expired') >= 0) {
+            msg = 'Your challenge timed out. This happens if you wait too long before recording.';
+            tip = 'Tap Retry below to get a fresh challenge. Start recording within a minute of seeing your challenge phrase.';
+        } else if (msg.indexOf('400') >= 0) {
+            msg = 'The server could not process your recording. This can happen with very short or silent recordings.';
+            tip = 'Speak clearly and hold your fingers up near your face. Tap Retry to try again.';
+        } else if (msg.indexOf('500') >= 0 || msg.indexOf('502') >= 0 || msg.indexOf('503') >= 0) {
+            msg = 'Our verification servers are temporarily busy. This is not your fault.';
+            tip = 'Wait a few seconds and tap Retry. If it keeps happening, try again in a minute.';
+        } else if (msg.indexOf('Network') >= 0 || msg.indexOf('fetch') >= 0 || msg.indexOf('Failed') >= 0) {
+            msg = 'Could not reach the verification server. Check your internet connection.';
+            tip = 'Make sure you are online and tap Retry.';
+        } else {
+            tip = 'Tap Retry to try again. If the problem persists, try a different browser.';
+        }
         stepEl.textContent = 'Verification error';
-        detailEl.textContent = e.message || 'Network error — check connection';
+        detailEl.textContent = msg;
         ring.style.stroke = 'var(--error)';
         console.error('Verification failed:', e);
-        // Show retry for network errors too
-        const retryEl = document.getElementById('retrySection');
+        var retryEl = document.getElementById('retrySection');
         retryEl.style.display = 'block';
-        document.getElementById('failReasons').textContent = e.message || 'Network error during verification.';
-        document.getElementById('retryTipsList').textContent = 'Check your internet connection and try again. If the problem persists, try a different browser.';
+        document.getElementById('failReasons').textContent = msg;
+        document.getElementById('retryTipsList').textContent = tip;
         retryAttempts++;
         document.getElementById('retryCount').textContent = `Attempt ${retryAttempts} of ${MAX_RETRIES}`;
         if (retryAttempts >= MAX_RETRIES) {
