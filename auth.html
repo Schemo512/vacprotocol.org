@@ -1325,11 +1325,9 @@ async function runRealVerification(videoBlob) {
         } else if (msg.indexOf('500') >= 0 || msg.indexOf('502') >= 0 || msg.indexOf('503') >= 0) {
             msg = 'Our verification servers are temporarily busy. This is not your fault.';
             tip = 'Wait a few seconds and tap Retry. If it keeps happening, try again in a minute.';
-        } else if (msg.indexOf('Network') >= 0 || msg.indexOf('fetch') >= 0 || msg.indexOf('Failed') >= 0) {
-            msg = "Could not reach server. This may be a network issue or your challenge timed out.";
-            tip = "Tap Retry for a fresh challenge. Start recording promptly after pressing Start.";
         } else {
-            tip = 'Tap Retry to try again. If the problem persists, try a different browser.';
+            msg = "Something went wrong — most likely your challenge timed out.";
+            tip = "Tap Retry for a fresh challenge. Press Start and complete the recording promptly.";
         }
         stepEl.textContent = 'Verification error';
         detailEl.textContent = msg;
