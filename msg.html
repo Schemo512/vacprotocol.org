@@ -423,7 +423,13 @@ async function initMsgMedia(type) {
 function startMsgRecord() {
     if (!msgStream) return;
     msgChunks = [];
-    const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'audio/webm'];
+    const mimeTypes = [
+        'video/mp4',  // Safari/iOS — native MP4, universally playable
+        'video/webm;codecs=vp9,opus', 
+        'video/webm;codecs=vp8,opus', 
+        'video/webm', 
+        'audio/webm'
+    ];
     let mime = '';
     for (const mt of mimeTypes) {
         if (MediaRecorder.isTypeSupported(mt)) { mime = mt; break; }
@@ -704,7 +710,9 @@ async function sendMessage() {
                 btn.textContent = 'Uploading media…';
                 const blob = new Blob(msgChunks, { type: msgRecorder?.mimeType || 'video/webm' });
                 const formData = new FormData();
-                formData.append('video', blob, `${sentResult.message_id}.webm`);
+                const actualMime = msgRecorder?.mimeType || 'video/webm';
+                const ext = actualMime.includes('mp4') ? 'mp4' : 'webm';
+                formData.append('video', blob, `${sentResult.message_id}.${ext}`);
                 await fetch(`${API_BASE}/v1/msg/${sentResult.message_id}/video`, {
                     method: 'POST',
                     body: formData,
