@@ -225,7 +225,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
 /* Modality list */
 .modalities-mini { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.modalities-mini.open { max-height: 200px !important; opacity: 1 !important; }
+.modalities-mini.open { max-height: 600px !important; opacity: 1 !important; }
 .dd-arrow.open { transform: rotate(180deg); }
 .mod-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 4px; padding: 3px 8px; }
 .mod-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
@@ -541,12 +541,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <button onclick="document.getElementById('successModalities').classList.toggle('open');this.querySelector('.dd-arrow').classList.toggle('open')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--text-tertiary);font-family:var(--mono);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color 0.2s">
                 View modalities <span class="dd-arrow" style="display:inline-block;transition:transform 0.2s;font-size:8px">&#9660;</span>
             </button>
-            <div class="modalities-mini" style="justify-content:center;margin-top:10px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,opacity 0.3s;opacity:0" id="successModalities"></div>
+            <div class="modalities-mini" style="margin-top:10px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,opacity 0.3s;opacity:0;text-align:left" id="successModalities"></div>
         </div>
     </div>
 
     <!-- Primary CTA: Share -->
-    <details style="margin-top:10px"><summary style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;letter-spacing:1px">HOW WE AUTHENTICATED YOU</summary><div id="proofContent" style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:8px">Loading...</div></details>
+    
 
     <!-- Share card -->
     <div class="share-card" style="border-color:var(--teal);border-width:1.5px">
@@ -1631,29 +1631,40 @@ function showSuccess() {
     // Modalities with real status
     const modEl = document.getElementById('successModalities');
     const mods = bio.modalities || [];
-    modEl.innerHTML = mods.map(m => {
-        const cls = m.status === 'verified' ? '' : 'failed';
-        return `<div class="mod-chip ${cls}"><span class="dot"></span>${m.name.replace(/_/g, ' ')} ${m.score ? '(' + m.score.toFixed(2) + ')' : ''}</div>`;
+    var modDescs = {
+        'face_liveness': 'Gemini analysed video frames for natural micro-expressions, eye movement, and 3D depth consistency to confirm a live human face.',
+        'deepfake_detection': 'Checked for synthetic artifacts, GAN fingerprints, and inconsistent lighting or skin texture that indicate AI-generated faces.',
+        'voiceprint': 'Deepgram captured a unique voiceprint from your speech patterns, pitch, and cadence for biometric matching.',
+        'lip_sync': 'Cross-referenced lip movements with audio waveform to verify the voice belongs to the face on screen.',
+        'challenge_response': 'Matched your spoken words against the server-generated random challenge phrase to prove real-time presence.',
+        'finger_gesture': 'Gemini counted fingers shown in each pose and verified the sequence matched the spoken digits at corresponding timestamps.'
+    };
+    var modNames = {
+        'face_liveness': 'Face Liveness',
+        'deepfake_detection': 'Deepfake Scan',
+        'voiceprint': 'Voiceprint',
+        'lip_sync': 'Lip Sync',
+        'challenge_response': 'Challenge Match',
+        'finger_gesture': 'Finger Gesture'
+    };
+    modEl.innerHTML = mods.map(function(m) {
+        var pct = m.score ? (m.score * 100).toFixed(0) + '%' : '--';
+        var icon = m.status === 'verified' ? '✅' : '❌';
+        var name = modNames[m.name] || m.name.replace(/_/g, ' ');
+        var desc = modDescs[m.name] || '';
+        var extraInfo = '';
+        if (m.name === 'challenge_response' && r.challenge) {
+            extraInfo = '<div style="margin-top:4px;font-size:11px;color:var(--text-quaternary)">Heard: “' + (r.challenge.transcript || '?') + '”</div>';
+        }
+        if (m.name === 'finger_gesture' && r.biometric_verification?.raw_results?.finger_gesture) {
+            var fg = r.biometric_verification.raw_results.finger_gesture;
+            if (fg.digits_seen) extraInfo = '<div style="margin-top:4px;font-size:11px;color:var(--text-quaternary)">Saw: [' + fg.digits_seen.join(', ') + '] Expected: [' + (fg.digits_expected||[]).join(', ') + ']</div>';
+        }
+        return '<details style="margin-bottom:2px"><summary style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;list-style:none;font-size:13px">' +
+            '<span>' + icon + '</span><span style="flex:1;color:var(--text-secondary)">' + name + '</span><span style="font-family:var(--mono);font-size:12px;color:var(--teal)">' + pct + '</span></summary>' +
+            '<div style="font-size:12px;color:var(--text-tertiary);line-height:1.6;padding:4px 0 8px 28px">' + desc + extraInfo + '</div></details>';
     }).join('');
 
-    // Populate proof section
-    var proofEl = document.getElementById('proofContent');
-    if (proofEl && mods.length > 0) {
-        var p = '';
-        var face = mods.find(function(m){return m.name==='face_liveness'});
-        var df = mods.find(function(m){return m.name==='deepfake_detection'});
-        var ls = mods.find(function(m){return m.name==='lip_sync'});
-        var vp = mods.find(function(m){return m.name==='voiceprint'});
-        var cr = mods.find(function(m){return m.name==='challenge_response'});
-        var fg = mods.find(function(m){return m.name==='finger_gesture'});
-        if (face) p += (face.score>=0.5?'✅':'❌') + ' <strong>Face liveness:</strong> ' + (face.score*100).toFixed(0) + '%<br>';
-        if (df) p += (df.score>=0.5?'✅':'❌') + ' <strong>Deepfake scan:</strong> ' + (df.score*100).toFixed(0) + '%<br>';
-        if (vp) p += (vp.score>=0.5?'✅':'❌') + ' <strong>Voiceprint:</strong> ' + (vp.score*100).toFixed(0) + '%<br>';
-        if (ls) p += (ls.score>=0.5?'✅':'❌') + ' <strong>Lip sync:</strong> ' + (ls.score*100).toFixed(0) + '%<br>';
-        if (cr) p += (cr.score>=0.5?'✅':'❌') + ' <strong>Challenge match:</strong> ' + (cr.score*100).toFixed(0) + '%<br>';
-        if (fg) p += (fg.score>=0.5?'✅':'❌') + ' <strong>Finger gesture:</strong> ' + (fg.score*100).toFixed(0) + '%<br>';
-        proofEl.innerHTML = p || 'No modality data available.';
-    }
 
     // Transcript display
     if (r.challenge?.transcript) {
