@@ -70,7 +70,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .step-section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-.header { text-align: center; padding: clamp(8px, 2vh, 24px) 0 clamp(6px, 1.5vh, 16px); }
+.header { text-align: center; padding: clamp(8px, 2vh, 24px) 0 clamp(6px, 1.5vh, 16px); position: relative; }
 .header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
 .header-title { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
 .header-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto; }
@@ -177,9 +177,9 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .mod-result.show-desc .mod-info { color: var(--accent); }
 
 /* Back button */
-.btn-back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); color: var(--text-secondary); font-family: var(--mono); font-size: 12px; cursor: pointer; padding: 6px 12px; margin-bottom: 12px; border-radius: 8px; transition: color 0.2s, border-color 0.2s; }
-.btn-back:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
-.btn-back svg { opacity: 0.8; }
+.btn-back { position: absolute; top: clamp(8px, 2vh, 24px); left: 0; display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-tertiary); font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 0; transition: color 0.2s; }
+.btn-back:hover { color: var(--text-primary); }
+.btn-back svg { opacity: 0.6; }
 
 /* Success chain display */
 .chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
@@ -705,23 +705,32 @@ async function requestCamera() {
         await vid.play().catch(() => {});
         document.getElementById('cameraLabel').textContent = 'CAMERA ACTIVE';
 
-        // Fetch challenge from backend
-        btn.textContent = 'Loading challenge…';
-        const d = userData();
-        const resp = await fetch(`${API_BASE}/v1/vat/auth/challenge`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: d.name, risk_level: 'medium' }),
-        });
-        challengeData = await resp.json();
-
-        btn.textContent = 'Proceed to Challenge';
-        btn.disabled = true;
-        btn.onclick = goToChallenge;
-        // Show pre-recording checklist and start automated AV checks
+        // Show AV checks immediately — don't wait for challenge fetch
         document.getElementById('preRecordChecklist').style.display = 'block';
         document.getElementById('avAudioBar').style.display = 'block';
         startAVChecks();
+
+        // Fetch challenge from backend (parallel — doesn't block AV checks)
+        btn.textContent = 'Loading challenge…';
+        btn.disabled = true;
+        const d = userData();
+        try {
+            const resp = await fetch(`${API_BASE}/v1/vat/auth/challenge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: d.name, risk_level: 'medium' }),
+            });
+            challengeData = await resp.json();
+        } catch (fetchErr) {
+            console.error('[CHALLENGE FETCH]', fetchErr);
+            // Show error but keep AV checks running
+            err.innerHTML = `<div style="color: var(--warning); margin-bottom: 4px;">Could not load challenge — check your connection and try again.</div>`;
+            err.style.display = 'block';
+        }
+
+        btn.textContent = 'Proceed to Challenge';
+        btn.disabled = true; // updateAVReady will enable when checks pass
+        btn.onclick = goToChallenge;
         // Fetch adaptive modality requirements
         fetchModalityRequirements();
     } catch (e) {
