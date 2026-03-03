@@ -1127,6 +1127,7 @@ function beginRecording() {
     const DIGIT_DURATION = 2;
     const BUFFER = 1;
     const totalDuration = PHRASE_DURATION + (digits.length * DIGIT_DURATION) + BUFFER;
+    const totalSeconds = Math.ceil(totalDuration);
 
     let elapsed = 0;
     const timerEl = document.getElementById('countdownTimer');
