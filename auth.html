@@ -150,13 +150,22 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .progress-step { font-family: var(--mono); font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; }
 .progress-detail { font-size: 14px; color: var(--text-secondary); }
 
-/* Modality results in processing */
-.modality-results { max-width: 360px; margin: 20px auto 0; }
-.mod-result { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; }
+/* Modality results — collapsible dropdown */
+.modality-results { max-width: 360px; margin: clamp(8px, 1.5vh, 16px) auto 0; }
+.modality-toggle { display: flex; align-items: center; justify-content: space-between; padding: clamp(6px, 1vh, 10px) clamp(10px, 2vw, 16px); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; user-select: none; transition: all 0.2s; }
+.modality-toggle:hover { border-color: var(--accent); }
+.modality-toggle .toggle-label { font-size: clamp(11px, 1.3vw, 13px); color: var(--text-secondary); font-weight: 500; }
+.modality-toggle .toggle-summary { font-family: var(--mono); font-size: clamp(10px, 1.2vw, 12px); color: var(--success); }
+.modality-toggle .toggle-summary.has-fail { color: var(--error); }
+.modality-toggle .toggle-arrow { font-size: 10px; color: var(--text-tertiary); transition: transform 0.2s; }
+.modality-toggle.open .toggle-arrow { transform: rotate(180deg); }
+.modality-list { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.modality-list.open { max-height: 300px; }
+.mod-result { display: flex; align-items: center; gap: clamp(6px, 1vw, 10px); padding: clamp(4px, 0.6vh, 6px) 0; font-size: clamp(11px, 1.3vw, 13px); }
 .mod-result + .mod-result { border-top: 1px solid var(--border); }
-.mod-status { width: 20px; text-align: center; font-size: 14px; }
+.mod-status { width: 18px; text-align: center; font-size: 13px; }
 .mod-name { flex: 1; color: var(--text-secondary); }
-.mod-score { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.mod-score { font-family: var(--mono); font-size: clamp(10px, 1.2vw, 12px); font-weight: 600; }
 .mod-score.pass { color: var(--success); }
 .mod-score.fail { color: var(--error); }
 .mod-score.pending { color: var(--text-quaternary); }
@@ -342,7 +351,6 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <div class="mod-chip" data-mod="voice_biometric"><span class="dot"></span>Voiceprint</div>
             <div class="mod-chip" data-mod="lip_sync"><span class="dot"></span>Lip-Sync</div>
             <div class="mod-chip" data-mod="otp_verification"><span class="dot"></span>Challenge Response</div>
-            <div class="mod-chip" data-mod="geolocation"><span class="dot"></span>Geolocation</div>
         </div>
     </div>
 </div>
@@ -414,12 +422,18 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="progress-detail" id="progressDetail">Video + Audio → Gemini + Deepgram</div>
     </div>
     <div class="modality-results" id="modalityResults">
+        <div class="modality-toggle" id="modalityToggle" onclick="toggleModalities()">
+            <span class="toggle-label">Verification Modalities</span>
+            <span class="toggle-summary" id="modalitySummary">5/5 passed</span>
+            <span class="toggle-arrow">▼</span>
+        </div>
+        <div class="modality-list" id="modalityList">
         <div class="mod-result" id="modFace"><span class="mod-status">⏳</span><span class="mod-name">Face Liveness</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modDeepfake"><span class="mod-status">⏳</span><span class="mod-name">Deepfake Detection</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modVoice"><span class="mod-status">⏳</span><span class="mod-name">Voiceprint</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-score pending">—</span></div>
         <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-score pending">—</span></div>
-        <div class="mod-result" id="modGeo"><span class="mod-status">⏳</span><span class="mod-name">Geolocation</span><span class="mod-score pending">—</span></div>
+        </div>
     </div>
     <div id="retrySection" style="display:none; margin-top: 20px;">
         <div id="failReasonCard" style="background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;">
@@ -791,7 +805,7 @@ async function runRealVerification(videoBlob) {
     ring.style.strokeDashoffset = circumference * 0.85;
 
     // Set geolocation as verified immediately (it's browser-side)
-    updateModality('modGeo', 'verified', 1.0);
+    // Geolocation removed from initial auth — reserved for groups/governance
 
     try {
         // Build multipart form data
@@ -825,6 +839,10 @@ async function runRealVerification(videoBlob) {
         stepEl.textContent = 'Processing results…';
 
         const mods = authResult.biometric_verification?.modalities || [];
+        // Auto-open modality dropdown when results arrive
+        const toggleEl = document.getElementById('modalityToggle');
+        const listEl = document.getElementById('modalityList');
+        if (toggleEl && listEl) { toggleEl.classList.add('open'); listEl.classList.add('open'); }
         for (const mod of mods) {
             const elId = {
                 'face_liveness': 'modFace',
@@ -832,7 +850,7 @@ async function runRealVerification(videoBlob) {
                 'voiceprint': 'modVoice',
                 'lip_sync': 'modLipSync',
                 'challenge_response': 'modChallenge',
-                'geolocation': 'modGeo',
+                'geolocation': null, // not used in initial auth
             }[mod.name];
             if (elId) {
                 updateModality(elId, mod.status, mod.score);
@@ -900,6 +918,39 @@ function updateModality(elId, status, score) {
         scoreEl.textContent = typeof score === 'number' ? score.toFixed(2) : '—';
         scoreEl.className = 'mod-score pending';
     }
+    updateModalitySummary();
+}
+
+function toggleModalities() {
+    const toggle = document.getElementById('modalityToggle');
+    const list = document.getElementById('modalityList');
+    toggle.classList.toggle('open');
+    list.classList.toggle('open');
+}
+
+function updateModalitySummary() {
+    const mods = ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge'];
+    let passed = 0, failed = 0, pending = 0;
+    mods.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const status = el.querySelector('.mod-status');
+        if (status.textContent === '✓') passed++;
+        else if (status.textContent === '✗' || status.textContent === '⚠') failed++;
+        else pending++;
+    });
+    const summary = document.getElementById('modalitySummary');
+    if (!summary) return;
+    if (pending > 0) {
+        summary.textContent = 'Checking...';
+        summary.className = 'toggle-summary';
+    } else if (failed > 0) {
+        summary.textContent = `${passed}/5 passed`;
+        summary.className = 'toggle-summary has-fail';
+    } else {
+        summary.textContent = `${passed}/5 passed`;
+        summary.className = 'toggle-summary';
+    }
 }
 
 // Show retry with specific fail reasons
@@ -955,7 +1006,7 @@ async function retryVerification() {
     if (retryAttempts >= MAX_RETRIES) return;
 
     // Reset modality displays
-    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modGeo'].forEach(id => {
+    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge'].forEach(id => {
         updateModality(id, 'pending', null);
     });
 
