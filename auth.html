@@ -779,6 +779,7 @@ let avCheckFrame = null;
 let avAudioCtx = null;
 let avAnalyser = null;
 let avChecks = { face: false, light: false, mic: false };
+let avPrevOval = null; // previous frame luminance for motion detection
 
 function startAVChecks() {
     // Initialize pill icons with spinners
@@ -833,42 +834,46 @@ function startAVChecks() {
                 avChecks.light = true;
             }
 
-            // 2. Face detection — edge density in oval region (works across all skin tones)
-            // A face in the oval creates high contrast edges (eyes, nose, mouth, hairline)
-            // vs empty/wall background which has low edge density
+            // 2. Face detection — edge density + motion in oval region
+            // Edge density alone can't distinguish a busy background from a face.
+            // A face always has micro-movement (breathing, blinking). A wall doesn't.
             const cw = 160, ch = 90;
-            let edgePixels = 0, ovalPixels = 0;
+            let edgePixels = 0, ovalPixels = 0, motionPixels = 0;
             const ovalCx = cw / 2, ovalCy = ch / 2, ovalRx = 30, ovalRy = 38;
+            const currentOval = new Uint8Array(cw * ch); // luminance buffer
             for (let y = 8; y < ch - 4; y += 2) {
                 for (let x = 8; x < cw - 4; x += 2) {
-                    // Check if pixel is inside oval region
                     const dx = (x - ovalCx) / ovalRx, dy = (y - ovalCy) / ovalRy;
                     if (dx * dx + dy * dy > 1) continue;
                     ovalPixels++;
-                    // Sobel-like edge detection — compare to neighbors
                     const idx = (y * cw + x) * 4;
+                    const lum = Math.round(0.299 * imgData[idx] + 0.587 * imgData[idx+1] + 0.114 * imgData[idx+2]);
+                    const pos = y * cw + x;
+                    currentOval[pos] = lum;
+                    // Edge check
                     const idxR = (y * cw + x + 2) * 4;
                     const idxD = ((y + 2) * cw + x) * 4;
-                    const lum = 0.299 * imgData[idx] + 0.587 * imgData[idx+1] + 0.114 * imgData[idx+2];
                     const lumR = 0.299 * imgData[idxR] + 0.587 * imgData[idxR+1] + 0.114 * imgData[idxR+2];
                     const lumD = 0.299 * imgData[idxD] + 0.587 * imgData[idxD+1] + 0.114 * imgData[idxD+2];
-                    const edgeH = Math.abs(lum - lumR);
-                    const edgeV = Math.abs(lum - lumD);
-                    if (edgeH > 15 || edgeV > 15) edgePixels++;
+                    if (Math.abs(lum - lumR) > 15 || Math.abs(lum - lumD) > 15) edgePixels++;
+                    // Motion check — compare to previous frame
+                    if (avPrevOval && Math.abs(lum - avPrevOval[pos]) > 5) motionPixels++;
                 }
             }
+            avPrevOval = currentOval;
             const edgeRatio = ovalPixels > 0 ? edgePixels / ovalPixels : 0;
-            const er = Math.round(edgeRatio * 100);
-            // A face typically has 15-50% edge density in the oval
-            // Empty background / wall: <10%. Too close (blurry): <12%
-            if (edgeRatio > 0.15) {
+            const motionRatio = ovalPixels > 0 ? motionPixels / ovalPixels : 0;
+            // Face = edges (features) + motion (alive). Need both.
+            const hasFaceEdges = edgeRatio > 0.12;
+            const hasMotion = motionRatio > 0.02; // even slight head movement triggers this
+            if (hasFaceEdges && hasMotion) {
                 setAVStatus('face', 'good', 'Face: detected');
                 avChecks.face = true;
-            } else if (edgeRatio > 0.08) {
-                setAVStatus('face', 'warn', 'Face: move closer');
+            } else if (hasFaceEdges && !hasMotion) {
+                setAVStatus('face', 'checking', 'Face: hold still but stay natural');
                 avChecks.face = false;
             } else {
-                setAVStatus('face', 'checking', 'Face: no face found');
+                setAVStatus('face', 'checking', 'Face: position in oval');
                 avChecks.face = false;
             }
         } catch (e) { /* canvas errors are non-fatal */ }
@@ -974,6 +979,7 @@ function stopAVChecks() {
     if (avCheckFrame) { cancelAnimationFrame(avCheckFrame); avCheckFrame = null; }
     if (avAudioCtx) { avAudioCtx.close().catch(() => {}); avAudioCtx = null; }
     avAnalyser = null;
+    avPrevOval = null;
 }
 
 // STEP 1 → 2: Challenge
