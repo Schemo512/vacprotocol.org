@@ -1214,6 +1214,29 @@ async function runRealVerification(videoBlob) {
         detailEl.textContent = 'Gemini (face) + Deepgram (voice)';
         ring.style.strokeDashoffset = circumference * 0.6;
 
+        // Smooth progress animation while waiting
+        var progress = 0.75;
+        ring.style.strokeDashoffset = circumference * progress;
+        var pSteps = [
+            {at: 0.65, text: 'Uploading recording...'},
+            {at: 0.55, text: 'Face liveness check...'},
+            {at: 0.45, text: 'Deepfake analysis...'},
+            {at: 0.35, text: 'Voice transcription...'},
+            {at: 0.25, text: 'Lip sync correlation...'},
+            {at: 0.18, text: 'Finger gesture analysis...'},
+            {at: 0.12, text: 'Computing trust score...'},
+        ];
+        var pIdx = 0;
+        var progressTimer = setInterval(function() {
+            progress -= 0.015;
+            if (progress < 0.08) progress = 0.08;
+            ring.style.strokeDashoffset = circumference * progress;
+            if (pIdx < pSteps.length && progress <= pSteps[pIdx].at) {
+                detailEl.textContent = pSteps[pIdx].text;
+                pIdx++;
+            }
+        }, 400);
+
         // Send to backend
         const resp = await fetch(`${API_BASE}/v1/vat/auth/verify`, {
             method: 'POST',
@@ -1226,6 +1249,7 @@ async function runRealVerification(videoBlob) {
         }
 
         authResult = await resp.json();
+        clearInterval(progressTimer);
 
         // Update modality displays with real results
         ring.style.strokeDashoffset = circumference * 0.2;
@@ -1272,6 +1296,7 @@ async function runRealVerification(videoBlob) {
         }
 
     } catch (e) {
+        clearInterval(progressTimer);
         var msg = e.message || 'Network error';
         var tip = '';
         if (msg.indexOf('expired challenge') >= 0 || msg.indexOf('Invalid or expired') >= 0) {
@@ -1284,8 +1309,8 @@ async function runRealVerification(videoBlob) {
             msg = 'Our verification servers are temporarily busy. This is not your fault.';
             tip = 'Wait a few seconds and tap Retry. If it keeps happening, try again in a minute.';
         } else if (msg.indexOf('Network') >= 0 || msg.indexOf('fetch') >= 0 || msg.indexOf('Failed') >= 0) {
-            msg = 'Could not reach the verification server. Check your internet connection.';
-            tip = 'Make sure you are online and tap Retry.';
+            msg = "Could not reach server. This may be a network issue or your challenge timed out.";
+            tip = "Tap Retry for a fresh challenge. Start recording promptly after pressing Start.";
         } else {
             tip = 'Tap Retry to try again. If the problem persists, try a different browser.';
         }
