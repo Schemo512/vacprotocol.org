@@ -160,7 +160,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .modality-toggle .toggle-arrow { font-size: 10px; color: var(--text-tertiary); transition: transform 0.2s; }
 .modality-toggle.open .toggle-arrow { transform: rotate(180deg); }
 .modality-list { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-.modality-list.open { max-height: 300px; }
+.modality-list.open { max-height: 800px; }
 .mod-result { display: flex; align-items: center; gap: clamp(6px, 1vw, 10px); padding: clamp(4px, 0.6vh, 6px) 0; font-size: clamp(11px, 1.3vw, 13px); }
 .mod-result + .mod-result { border-top: 1px solid var(--border); }
 .mod-status { width: 18px; text-align: center; font-size: 13px; }
@@ -1284,7 +1284,7 @@ async function runRealVerification(videoBlob) {
                 'geolocation': null, // not used in initial auth
             }[mod.name];
             if (elId) {
-                updateModality(elId, mod.status, mod.score);
+                updateModality(elId, mod.status, mod.score, mod.name, mod.detail);
                 await sleep(300); // Stagger for visual effect
             }
         }
@@ -1351,11 +1351,34 @@ async function runRealVerification(videoBlob) {
     }
 }
 
-function updateModality(elId, status, score) {
+function updateModality(elId, status, score, modName, detail) {
     const el = document.getElementById(elId);
     if (!el) return;
     const statusEl = el.querySelector('.mod-status');
     const scoreEl = el.querySelector('.mod-score');
+    // Add detail expand if we have engine data
+    if (detail && modName) {
+        var existing = el.querySelector('.mod-detail-expand');
+        if (!existing) {
+            var detDiv = document.createElement('div');
+            detDiv.className = 'mod-detail-expand';
+            detDiv.style.cssText = 'font-size:11px;color:var(--text-quaternary);padding:4px 0 6px 24px;line-height:1.5;font-family:var(--mono);display:none';
+            el.appendChild(detDiv);
+            el.style.cursor = 'pointer';
+            el.onclick = function(){var d=this.querySelector('.mod-detail-expand');if(d)d.style.display=d.style.display==='none'?'block':'none';};
+        }
+        var dd = el.querySelector('.mod-detail-expand');
+        if (dd) {
+            var lines = [];
+            if (modName==='face_liveness'){if(detail.person_description)lines.push('Saw: '+detail.person_description);if(detail.face_detected)lines.push('Face: yes');if(detail.blink_detected)lines.push('Blink: yes');}
+            if (modName==='deepfake_detection'){lines.push('Deepfake likelihood: '+(detail.deepfake_likelihood!==undefined?(detail.deepfake_likelihood*100).toFixed(0)+'%':'--'));if(!detail.artifacts||!detail.artifacts.length)lines.push('Artifacts: none');}
+            if (modName==='voiceprint'&&detail.confidence){lines.push('Confidence: '+(detail.confidence*100).toFixed(0)+'%');}
+            if (modName==='lip_sync'){lines.push('Lip-audio match: '+(detail.matches_audio?'yes':'no'));}
+            if (modName==='challenge_response'){if(detail.heard)lines.push('Heard: '+detail.heard);if(detail.expected)lines.push('Expected: '+detail.expected);if(detail.match_ratio!==undefined)lines.push('Match: '+(detail.match_ratio*100).toFixed(0)+'%');}
+            if (modName==='finger_gesture'){if(detail.digits_expected)lines.push('Expected: ['+detail.digits_expected.join(', ')+']');if(detail.digits_seen)lines.push('Gemini saw: ['+detail.digits_seen.join(', ')+']');if(detail.hand_near_face!==undefined)lines.push('Hand near face: '+(detail.hand_near_face?'yes':'no'));}
+            dd.innerHTML = lines.join('<br>');
+        }
+    }
 
     if (status === 'verified') {
         statusEl.textContent = '✓';
