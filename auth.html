@@ -252,7 +252,6 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="step-dot" id="dot3"></div>
 </div>
 
-<!-- Session 9: JS syntax fix redeploy — stray lines in Vercel cache -->
 <!-- STEP 0: Identity -->
 <div class="step-section active" id="step0">
     <div class="header">
@@ -915,13 +914,22 @@ function showRetry(result) {
 
     if (failed.length > 0) {
         const reasons = failed.map(m => {
+            // Distinguish API errors from actual verification failures
+            if (m.status === 'error') {
+                return `${m.name.replace(/_/g, ' ')} — service unavailable (will retry).`;
+            }
             const info = FAIL_REASONS[m.name] || { reason: `${m.name} check failed.`, tip: '' };
             return info.reason;
         });
-        const tips = failed.map(m => {
+        const tips = failed.filter(m => m.status === 'failed').map(m => {
             const info = FAIL_REASONS[m.name] || { reason: '', tip: 'Try again with better conditions.' };
             return info.tip;
         }).filter(Boolean);
+        // If only API errors (no actual failures), show a simpler message
+        const hasRealFailures = failed.some(m => m.status === 'failed');
+        if (!hasRealFailures) {
+            tips.push('Some verification services are temporarily unavailable. Your voice and location were verified successfully.');
+        }
 
         document.getElementById('failReasons').innerHTML = reasons.map(r =>
             `<div style="margin-bottom: 4px;">${r}</div>`
