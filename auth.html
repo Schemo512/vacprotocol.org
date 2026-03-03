@@ -793,8 +793,11 @@ function startAVChecks() {
     const ctx = canvas.getContext('2d');
 
     function runAVFrame() {
-        const video = document.getElementById('cameraPreview');
-        if (!video || video.paused) { avCheckFrame = requestAnimationFrame(runAVFrame); return; }
+        const video = document.getElementById('videoPreview');
+        if (!video || video.paused || video.readyState < 2) { avCheckFrame = requestAnimationFrame(runAVFrame); return; }
+
+        // Ensure AudioContext is running (Chrome suspends until user gesture)
+        if (avAudioCtx && avAudioCtx.state === 'suspended') avAudioCtx.resume();
 
         // 1. Brightness check
         try {
