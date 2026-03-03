@@ -567,13 +567,34 @@ function renderMessage(msg) {
 
     // Body — video playback + text content
     const bodyEl = document.getElementById('readBody');
+    const videoUrl = `${API_BASE}/v1/msg/${msg.message_id}/video`;
     if (msg.message_type === 'video_clip' || msg.message_type === 'voice_note') {
+        const mediaId = 'msgMedia_' + msg.message_id;
         const mediaEl = msg.message_type === 'video_clip'
-            ? `<video controls playsinline style="width:100%;max-height:400px;border-radius:8px;margin-bottom:12px;background:#000;" src="${API_BASE}/v1/msg/${msg.message_id}/video"></video>`
-            : `<audio controls style="width:100%;margin-bottom:12px;" src="${API_BASE}/v1/msg/${msg.message_id}/video"></audio>`;
+            ? `<video id="${mediaId}" controls playsinline webkit-playsinline style="width:100%;max-height:400px;border-radius:8px;margin-bottom:12px;background:#000;">
+                <source src="${videoUrl}" type="video/webm">
+                <source src="${videoUrl}" type="video/mp4">
+               </video>
+               <div id="${mediaId}_fallback" style="display:none;text-align:center;padding:16px;background:#161B22;border-radius:8px;margin-bottom:12px;">
+                <div style="color:#C9D1D9;margin-bottom:8px;">Video format not supported in this browser</div>
+                <a href="${videoUrl}" download style="color:#7C3AED;text-decoration:underline;">Download video</a>
+               </div>`
+            : `<audio controls style="width:100%;margin-bottom:12px;" src="${videoUrl}"></audio>`;
         // Extract text caption (after the media label line)
         const lines = (msg.content || '').split('\n').filter(l => !l.startsWith('🎥') && !l.startsWith('🎙️')).join('\n').trim();
         bodyEl.innerHTML = mediaEl + (lines ? `<div style="white-space:pre-wrap;margin-top:8px;">${lines}</div>` : '');
+        
+        // Handle video error (e.g., Safari can't play WebM)
+        if (msg.message_type === 'video_clip') {
+            const vid = document.getElementById(mediaId);
+            if (vid) {
+                vid.addEventListener('error', () => {
+                    vid.style.display = 'none';
+                    const fb = document.getElementById(mediaId + '_fallback');
+                    if (fb) fb.style.display = 'block';
+                });
+            }
+        }
     } else {
         bodyEl.textContent = msg.content;
     }
@@ -714,10 +735,19 @@ function showSent(result) {
     document.getElementById('sentSummary').textContent =
         `To: ${recipientEmail}\nSubject: ${document.getElementById('composeSubject').value || '(none)'}`;
 
-    const trustText = result.sender_verified
-        ? `Sender verified · Trust: ${result.trust_score.toFixed(2)} · Level: ${result.trust_level}`
+    const trustText = result.sender_verified || result.trust_score >= 0.7
+        ? `Sender verified · Trust: ${result.trust_score.toFixed(2)}`
+        : result.trust_score > 0
+        ? `Partially verified · Trust: ${result.trust_score.toFixed(2)}`
         : 'Sender not yet verified — verify at /auth to strengthen messages';
     document.getElementById('sentTrust').textContent = trustText;
+    
+    // Hide "Verify My Identity" button if already verified
+    const verifyBtn = document.querySelector('#viewSent .btn-secondary');
+    if (verifyBtn && (result.sender_verified || result.trust_score >= 0.7)) {
+        verifyBtn.textContent = 'My Dashboard';
+        verifyBtn.onclick = () => { window.location.href = '/dashboard?email=' + encodeURIComponent(document.getElementById('composeSenderEmail').value); };
+    }
 
     document.getElementById('sentUrl').textContent = result.view_url;
 
