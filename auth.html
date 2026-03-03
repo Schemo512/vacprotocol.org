@@ -334,7 +334,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </button>
         <div class="header-eyebrow">Step 2 of 4</div>
         <div class="header-title">Camera & Microphone</div>
-        <div class="header-sub">We'll record a short video of you speaking a challenge phrase. This takes about 10 seconds.</div>
+        <div class="header-sub">We'll record a short video of you speaking a challenge phrase, then showing fingers to match the digits. Takes about 14 seconds.</div>
         <div id="deviceInfo" style="font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); margin-top: 4px;"></div>
     </div>
     <div class="camera-container" id="cameraBox">
@@ -392,6 +392,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <div class="mod-chip" data-mod="voice_biometric"><span class="dot"></span>Voiceprint</div>
             <div class="mod-chip" data-mod="lip_sync"><span class="dot"></span>Lip-Sync</div>
             <div class="mod-chip" data-mod="otp_verification"><span class="dot"></span>Challenge Response</div>
+            <div class="mod-chip" data-mod="finger_gesture"><span class="dot"></span>Finger Gesture</div>
         </div>
     </div>
 </div>
@@ -444,7 +445,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div id="combinedCaptureInfo" style="display:none; margin-top: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
         <div style="font-family: var(--mono); font-size: 10px; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">One action, six signals</div>
         <div style="font-size: 12px; color: var(--text-tertiary); line-height: 1.6;">
-            Speaking the challenge phrase simultaneously captures your face, voice, lip movements, and the challenge response — a single natural gesture that produces six independent biometric signals. Longer phrases yield stronger verification.
+            Speaking the phrase then showing fingers captures your face, voice, lip movements, challenge response, and finger gesture — producing seven independent biometric signals from one recording. The finger count must match the digits you spoke.
         </div>
     </div>
 </div>
@@ -482,6 +483,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="mod-result" id="modVoice"><span class="mod-status">⏳</span><span class="mod-name">Voiceprint</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Verifies speech is from a live human voice, not synthesized</span></div>
         <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Confirms lip movements match spoken audio in real time</span></div>
         <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Matches spoken words against a unique server-generated phrase</span></div>
+        <div class="mod-result" id="modFinger"><span class="mod-status">⏳</span><span class="mod-name">Finger Gesture</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Verifies correct finger count sequence shown near the face</span></div>
         </div>
     </div>
     <!-- Under the Hood — engine analysis details -->
@@ -1013,7 +1015,9 @@ function retryAVSetup() {
 function goToChallenge() {
     stopAVChecks(); // Clean up audio context and animation frame
     const phrase = challengeData?.phrase || `I am ${userData().name}, authorising VAC Protocol`;
-    document.getElementById('challengeText').textContent = `"${phrase}"`;
+    const digits = challengeData?.digits || [];
+    const digitStr = digits.join(', ');
+    document.getElementById('challengeText').innerHTML = `"${phrase}"<br><span style="font-size:12px;opacity:0.5;margin-top:6px;display:inline-block">Then show fingers: ${digitStr}</span>`;
     const recVid = document.getElementById('videoPreviewRec');
     recVid.srcObject = mediaStream;
     recVid.muted = true;
@@ -1082,25 +1086,52 @@ function beginRecording() {
     // Show combined capture info
     document.getElementById('combinedCaptureInfo').style.display = 'block';
 
-    // Record for 7 seconds (was 5 — too short, digits get cut off)
-    let remaining = 7;
+    // Phased recording: speak phrase (6s) then show fingers sequentially (2.5s each)
+    const digits = challengeData?.digits || [];
+    const SPEAK_DURATION = 6;
+    const FINGER_DURATION = 2.5;
+    const totalDuration = SPEAK_DURATION + (digits.length * FINGER_DURATION);
+    const totalSeconds = Math.ceil(totalDuration);
+
+    let elapsed = 0;
     const timerEl = document.getElementById('countdownTimer');
     const ringFill = document.getElementById('countdownRingFill');
+    const challengeEl = document.getElementById('challengeText');
     const circumference = 2 * Math.PI * 39;
-    timerEl.textContent = remaining;
+    timerEl.textContent = totalSeconds;
     ringFill.classList.add('recording');
     ringFill.style.strokeDashoffset = 0;
 
+    // Phase prompt updater
+    function updatePhasePrompt(sec) {
+        if (sec < SPEAK_DURATION) {
+            // Speaking phase
+            const phrase = challengeData?.phrase || '';
+            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SAY THE PHRASE</span>"' + phrase + '"';
+        } else {
+            // Finger phase
+            const fingerElapsed = sec - SPEAK_DURATION;
+            const digitIndex = Math.min(Math.floor(fingerElapsed / FINGER_DURATION), digits.length - 1);
+            const digit = digits[digitIndex];
+            const step = digitIndex + 1;
+            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SHOW FINGERS (' + step + ' of ' + digits.length + ')</span><span style="font-size:52px;font-weight:700;line-height:1.2;display:block">' + digit + '</span><span style="font-size:12px;opacity:0.5">Hold up ' + digit + ' finger' + (digit !== 1 ? 's' : '') + ' near your face</span>';
+        }
+    }
+    updatePhasePrompt(0);
+
     const recInterval = setInterval(() => {
-        remaining--;
-        timerEl.textContent = remaining;
-        ringFill.style.strokeDashoffset = circumference * ((7 - remaining) / 7);
-        if (remaining <= 0) {
+        elapsed++;
+        const remaining = totalSeconds - elapsed;
+        timerEl.textContent = Math.max(remaining, 0);
+        ringFill.style.strokeDashoffset = circumference * (elapsed / totalSeconds);
+        updatePhasePrompt(elapsed);
+        if (elapsed >= totalSeconds) {
             clearInterval(recInterval);
-            // 500ms buffer after timer to catch trailing audio
+            challengeEl.textContent = 'Processing\u2026';
             setTimeout(() => { mediaRecorder.stop(); }, 500);
         }
     }, 1000);
+}
 }
 
 // Recording complete → upload to backend for real verification
@@ -1180,6 +1211,7 @@ async function runRealVerification(videoBlob) {
                 'voiceprint': 'modVoice',
                 'lip_sync': 'modLipSync',
                 'challenge_response': 'modChallenge',
+                'finger_gesture': 'modFinger',
                 'geolocation': null, // not used in initial auth
             }[mod.name];
             if (elId) {
@@ -1267,7 +1299,7 @@ function toggleModalities() {
 }
 
 function updateModalitySummary() {
-    const mods = ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge'];
+    const mods = ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger'];
     let passed = 0, failed = 0, pending = 0;
     mods.forEach(id => {
         const el = document.getElementById(id);
@@ -1354,6 +1386,18 @@ function populateUnderHood(authData) {
         html += `</div>`;
     }
 
+    const finger = mods.find(m => m.name === 'finger_gesture');
+    if (finger) {
+        html += `<div class="hood-section"><div class="hood-label">Finger Gesture Verification <span class="hood-provider">gemini</span></div>`;
+        const seen = finger.detail?.digits_seen || [];
+        const expected = finger.detail?.digits_expected || [];
+        html += `<div class="hood-value" style="font-size: 10px;">`;
+        html += `Expected: [${expected.join(', ')}] \u00b7 Seen: [${seen.join(', ')}]`;
+        html += ` \u00b7 Hand near face: ${finger.detail?.hand_near_face ? '\u2713' : '\u2717'}`;
+        html += ` \u00b7 Score: ${(finger.score * 100).toFixed(0)}%`;
+        html += `</div></div>`;
+    }
+
     if (bio?.trust_breakdown) {
         html += `<div class="hood-section"><div class="hood-label">Trust Score Breakdown</div>`;
         html += `<div class="hood-value" style="font-size: 10px;">`;
@@ -1427,7 +1471,7 @@ async function retryVerification() {
     if (retryAttempts >= MAX_RETRIES) return;
 
     // Reset modality displays
-    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge'].forEach(id => {
+    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger'].forEach(id => {
         updateModality(id, 'pending', null);
     });
 
