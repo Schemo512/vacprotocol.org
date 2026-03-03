@@ -424,7 +424,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="modality-results" id="modalityResults">
         <div class="modality-toggle" id="modalityToggle" onclick="toggleModalities()">
             <span class="toggle-label">Verification Modalities</span>
-            <span class="toggle-summary" id="modalitySummary">5/5 passed</span>
+            <span class="toggle-summary" id="modalitySummary">Checking…</span>
             <span class="toggle-arrow">▼</span>
         </div>
         <div class="modality-list" id="modalityList">
@@ -753,8 +753,8 @@ function beginRecording() {
     // Show combined capture info
     document.getElementById('combinedCaptureInfo').style.display = 'block';
 
-    // Record for 5 seconds
-    let remaining = 5;
+    // Record for 7 seconds (was 5 — too short, digits get cut off)
+    let remaining = 7;
     const timerEl = document.getElementById('countdownTimer');
     const ringFill = document.getElementById('countdownRingFill');
     const circumference = 2 * Math.PI * 39;
@@ -765,10 +765,11 @@ function beginRecording() {
     const recInterval = setInterval(() => {
         remaining--;
         timerEl.textContent = remaining;
-        ringFill.style.strokeDashoffset = circumference * ((5 - remaining) / 5);
+        ringFill.style.strokeDashoffset = circumference * ((7 - remaining) / 7);
         if (remaining <= 0) {
             clearInterval(recInterval);
-            mediaRecorder.stop();
+            // 500ms buffer after timer to catch trailing audio
+            setTimeout(() => { mediaRecorder.stop(); }, 500);
         }
     }, 1000);
 }
@@ -968,6 +969,10 @@ function showRetry(result) {
             // Distinguish API errors from actual verification failures
             if (m.status === 'error') {
                 return `${m.name.replace(/_/g, ' ')} — service unavailable (will retry).`;
+            }
+            // For challenge response, show what was heard vs expected
+            if (m.name === 'challenge_response' && (m.detail?.heard || m.detail?.expected)) {
+                return `Challenge Response — heard: "${m.detail.heard || '(nothing)'}" vs expected: "${m.detail.expected || challengePhrase}"`;
             }
             const info = FAIL_REASONS[m.name] || { reason: `${m.name} check failed.`, tip: '' };
             return info.reason;
