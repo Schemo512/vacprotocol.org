@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAC Protocol — Vouch Request</title>
+<style>
+:root{--bg:#0a0f1a;--surface:#111827;--border:#1e293b;--text:#e2e8f0;--text-secondary:#94a3b8;--text-tertiary:#64748b;--teal:#2dd4bf;--purple:#8b5cf6;--success:#22c55e;--error:#ef4444;--mono:'SF Mono',Monaco,monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;justify-content:center;padding:40px 16px}
+.container{max-width:480px;width:100%;text-align:center}
+.logo{width:60px;height:60px;margin:0 auto 16px}
+h1{font-size:20px;margin-bottom:8px}
+.subtitle{color:var(--text-tertiary);font-family:var(--mono);font-size:11px;letter-spacing:1px;margin-bottom:32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;text-align:left}
+.requester{font-size:18px;font-weight:600;margin-bottom:4px}
+.email{color:var(--text-tertiary);font-size:13px;font-family:var(--mono);margin-bottom:12px}
+.message{color:var(--text-secondary);font-size:14px;font-style:italic;line-height:1.5;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px}
+.label{color:var(--text-tertiary);font-family:var(--mono);font-size:10px;letter-spacing:1px;margin-bottom:6px}
+.btn{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-bottom:10px;transition:opacity 0.2s}
+.btn-confirm{background:var(--purple);color:white}
+.btn-confirm:hover{opacity:0.9}
+.btn-decline{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
+.btn-decline:hover{border-color:var(--text-tertiary)}
+.status{padding:16px;border-radius:10px;font-size:14px;margin-top:16px;text-align:center}
+.status.success{background:rgba(34,197,94,0.1);color:var(--success);border:1px solid rgba(34,197,94,0.2)}
+.status.error{background:rgba(239,68,68,0.1);color:var(--error);border:1px solid rgba(239,68,68,0.2)}
+.status.pending{background:rgba(139,92,246,0.1);color:var(--purple);border:1px solid rgba(139,92,246,0.2)}
+.loading{color:var(--text-tertiary);padding:40px 0}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;resize:vertical;min-height:60px;margin-bottom:12px;font-family:inherit}
+textarea:focus{outline:none;border-color:var(--teal)}
+select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;margin-bottom:12px;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="container">
+    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,5 93,27.5 93,72.5 50,95 7,72.5 7,27.5" stroke="#2dd4bf" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+        <circle cx="50" cy="50" r="18" stroke="#2dd4bf" stroke-width="1.5" fill="none"/>
+        <circle cx="50" cy="42" r="3" fill="#2dd4bf"/>
+        <line x1="50" y1="46" x2="50" y2="58" stroke="#2dd4bf" stroke-width="1.5"/>
+        <line x1="42" y1="50" x2="58" y2="50" stroke="#2dd4bf" stroke-width="1.5"/>
+    </svg>
+    <h1>Vouch Request</h1>
+    <div class="subtitle">VAC PROTOCOL</div>
+
+    <div id="loading" class="loading">Loading vouch request...</div>
+    <div id="content" style="display:none">
+        <div class="card">
+            <div class="label">REQUESTING IDENTITY VOUCH</div>
+            <div class="requester" id="requesterName"></div>
+            <div class="email" id="requesterEmail"></div>
+            <div class="message" id="vouchMessage" style="display:none"></div>
+        </div>
+
+        <div id="actionSection">
+            <div class="card">
+                <div class="label">YOUR RELATIONSHIP (OPTIONAL)</div>
+                <select id="relationship">
+                    <option value="">Select...</option>
+                    <option value="colleague">Colleague</option>
+                    <option value="friend">Friend</option>
+                    <option value="family">Family</option>
+                    <option value="business">Business contact</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="label">NOTE (OPTIONAL)</div>
+                <textarea id="voucherNote" placeholder="I can confirm this person is who they say they are..."></textarea>
+            </div>
+            <button class="btn btn-confirm" onclick="confirmVouch(true)">I Vouch For This Person</button>
+            <button class="btn btn-decline" onclick="confirmVouch(false)">Decline</button>
+        </div>
+
+        <div id="resultSection" style="display:none"></div>
+        <div id="alreadyDone" style="display:none" class="status pending">This vouch request has already been processed.</div>
+    </div>
+    <div id="errorSection" style="display:none" class="status error">Vouch request not found or has expired.</div>
+</div>
+<script>
+const API_BASE = 'https://vac-system-production.up.railway.app';
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get('id') || window.location.pathname.split('/').pop();
+
+async function loadVouch() {
+    try {
+        const resp = await fetch(`${API_BASE}/v1/vouch/${requestId}`);
+        if (!resp.ok) throw new Error('not found');
+        const data = await resp.json();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('requesterName').textContent = data.requester_name;
+        document.getElementById('requesterEmail').textContent = data.requester_email;
+        if (data.message) {
+            document.getElementById('vouchMessage').textContent = '"' + data.message + '"';
+            document.getElementById('vouchMessage').style.display = 'block';
+        }
+        if (data.status !== 'pending') {
+            document.getElementById('actionSection').style.display = 'none';
+            document.getElementById('alreadyDone').style.display = 'block';
+        }
+    } catch (e) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('errorSection').style.display = 'block';
+    }
+}
+
+async function confirmVouch(confirmed) {
+    const btn = document.querySelector('.btn-confirm');
+    btn.disabled = true;
+    btn.textContent = confirmed ? 'Confirming...' : 'Declining...';
+    try {
+        const resp = await fetch(`${API_BASE}/v1/vouch/${requestId}/confirm`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                confirmed: confirmed,
+                voucher_note: document.getElementById('voucherNote').value || null,
+                relationship: document.getElementById('relationship').value || null,
+            })
+        });
+        const data = await resp.json();
+        document.getElementById('actionSection').style.display = 'none';
+        const result = document.getElementById('resultSection');
+        result.style.display = 'block';
+        if (confirmed) {
+            result.innerHTML = '<div class="status success">Vouch confirmed. Thank you for strengthening the trust graph.</div>';
+        } else {
+            result.innerHTML = '<div class="status error">Vouch declined.</div>';
+        }
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'I Vouch For This Person';
+        alert('Network error — try again');
+    }
+}
+
+loadVouch();
+</script>
+</body>
+</html>

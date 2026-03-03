@@ -17,6 +17,10 @@
       "destination": "/vat-verify.html?jti=:jti"
     },
     {
+      "source": "/vouch/:id",
+      "destination": "/vouch.html?id=:id"
+    },
+    {
       "source": "/groups",
       "destination": "/groups.html"
     }
