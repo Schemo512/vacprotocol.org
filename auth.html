@@ -833,36 +833,42 @@ function startAVChecks() {
                 avChecks.light = true;
             }
 
-            // 2. Face detection — scan full frame for skin, measure cluster size + position
-            let skinPixels = 0, skinXsum = 0, skinYsum = 0, totalPixels = 0;
-            for (let y = 10; y < 80; y += 2) {
-                for (let x = 20; x < 140; x += 2) {
-                    const idx = (y * 160 + x) * 4;
-                    const red = imgData[idx], green = imgData[idx+1], blue = imgData[idx+2];
-                    totalPixels++;
-                    // Broader skin-tone heuristic — works across more skin tones and lighting
-                    if (red > 60 && green > 30 && blue > 15 && red > green - 20 && (red - blue) > 5 && Math.abs(red - green) < 80) {
-                        skinPixels++;
-                        skinXsum += x;
-                        skinYsum += y;
-                    }
+            // 2. Face detection — edge density in oval region (works across all skin tones)
+            // A face in the oval creates high contrast edges (eyes, nose, mouth, hairline)
+            // vs empty/wall background which has low edge density
+            const cw = 160, ch = 90;
+            let edgePixels = 0, ovalPixels = 0;
+            const ovalCx = cw / 2, ovalCy = ch / 2, ovalRx = 30, ovalRy = 38;
+            for (let y = 8; y < ch - 4; y += 2) {
+                for (let x = 8; x < cw - 4; x += 2) {
+                    // Check if pixel is inside oval region
+                    const dx = (x - ovalCx) / ovalRx, dy = (y - ovalCy) / ovalRy;
+                    if (dx * dx + dy * dy > 1) continue;
+                    ovalPixels++;
+                    // Sobel-like edge detection — compare to neighbors
+                    const idx = (y * cw + x) * 4;
+                    const idxR = (y * cw + x + 2) * 4;
+                    const idxD = ((y + 2) * cw + x) * 4;
+                    const lum = 0.299 * imgData[idx] + 0.587 * imgData[idx+1] + 0.114 * imgData[idx+2];
+                    const lumR = 0.299 * imgData[idxR] + 0.587 * imgData[idxR+1] + 0.114 * imgData[idxR+2];
+                    const lumD = 0.299 * imgData[idxD] + 0.587 * imgData[idxD+1] + 0.114 * imgData[idxD+2];
+                    const edgeH = Math.abs(lum - lumR);
+                    const edgeV = Math.abs(lum - lumD);
+                    if (edgeH > 15 || edgeV > 15) edgePixels++;
                 }
             }
-            const skinRatio = skinPixels / totalPixels;
-            const sr = Math.round(skinRatio * 100);
-            if (skinRatio > 0.12) {
-                if (skinRatio < 0.18) {
-                    setAVStatus('face', 'warn', 'Face: move closer (' + sr + '%)');
-                    avChecks.face = false;
-                } else if (skinRatio > 0.65) {
-                    setAVStatus('face', 'warn', 'Face: too close (' + sr + '%)');
-                    avChecks.face = true;
-                } else {
-                    setAVStatus('face', 'good', 'Face: detected (' + sr + '%)');
-                    avChecks.face = true;
-                }
+            const edgeRatio = ovalPixels > 0 ? edgePixels / ovalPixels : 0;
+            const er = Math.round(edgeRatio * 100);
+            // A face typically has 15-50% edge density in the oval
+            // Empty background / wall: <10%. Too close (blurry): <12%
+            if (edgeRatio > 0.15) {
+                setAVStatus('face', 'good', 'Face: detected');
+                avChecks.face = true;
+            } else if (edgeRatio > 0.08) {
+                setAVStatus('face', 'warn', 'Face: move closer');
+                avChecks.face = false;
             } else {
-                setAVStatus('face', 'checking', 'Face: scanning… (' + sr + '%)');
+                setAVStatus('face', 'checking', 'Face: no face found');
                 avChecks.face = false;
             }
         } catch (e) { /* canvas errors are non-fatal */ }
