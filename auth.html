@@ -1031,7 +1031,7 @@ function goToChallenge() {
         const fb = document.createElement('div');
         fb.id = 'fingerFallback';
         fb.style.cssText = 'text-align:center;margin-top:8px';
-        fb.innerHTML = '<button onclick="setFingerFallback()" style="background:none;border:none;color:var(--text-quaternary);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;padding:4px">Can\'t show fingers? Voice-only mode</button>';
+        fb.innerHTML = '<button onclick="setFingerFallback()" style="background:none;border:none;color:var(--text-quaternary);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;padding:4px">Cannot show fingers? Voice-only mode</button>';
         document.getElementById('challengeText').parentElement.appendChild(fb);
     }
     const recVid = document.getElementById('videoPreviewRec');
@@ -1053,7 +1053,7 @@ function setFingerFallback() {
     } else {
         fingerFallback = 'none';
         const fb = document.getElementById('fingerFallback');
-        if (fb) fb.querySelector('button').textContent = "Can't show fingers? Voice-only mode";
+        if (fb) fb.querySelector('button').textContent = "Cannot show fingers? Voice-only mode";
         const phrase = challengeData?.phrase || '';
         const digits = challengeData?.digits || [];
         document.getElementById('challengeText').innerHTML = '"' + phrase + '"<br><span style="font-size:12px;opacity:0.5;margin-top:6px;display:inline-block">Then show fingers: ' + digits.join(', ') + '</span>';
