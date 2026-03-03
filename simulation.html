@@ -349,20 +349,20 @@ const SCENARIOS = {
   },
   openclaw: {
     title: "OpenClaw — Agent Team",
-    subtitle: "PDOS deploys a 5-agent team for a startup founder",
+    subtitle: "Athena deploys a 5-agent team for a startup founder",
     claims: "Claims 99-112, 168-271",
     audience: "Developers / Enterprise / OpenClaw",
     color: "#FF6F00",
-    oneSentence: "The founder described a problem. PDOS built a team of 5 agents. Each agent had scoped authority. A collaborator joined mid-mission. Agents finished tasks and lost access automatically. One agent requested more access — the founder bio-approved it. The protocol enforced every boundary.",
+    oneSentence: "The founder described a problem. Athena built a team of 5 agents. Each agent had scoped authority. A collaborator joined mid-mission. Agents finished tasks and lost access automatically. One agent requested more access — the founder bio-approved it. The protocol enforced every boundary.",
     story: {
-      intro: "Jake is a startup founder. He tells PDOS — his AI operating system — 'I need to prepare for our Series A.' PDOS recommends a team of 5 AI agents: a financial analyst, a market researcher, a pitch deck writer, a legal reviewer, and a data room organiser. Each agent needs access to sensitive company data. Jake's co-founder Lisa needs to collaborate. How do you give 5 AI agents and 2 humans scoped access to everything — without anyone exceeding their authority — and ensure access disappears the moment each job is done?",
+      intro: "Jake is a startup founder. He tells Athena — his AI operating system — 'I need to prepare for our Series A.' Athena recommends a team of 5 AI agents: a financial analyst, a market researcher, a pitch deck writer, a legal reviewer, and a data room organiser. Each agent needs access to sensitive company data. Jake's co-founder Lisa needs to collaborate. How do you give 5 AI agents and 2 humans scoped access to everything — without anyone exceeding their authority — and ensure access disappears the moment each job is done?",
       whyVAC: "Today on platforms like OpenClaw, anyone can deploy agent skills with zero identity verification. 512 vulnerabilities have been found. Malicious plugins exfiltrate data. Nobody can answer 'who authorised this agent?' VAC solves this: every agent traces back to a verified human, every action is scoped, access auto-revokes when the task is complete, and if an agent needs more access mid-task, a real human must bio-verify the decision.",
       beats: [
-        { at: 0, text: "Jake opens the PDOS app and records a short video: 'I'm Jake, CEO of Nexus Labs, authorising Series A preparation.' The VAC SDK captures his 5 biometric signals. His identity is now the root of every agent action that follows." },
-        { at: 1, text: "PDOS analyses Jake's request and recommends 5 agents from the OpenClaw skill repository. But before any agent is deployed, each one needs a VAC-scoped delegation token from Jake — specifying exactly what it can access, what it must deliver, and when its access ends." },
+        { at: 0, text: "Jake opens the Athena app and records a short video: 'I'm Jake, CEO of Nexus Labs, authorising Series A preparation.' The VAC SDK captures his 5 biometric signals. His identity is now the root of every agent action that follows." },
+        { at: 1, text: "Athena analyses Jake's request and recommends 5 agents from the OpenClaw skill repository. But before any agent is deployed, each one needs a VAC-scoped delegation token from Jake — specifying exactly what it can access, what it must deliver, and when its access ends." },
         { at: 2, text: "The Financial Analyst agent gets a narrow scope: read-only access to revenue data and financial models. Its purpose: deliver a revenue projection model. The moment that model is delivered, access to the source data will automatically evaporate. No timer needed — task completion IS the trigger." },
         { at: 3, text: "Market Researcher gets access to competitive intelligence — but NOT to financial data. Pitch Deck Writer can read everything but cannot access the cap table. Each agent's scope narrows from Jake's root authority, and each has a defined deliverable that triggers auto-revocation." },
-        { at: 4, text: "Jake invites Lisa, his co-founder. Lisa opens the app, records her own verification video. The VAC SDK creates her identity token. PDOS adds her as a collaborator with co-founder authority — she can see everything Jake authorised, and add her own agent delegations." },
+        { at: 4, text: "Jake invites Lisa, his co-founder. Lisa opens the app, records her own verification video. The VAC SDK creates her identity token. Athena adds her as a collaborator with co-founder authority — she can see everything Jake authorised, and add her own agent delegations." },
         { at: 5, text: "Lisa deploys a sixth agent — an Investor Relations bot — with her own scoped delegation. Both founders' biometric proofs now anchor different branches of the agent team. Two humans, six agents, one governed system." },
         { at: 6, text: "Financial Analyst delivers its revenue projection model. Task complete. The completion verification module — independent of the agent — confirms the deliverable. Instantly, the agent's read access to source revenue data is automatically revoked. The model output remains; the source data access is gone. The team's aggregate data footprint just shrank." },
         { at: 7, text: "Market Researcher delivers its competitive analysis. Purpose fulfilled. Access auto-revokes. Two agents down, four still active. The team's data exposure is monotonically shrinking — every completed task removes another access path." },
@@ -378,7 +378,7 @@ const SCENARIOS = {
     nodes: [
       { id: "jake", label: "Jake (CEO) 👤", type: "human", trust: 0.95, scope: "Full company data, Series A", jurisdiction: "US-CA", role: "CEO — Root Authority", x: 300, y: 40 },
       { id: "lisa", label: "Lisa (Co-founder) 👤", type: "human", trust: 0.92, scope: "Full company data, Series A", jurisdiction: "US-CA", role: "Co-founder — Collaborator", x: 500, y: 40 },
-      { id: "pdos", label: "PDOS Orchestrator", type: "collective", trust: 0.90, scope: "Agent team management", jurisdiction: "US-CA", x: 400, y: 150 },
+      { id: "pdos", label: "Athena Orchestrator", type: "collective", trust: 0.90, scope: "Agent team management", jurisdiction: "US-CA", x: 400, y: 150 },
       { id: "financial", label: "Financial Analyst", type: "agent", trust: 0.85, scope: "Revenue + models, READ ONLY", jurisdiction: "US-CA", x: 150, y: 270 },
       { id: "market", label: "Market Researcher", type: "agent", trust: 0.85, scope: "Competitive intel ONLY", jurisdiction: "US-CA", x: 300, y: 270 },
       { id: "pitch", label: "Pitch Deck Writer", type: "agent", trust: 0.82, scope: "All data, NO cap table", jurisdiction: "US-CA", x: 450, y: 270 },
@@ -390,7 +390,7 @@ const SCENARIOS = {
     edges: [["jake","pdos"],["lisa","pdos"],["pdos","financial"],["pdos","market"],["pdos","pitch"],["pdos","legal"],["pdos","dataroom"],["lisa","ir"],["legal","blocked"]],
     events: [
       { time: 0, type: "verify", node: "jake", message: "📹 Jake verified — 5-modal biometric: face, voice, behaviour, location, timestamp ✓" },
-      { time: 1200, type: "create", node: "pdos", message: "PDOS recommends 5-agent team for Series A preparation" },
+      { time: 1200, type: "create", node: "pdos", message: "Athena recommends 5-agent team for Series A preparation" },
       { time: 2200, type: "delegate", node: "financial", message: "Financial Analyst deployed — Scope: revenue + models, READ ONLY | Purpose: deliver revenue projection model" },
       { time: 3000, type: "delegate", node: "market", message: "Market Researcher deployed — Scope: competitive intel ONLY | Purpose: deliver competitive analysis" },
       { time: 3400, type: "delegate", node: "pitch", message: "Pitch Deck Writer deployed — Scope: all data EXCEPT cap table | Purpose: deliver pitch deck" },
@@ -405,7 +405,7 @@ const SCENARIOS = {
       { time: 7900, type: "delegate", node: "legal", message: "✓ Supplementary token issued: WRITE to term-sheet-v3.docx only, purpose-bound to markup completion" },
       { time: 8200, type: "action", node: "legal", message: "✅ Redline markup saved → supplementary WRITE access AUTO-REVOKED. Original READ access unchanged." },
       { time: 8600, type: "blocked", node: "blocked", message: "🛑 Legal Reviewer attempted cap table access — BLOCKED. Scope: legal docs only." },
-      { time: 9000, type: "provenance", node: "legal", message: "⚠ Scope violation logged. Provenance: Legal Reviewer → PDOS → Jake. Full audit trail recorded." },
+      { time: 9000, type: "provenance", node: "legal", message: "⚠ Scope violation logged. Provenance: Legal Reviewer → Athena → Jake. Full audit trail recorded." },
       { time: 9500, type: "action", node: "pitch", message: "✅ TASK COMPLETE: Pitch deck finalised → data access AUTO-REVOKED" },
       { time: 9800, type: "action", node: "dataroom", message: "✅ TASK COMPLETE: Data room organised → access AUTO-REVOKED" },
       { time: 10200, type: "revoke", node: "jake", message: "⚠ Jake revokes remaining agents — CASCADE: IR + Legal lose authority in 340ms. Clean shutdown." },
@@ -465,15 +465,15 @@ const SCENARIOS = {
     title: "Token Cost Control",
     subtitle: "Jason's $100/day agent budget — enforced by cryptography",
     claims: "Claims 39-55, 242-271",
-    audience: "Jason Calacanis / OpenClaw / Enterprise",
+    audience: "Jason Calacanis / Investors / Enterprise",
     color: "#D29922",
     oneSentence: "Jason's AI agents were burning $400/day in API tokens with no ceiling. He set a $100/day VAC budget. The coordinator got $100, delegated $40 to research, $30 to writing, $20 to coding, kept $10 reserve. When the researcher hit $40, the chain revoked. The other agents kept working. Jason saw exactly where every dollar went.",
     story: {
-      intro: "This one is for Jason Calacanis — because he said it on the All-In Podcast and we built the solution. Jason runs a lean operation. He's all-in on AI agents — using OpenClaw to automate research, content, coding, and outreach. The agents are incredible. They're also burning through $400/day in API tokens and nobody knows where the money is going. Claude Opus calls cost $0.075/1K tokens. His researcher agent loves Opus. Jason needs a hard spending ceiling that no agent can override — not a dashboard that shows him the damage after the fact, but a cryptographic constraint that stops the spend before it happens. So here it is, Jason. This is how VAC solves your problem.",
+      intro: "This one is for Jason Calacanis — because he said it on the All-In Podcast and we built the solution. Jason runs a lean operation. He's all-in on AI agents — using them to automate research, content, coding, and outreach across his portfolio. The agents are incredible. They're also burning through $400/day in API tokens and nobody knows where the money is going. Claude Opus calls cost $0.075/1K tokens. His researcher agent loves Opus. Jason needs a hard spending ceiling that no agent can override — not a dashboard that shows him the damage after the fact, but a cryptographic constraint that stops the spend before it happens. So here it is, Jason. This is how VAC solves your problem.",
       whyVAC: "Today, agent platforms have no spend governance. You can set soft limits, get alerts, review logs — but the agent has already spent the money by the time you see the alert. VAC scope constraints treat budget exactly like any other permission: it narrows monotonically down the delegation chain, and exceeding it triggers automatic revocation. The agent doesn't get a warning — it gets revoked. Jason asked for this. We built it.",
       beats: [
         { at: 0, text: "Jason opens VAC and records his biometric verification. Face, voice, challenge-response, location. Root VAT issued: trust 0.95. He sets the daily scope: $100 API spend ceiling, models up to $0.03/1K tokens (Sonnet-class, not Opus), and approved providers: Anthropic + OpenAI only." },
-        { at: 1, text: "PDOS recommends a 4-agent team for today's work: a market researcher, a content writer, a code reviewer, and an outreach coordinator. Each needs a VAC delegation token from Jason's root — with a slice of the $100 budget." },
+        { at: 1, text: "Athena recommends a 4-agent team for today's work: a market researcher, a content writer, a code reviewer, and an outreach coordinator. Each needs a VAC delegation token from Jason's root — with a slice of the $100 budget." },
         { at: 2, text: "The coordinator agent gets the full $100 scope but immediately delegates: $40 to Research, $30 to Content, $20 to Code Review, keeps $10 as reserve for orchestration calls. Each sub-agent's token cryptographically locks its budget ceiling. Monotonic narrowing — they can never spend more than their parent authorised." },
         { at: 3, text: "Research Agent starts work. It tries to use Claude Opus ($0.075/1K) — Jason's scope says max $0.03/1K. Request blocked. Not rate-limited. BLOCKED. The agent falls back to Sonnet and proceeds. Jason's model cost preference is mathematically enforced, not suggested." },
         { at: 4, text: "Content Writer is drafting a blog post series. $8 spent of its $30 budget. Code Reviewer is analysing a PR. $3 spent of its $20 budget. Research Agent is deep in competitive analysis — $22 spent of its $40 budget. The coordinator's real-time view shows exactly where every dollar is going." },
@@ -486,8 +486,8 @@ const SCENARIOS = {
       ],
     },
     nodes: [
-      { id: "jason", label: "Jason (Founder) 👤", type: "human", trust: 0.95, scope: "$100/day · Sonnet-class max", jurisdiction: "US-CA", role: "Root Authority — Budget Owner", x: 400, y: 40 },
-      { id: "coord", label: "Coordinator (PDOS)", type: "collective", trust: 0.90, scope: "$100 total · $10 reserve", jurisdiction: "US-CA", x: 400, y: 150 },
+      { id: "jason", label: "Jason (Investor) 👤", type: "human", trust: 0.95, scope: "$100/day · Sonnet-class max", jurisdiction: "US-CA", role: "Root Authority — Budget Owner", x: 400, y: 40 },
+      { id: "coord", label: "Coordinator (Athena)", type: "collective", trust: 0.90, scope: "$100 total · $10 reserve", jurisdiction: "US-CA", x: 400, y: 150 },
       { id: "research", label: "Research Agent 💰", type: "agent", trust: 0.85, scope: "$40 budget · Sonnet only", jurisdiction: "US-CA", x: 150, y: 280 },
       { id: "content", label: "Content Writer", type: "agent", trust: 0.85, scope: "$30 budget · Sonnet only", jurisdiction: "US-CA", x: 300, y: 280 },
       { id: "code", label: "Code Reviewer", type: "agent", trust: 0.82, scope: "$20 budget · Sonnet only", jurisdiction: "US-CA", x: 500, y: 280 },
@@ -497,7 +497,7 @@ const SCENARIOS = {
     edges: [["jason","coord"],["coord","research"],["coord","content"],["coord","code"],["coord","reserve"],["research","blocked"]],
     events: [
       { time: 0, type: "verify", node: "jason", message: "📹 Jason verified — 5-modal biometric ✓ — Daily budget: $100, model ceiling: $0.03/1K tokens" },
-      { time: 1200, type: "create", node: "coord", message: "PDOS Coordinator deployed — $100 total budget, delegating to 4 sub-agents" },
+      { time: 1200, type: "create", node: "coord", message: "Athena Coordinator deployed — $100 total budget, delegating to 4 sub-agents" },
       { time: 2000, type: "delegate", node: "research", message: "Research Agent — Budget: $40 | Model: Sonnet-class max | Provider: Anthropic + OpenAI" },
       { time: 2600, type: "delegate", node: "content", message: "Content Writer — Budget: $30 | Model: Sonnet-class max" },
       { time: 3000, type: "delegate", node: "code", message: "Code Reviewer — Budget: $20 | Model: Sonnet-class max" },
@@ -1363,7 +1363,7 @@ function VACSimulation() {
                   {/* Jake and Lisa at top */}
                   <line x1="220" y1="45" x2="350" y2="130" stroke="#2E75B666" strokeWidth="2" />
                   <line x1="480" y1="45" x2="350" y2="130" stroke="#2E75B666" strokeWidth="2" />
-                  {/* PDOS to agents */}
+                  {/* Athena to agents */}
                   <line x1="350" y1="130" x2="120" y2="230" stroke="#66BB6A66" strokeWidth="2" />
                   <line x1="350" y1="130" x2="250" y2="230" stroke="#66BB6A66" strokeWidth="2" />
                   <line x1="350" y1="130" x2="380" y2="230" stroke="#66BB6A66" strokeWidth="2" />
@@ -1385,10 +1385,10 @@ function VACSimulation() {
                   <text x="480" y="82" textAnchor="middle" fill="#CE93D8" fontSize="10" fontWeight="700">Lisa (Co-founder)</text>
                   <text x="480" y="94" textAnchor="middle" fill="#888" fontSize="8">🌳 TRUSTED · 5-modal verified</text>
 
-                  {/* PDOS Orchestrator */}
+                  {/* Athena Orchestrator */}
                   <circle cx="350" cy="130" r="22" fill="#1a1a1a" stroke="#FFB74D" strokeWidth="2" />
                   <text x="350" y="134" textAnchor="middle" fill="#FFB74D" fontSize="12">✦</text>
-                  <text x="350" y="163" textAnchor="middle" fill="#FFB74D" fontSize="10" fontWeight="700">PDOS Orchestrator</text>
+                  <text x="350" y="163" textAnchor="middle" fill="#FFB74D" fontSize="10" fontWeight="700">Athena Orchestrator</text>
                   <text x="350" y="175" textAnchor="middle" fill="#888" fontSize="8">Delegated by Jake · Scoped</text>
 
                   {/* Agents */}
@@ -1442,13 +1442,13 @@ function VACSimulation() {
                   {/* Jason */}
                   <circle cx="350" cy="45" r="24" fill="#3D2800" stroke="#D29922" strokeWidth="2" />
                   <text x="350" y="49" textAnchor="middle" fill="#fff" fontSize="14">👤</text>
-                  <text x="350" y="82" textAnchor="middle" fill="#D29922" fontSize="10" fontWeight="700">Jason (Founder)</text>
+                  <text x="350" y="82" textAnchor="middle" fill="#D29922" fontSize="10" fontWeight="700">Jason (Investor)</text>
                   <text x="350" y="94" textAnchor="middle" fill="#888" fontSize="8">⭐ ROOT · $100/day budget</text>
 
                   {/* Coordinator */}
                   <circle cx="350" cy="140" r="20" fill="#1a1a1a" stroke="#FFB74D" strokeWidth="2" />
                   <text x="350" y="144" textAnchor="middle" fill="#FFB74D" fontSize="12">✦</text>
-                  <text x="350" y="170" textAnchor="middle" fill="#FFB74D" fontSize="9" fontWeight="700">PDOS Coordinator</text>
+                  <text x="350" y="170" textAnchor="middle" fill="#FFB74D" fontSize="9" fontWeight="700">Athena Coordinator</text>
                   <text x="350" y="182" textAnchor="middle" fill="#888" fontSize="7">$100 → delegates $90 · keeps $10</text>
 
                   {/* Research - highlighted/warning */}
@@ -1674,7 +1674,7 @@ function VACSimulation() {
 
                 <div style={{ marginTop: 10, fontSize: 11, color: "#666" }}>
                   {scenario === "wananga" ? "In this scenario: when Mere vouches for Hemi, both mine a token. When Hemi's rangatahi complete the programme with verified progress, the programme's aggregate trust score rises — making every future vouch from this wānanga carry more weight." :
-                   scenario === "openclaw" ? "In this scenario: when Jake verifies and deploys agents through PDOS, his trust score anchors the entire team. When Lisa joins and is independently verified, the team's aggregate reputation strengthens — two verified founders carry more weight than one." :
+                   scenario === "openclaw" ? "In this scenario: when Jake verifies and deploys agents through Athena, his trust score anchors the entire team. When Lisa joins and is independently verified, the team's aggregate reputation strengthens — two verified founders carry more weight than one." :
                    scenario === "tokencost" ? "In this scenario: Jason's biometric verification anchors a daily budget. Every dollar spent by every agent traces back to his verified identity. When the Research Agent is revoked and reinstated, a fresh biometric is required — not a cached approval. The trust graph isn't just about identity, it's about resource governance." :
                    scenario === "personalai" ? "In this scenario: Sarah's biometric verification proves the video is genuinely her — not AI-generated, not a deepfake. Each sharing relationship is a separate scope in the delegation chain. The recruiter and friend see different content from the same root. When access expires, the content is gone. Sharing isn't surrendering." :
                    scenario === "healthcare" ? "In this scenario: Dr. Chen's anchor status means every clinical agent inherits verified provenance. Each successful delegation without scope violation strengthens the trust chain — the hospital's reputation grows with every compliant interaction." :

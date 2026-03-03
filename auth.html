@@ -252,6 +252,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="step-dot" id="dot3"></div>
 </div>
 
+<!-- Session 9: JS syntax fix redeploy — stray lines in Vercel cache -->
 <!-- STEP 0: Identity -->
 <div class="step-section active" id="step0">
     <div class="header">
@@ -1231,8 +1232,6 @@ function openMessage() {
 function openDashboard() {
     const email = userData().email;
     window.open(`/dashboard?email=${encodeURIComponent(email)}`, '_blank');
-}
-    window.open(url, '_blank');
 }
 </script>
 <script src="vac-themes.js"></script>
