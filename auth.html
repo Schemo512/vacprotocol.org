@@ -1810,26 +1810,26 @@ async function sendToRecipient() {
 
     try {
         const d = userData();
-        const resp = await fetch(`${API_BASE}/v1/vat/auth/capture`, {
+        const resp = await fetch(`${API_BASE}/v1/vouch/request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                name: d.name,
-                email: d.email,
-                org_name: d.org,
-                org_role: d.role,
-                recipient_name: name,
-                recipient_email: email,
+                requester_name: d.name,
+                requester_email: d.email,
+                voucher_name: name,
+                voucher_email: email,
+                message: 'I just verified my identity with VAC Protocol. Can you vouch for me?',
+                vouch_type: 'identity',
+                source_app: 'vac-auth',
             }),
         });
         const data = await resp.json();
-        if (data.recipient_notified) {
-            fb.textContent = `Sent to ${email} ✓`;
+        if (resp.ok && data.request_id) {
+            fb.textContent = `Vouch request sent to ${email} ✓`;
             fb.style.color = 'var(--success)';
             fb.style.display = 'block';
-            document.getElementById('shareUrl').textContent = data.share_url;
         } else {
-            fb.textContent = data.recipient_error || 'Failed to send — try again';
+            fb.textContent = data.detail || 'Failed to send — try again';
             fb.style.color = 'var(--error)';
             fb.style.display = 'block';
         }
@@ -1839,7 +1839,7 @@ async function sendToRecipient() {
         fb.style.display = 'block';
     }
     btn.disabled = false;
-    btn.textContent = 'Send Verification Link';
+    btn.textContent = 'Send Vouch Request';
 }
 
 // Fetch adaptive modality requirements based on trust relationship
