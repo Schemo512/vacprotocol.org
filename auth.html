@@ -1318,7 +1318,7 @@ async function runRealVerification(videoBlob) {
         var tip = '';
         if (msg.indexOf('expired challenge') >= 0 || msg.indexOf('Invalid or expired') >= 0 || msg.indexOf('Challenge not found') >= 0) {
             msg = 'Your challenge expired or the server restarted. Not your fault.';
-            tip = 'Tap Retry for a fresh challenge. It will work on the next attempt.';
+            tip = 'Tap Retry for a fresh challenge. This usually resolves on retry.';
         } else if (msg.indexOf('400') >= 0) {
             msg = 'The server could not process your recording. This can happen with very short or silent recordings.';
             tip = 'Speak clearly and hold your fingers up near your face. Tap Retry to try again.';
@@ -1337,6 +1337,7 @@ async function runRealVerification(videoBlob) {
         retryEl.style.display = 'block';
         document.getElementById("failReasons").parentElement.style.display="none";
         document.getElementById('retryTipsList').textContent = tip;
+        try{document.getElementById("modalityToggle").style.display="none";document.getElementById("engineToggle").style.display="none";}catch(x){}
         retryAttempts++;
         document.getElementById('retryCount').textContent = retryAttempts > 1 ? 'Attempt ' + retryAttempts + ' of ' + MAX_RETRIES : '';
         if (retryAttempts >= MAX_RETRIES) {
