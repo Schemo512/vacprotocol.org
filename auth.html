@@ -182,7 +182,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .btn-back svg { opacity: 0.6; }
 
 /* Success chain display */
-.chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
 
 /* AV check pills */
 .av-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 10px; flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: clamp(11px, 1.2vw, 12px); color: var(--text-secondary); transition: border-color 0.3s, background 0.3s; }
@@ -215,7 +215,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .chain-arrow { text-align: center; color: var(--text-quaternary); font-size: 11px; padding: 2px 0; }
 
 /* Share section */
-.share-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.share-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
 .share-url { font-family: var(--mono); font-size: 12px; color: var(--teal); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; word-break: break-all; margin: 12px 0; cursor: pointer; transition: border-color 0.15s; }
 .share-url:hover { border-color: var(--teal-border); }
 
@@ -546,6 +546,9 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     </div>
 
     <!-- Primary CTA: Share -->
+    <details style="margin-top:10px"><summary style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;letter-spacing:1px">HOW WE AUTHENTICATED YOU</summary><div id="proofContent" style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:8px">Loading...</div></details>
+
+    <!-- Share card -->
     <div class="share-card">
         <div style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Your Verification Link</div>
         <div class="share-url" id="shareUrl" onclick="copyShareUrl()"></div>
@@ -565,8 +568,8 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
     <!-- Secondary actions -->
     <div style="display: flex; gap: 10px; margin-top: 12px;">
-        <button class="btn-secondary" onclick="openMessage()" style="flex: 1;">Send Message</button>
-        <button class="btn-secondary" onclick="openDashboard()" style="flex: 1;">My Dashboard</button>
+        <button class="btn-secondary" onclick="openMessage()" style="flex: 1; opacity: 0.4; cursor: not-allowed;" disabled title="Get vouched by another human first">Send Message</button>
+        <a href="javascript:openDashboard()" style="flex: 1; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); text-decoration: none; padding: 10px;">My Dashboard &rarr;</a>
     </div>
 
     <!-- Collapsible detail sections -->
@@ -1632,6 +1635,25 @@ function showSuccess() {
         const cls = m.status === 'verified' ? '' : 'failed';
         return `<div class="mod-chip ${cls}"><span class="dot"></span>${m.name.replace(/_/g, ' ')} ${m.score ? '(' + m.score.toFixed(2) + ')' : ''}</div>`;
     }).join('');
+
+    // Populate proof section
+    var proofEl = document.getElementById('proofContent');
+    if (proofEl && mods.length > 0) {
+        var p = '';
+        var face = mods.find(function(m){return m.name==='face_liveness'});
+        var df = mods.find(function(m){return m.name==='deepfake_detection'});
+        var ls = mods.find(function(m){return m.name==='lip_sync'});
+        var vp = mods.find(function(m){return m.name==='voiceprint'});
+        var cr = mods.find(function(m){return m.name==='challenge_response'});
+        var fg = mods.find(function(m){return m.name==='finger_gesture'});
+        if (face) p += (face.score>=0.5?'✅':'❌') + ' <strong>Face liveness:</strong> ' + (face.score*100).toFixed(0) + '%<br>';
+        if (df) p += (df.score>=0.5?'✅':'❌') + ' <strong>Deepfake scan:</strong> ' + (df.score*100).toFixed(0) + '%<br>';
+        if (vp) p += (vp.score>=0.5?'✅':'❌') + ' <strong>Voiceprint:</strong> ' + (vp.score*100).toFixed(0) + '%<br>';
+        if (ls) p += (ls.score>=0.5?'✅':'❌') + ' <strong>Lip sync:</strong> ' + (ls.score*100).toFixed(0) + '%<br>';
+        if (cr) p += (cr.score>=0.5?'✅':'❌') + ' <strong>Challenge match:</strong> ' + (cr.score*100).toFixed(0) + '%<br>';
+        if (fg) p += (fg.score>=0.5?'✅':'❌') + ' <strong>Finger gesture:</strong> ' + (fg.score*100).toFixed(0) + '%<br>';
+        proofEl.innerHTML = p || 'No modality data available.';
+    }
 
     // Transcript display
     if (r.challenge?.transcript) {
