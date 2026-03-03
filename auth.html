@@ -169,6 +169,9 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .mod-score.pass { color: var(--success); }
 .mod-score.fail { color: var(--error); }
 .mod-score.pending { color: var(--text-quaternary); }
+.mod-result { cursor: pointer; flex-wrap: wrap; }
+.mod-desc { display: none; width: 100%; font-size: clamp(9px, 1.1vw, 11px); color: var(--text-quaternary); padding: 2px 0 4px 28px; line-height: 1.4; }
+.mod-result.show-desc .mod-desc { display: block; }
 
 /* Success chain display */
 .chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
@@ -434,11 +437,11 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             <span class="toggle-arrow">▼</span>
         </div>
         <div class="modality-list" id="modalityList">
-        <div class="mod-result" id="modFace"><span class="mod-status">⏳</span><span class="mod-name">Face Liveness</span><span class="mod-score pending">—</span></div>
-        <div class="mod-result" id="modDeepfake"><span class="mod-status">⏳</span><span class="mod-name">Deepfake Detection</span><span class="mod-score pending">—</span></div>
-        <div class="mod-result" id="modVoice"><span class="mod-status">⏳</span><span class="mod-name">Voiceprint</span><span class="mod-score pending">—</span></div>
-        <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-score pending">—</span></div>
-        <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-score pending">—</span></div>
+        <div class="mod-result" id="modFace" onclick="toggleModDesc(this)"><span class="mod-status">⏳</span><span class="mod-name">Face Liveness</span><span class="mod-score pending">—</span><span class="mod-desc">Confirms a real person is present, not a photo or mask</span></div>
+        <div class="mod-result" id="modDeepfake" onclick="toggleModDesc(this)"><span class="mod-status">⏳</span><span class="mod-name">Deepfake Detection</span><span class="mod-score pending">—</span><span class="mod-desc">Checks for AI-generated or manipulated video artifacts</span></div>
+        <div class="mod-result" id="modVoice" onclick="toggleModDesc(this)"><span class="mod-status">⏳</span><span class="mod-name">Voiceprint</span><span class="mod-score pending">—</span><span class="mod-desc">Verifies speech is from a live human voice, not synthesized</span></div>
+        <div class="mod-result" id="modLipSync" onclick="toggleModDesc(this)"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-score pending">—</span><span class="mod-desc">Confirms lip movements match spoken audio in real time</span></div>
+        <div class="mod-result" id="modChallenge" onclick="toggleModDesc(this)"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-score pending">—</span><span class="mod-desc">Matches spoken words against a unique server-generated phrase</span></div>
         </div>
     </div>
     <!-- Under the Hood — engine analysis details -->
@@ -983,6 +986,10 @@ function toggleUnderHood() {
     const isOpen = list.classList.contains('open');
     list.classList.toggle('open');
     arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function toggleModDesc(el) {
+    el.classList.toggle('show-desc');
 }
 
 function populateUnderHood(authData) {
