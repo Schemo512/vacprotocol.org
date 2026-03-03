@@ -334,7 +334,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </button>
         <div class="header-eyebrow">Step 2 of 4</div>
         <div class="header-title">Camera & Microphone</div>
-        <div class="header-sub">We'll record a short video of you speaking a challenge phrase, then showing fingers to match the digits. Takes about 14 seconds.</div>
+        <div class="header-sub">We'll record a short video of you speaking a challenge phrase, then showing fingers to match the digits. Takes about 15 seconds.</div>
         <div id="deviceInfo" style="font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); margin-top: 4px;"></div>
     </div>
     <div class="camera-container" id="cameraBox">
@@ -520,9 +520,9 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 <!-- STEP 4: Success -->
 <div class="step-section" id="step4">
     <div class="header">
-        <div class="header-eyebrow" id="successEyebrow">Verified ✓</div>
-        <div class="header-title" id="successTitle">You're Verified</div>
-        <div class="header-sub">Your identity is now cryptographically bound. Share your credential or send a verified message.</div>
+        <div class="header-eyebrow" id="successEyebrow">AUTHENTICATED ✓</div>
+        <div class="header-title" id="successTitle">You're Authenticated</div>
+        <div class="header-sub">Your identity is cryptographically bound. Share your credential or get vouched to reach Verified status.</div>
     </div>
 
     <!-- Identity card — compact -->
@@ -1089,7 +1089,7 @@ function beginRecording() {
     // Phased recording: speak phrase (6s) then show fingers sequentially (2.5s each)
     const digits = challengeData?.digits || [];
     const SPEAK_DURATION = 6;
-    const FINGER_DURATION = 2.5;
+    const FINGER_DURATION = 3;
     const totalDuration = SPEAK_DURATION + (digits.length * FINGER_DURATION);
     const totalSeconds = Math.ceil(totalDuration);
 
@@ -1114,7 +1114,7 @@ function beginRecording() {
             const digitIndex = Math.min(Math.floor(fingerElapsed / FINGER_DURATION), digits.length - 1);
             const digit = digits[digitIndex];
             const step = digitIndex + 1;
-            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SHOW FINGERS (' + step + ' of ' + digits.length + ')</span><span style="font-size:52px;font-weight:700;line-height:1.2;display:block">' + digit + '</span><span style="font-size:12px;opacity:0.5">Hold up ' + digit + ' finger' + (digit !== 1 ? 's' : '') + ' near your face</span>';
+            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SHOW FINGERS (' + step + ' of ' + digits.length + ')</span><span style="font-size:52px;font-weight:700;line-height:1.2;display:block">' + digit + '</span><span style="font-size:12px;opacity:0.5">Hold up ' + digit + ' finger' + (digit !== 1 ? 's' : '') + ' 2014 keep face visible</span>';
         }
     }
     updatePhasePrompt(0);
@@ -1527,14 +1527,16 @@ function showSuccess() {
     const bio = r.biometric_verification;
 
     document.getElementById('successName').textContent = d.name;
-    document.getElementById('successOrg').textContent = [d.role, d.org].filter(Boolean).join(' · ') || 'Verified Human';
-    document.getElementById('successScore').textContent = `Trust Score: ${bio.overall_score} · ${bio.trust_level}`;
+    document.getElementById('successOrg').textContent = [d.role, d.org].filter(Boolean).join(' · ') || 'Authenticated Human';
+    // Map trust level to state label
+    const trustLabel = {'high': 'authenticated', 'medium': 'partial', 'low': 'low confidence'}[bio.trust_level] || bio.trust_level;
+    document.getElementById('successScore').textContent = `Trust Score: ${bio.overall_score} · ${trustLabel}`;
 
     // Update header based on pass/fail
     if (!r.authenticated) {
-        document.getElementById('successEyebrow').textContent = 'Partial Verification';
+        document.getElementById('successEyebrow').textContent = 'PARTIAL AUTHENTICATION';
         document.getElementById('successEyebrow').style.color = 'var(--warning)';
-        document.getElementById('successTitle').textContent = 'Authority Chain Minted (Partial)';
+        document.getElementById('successTitle').textContent = 'Partially Authenticated';
     }
 
     // Verification method badge
