@@ -181,14 +181,14 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
 /* AV check pills */
 .av-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: clamp(11px, 1.2vw, 12px); color: var(--text-secondary); transition: border-color 0.3s, background 0.3s; }
-.av-pill.good { border-color: var(--success); background: rgba(63,185,80,0.08); }
-.av-pill.good .av-pill-icon { color: var(--success); }
-.av-pill.warn { border-color: var(--warning); background: rgba(210,153,34,0.08); }
-.av-pill.warn .av-pill-icon { color: var(--warning); }
-.av-pill.bad { border-color: var(--error); background: rgba(248,81,73,0.08); }
-.av-pill.bad .av-pill-icon { color: var(--error); }
-.av-pill-icon { font-size: 12px; }
-.av-pill-value { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
+.av-pill.good { border-color: var(--success); background: rgba(63,185,80,0.08); color: var(--success); }
+.av-pill.warn { border-color: var(--warning); background: rgba(210,153,34,0.08); color: var(--warning); }
+.av-pill.bad { border-color: var(--error); background: rgba(248,81,73,0.08); color: var(--error); }
+.av-pill-icon { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+.av-pill-icon svg { width: 14px; height: 14px; }
+.av-pill-value { font-family: var(--mono); font-size: 10px; opacity: 0.7; }
+@keyframes av-spin { to { transform: rotate(360deg); } }
+.av-pill-icon.spinning svg { animation: av-spin 1s linear infinite; }
 
 /* Under the Hood engine detail */
 .hood-section { margin-bottom: clamp(6px, 1vh, 10px); }
@@ -353,10 +353,13 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div id="preRecordChecklist" style="display:none; margin-top: clamp(6px, 1vh, 10px);">
         <!-- Mic test — prominent call to action -->
         <div id="avAudioBar" style="display:none; margin-bottom: 8px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
-            <div id="avMicPrompt" style="font-size: clamp(12px, 1.4vw, 14px); color: var(--text-primary); font-weight: 500; margin-bottom: 6px;">🎤 Speak now to test your microphone</div>
+            <div id="avMicPrompt" style="display: flex; align-items: center; gap: 8px; font-size: clamp(12px, 1.4vw, 14px); color: var(--text-primary); font-weight: 500; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span id="avMicPromptText">Speak now to test your microphone</span>
+            </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
-                    <div id="avAudioLevel" style="height: 100%; width: 0%; background: var(--success); border-radius: 5px; transition: width 75ms, background 150ms;"></div>
+                <div style="flex: 1; height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden;">
+                    <div id="avAudioLevel" style="height: 100%; width: 0%; background: var(--success); border-radius: 6px; transition: width 75ms;"></div>
                 </div>
                 <span id="avAudioPct" style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); min-width: 30px; text-align: right;">0%</span>
             </div>
@@ -364,9 +367,9 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
         <!-- Status pills — horizontal row -->
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <div id="avPillFace" class="av-pill"><span id="avFaceIcon" class="av-pill-icon">⏳</span><span id="avFaceLabel">Face</span></div>
-            <div id="avPillLight" class="av-pill"><span id="avLightIcon" class="av-pill-icon">⏳</span><span id="avLightLabel">Light</span><span id="avLuxValue" class="av-pill-value"></span></div>
-            <div id="avPillMic" class="av-pill"><span id="avMicIcon" class="av-pill-icon">⏳</span><span id="avMicLabel">Mic</span></div>
+            <div id="avPillFace" class="av-pill"><span id="avFaceIcon" class="av-pill-icon spinning"></span><span id="avFaceLabel">Face</span></div>
+            <div id="avPillLight" class="av-pill"><span id="avLightIcon" class="av-pill-icon spinning"></span><span id="avLightLabel">Light</span><span id="avLuxValue" class="av-pill-value"></span></div>
+            <div id="avPillMic" class="av-pill"><span id="avMicIcon" class="av-pill-icon spinning"></span><span id="avMicLabel">Mic</span></div>
         </div>
     </div>
     <div style="text-align: center; margin-top: 16px;">
@@ -778,6 +781,11 @@ let avAnalyser = null;
 let avChecks = { face: false, light: false, mic: false };
 
 function startAVChecks() {
+    // Initialize pill icons with spinners
+    ['avFaceIcon', 'avLightIcon', 'avMicIcon'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = AV_ICONS.spinner; el.classList.add('spinning'); }
+    });
     // Set up audio analyser
     try {
         avAudioCtx = new AudioContext();
@@ -812,16 +820,16 @@ function startAVChecks() {
             document.getElementById('avLuxValue').textContent = avgBright;
 
             if (avgBright < 50) {
-                setAVStatus('light', '✗', 'Too dark — add more light', 'var(--error)');
+                setAVStatus('light', 'bad', 'Too dark');
                 avChecks.light = false;
             } else if (avgBright < 80) {
-                setAVStatus('light', '~', 'Could be brighter', 'var(--warning)');
+                setAVStatus('light', 'warn', 'Dim');
                 avChecks.light = true; // Acceptable
             } else if (avgBright > 220) {
-                setAVStatus('light', '~', 'Too bright — reduce backlight', 'var(--warning)');
+                setAVStatus('light', 'warn', 'Bright');
                 avChecks.light = false;
             } else {
-                setAVStatus('light', '✓', 'Lighting good', 'var(--success)');
+                setAVStatus('light', 'good', 'Good');
                 avChecks.light = true;
             }
 
@@ -839,10 +847,10 @@ function startAVChecks() {
             }
             const skinRatio = skinPixels / total;
             if (skinRatio > 0.3) {
-                setAVStatus('face', '✓', 'Face detected', 'var(--success)');
+                setAVStatus('face', 'good', 'Detected');
                 avChecks.face = true;
             } else {
-                setAVStatus('face', '⏳', 'Position face in oval', 'var(--text-quaternary)');
+                setAVStatus('face', 'checking', 'Scanning');
                 avChecks.face = false;
             }
         } catch (e) { /* canvas errors are non-fatal */ }
@@ -867,7 +875,7 @@ function startAVChecks() {
             else { bar.style.background = 'var(--text-quaternary)'; }
 
             if (level > 5) {
-                setAVStatus('mic', '✓', 'Microphone working', 'var(--success)');
+                setAVStatus('mic', 'good', 'Working');
                 avChecks.mic = true;
             }
         }
@@ -880,21 +888,30 @@ function startAVChecks() {
     avCheckFrame = requestAnimationFrame(runAVFrame);
 }
 
-function setAVStatus(check, icon, label, color) {
+// SVG icons (from folioAI — clean, professional, no emoji)
+const AV_ICONS = {
+    spinner: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>',
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+};
+
+function setAVStatus(check, status, label) {
     const pillMap = { face: 'avPillFace', light: 'avPillLight', mic: 'avPillMic' };
     const iconMap = { face: 'avFaceIcon', light: 'avLightIcon', mic: 'avMicIcon' };
     const labelMap = { face: 'avFaceLabel', light: 'avLightLabel', mic: 'avMicLabel' };
     const pill = document.getElementById(pillMap[check]);
     const iconEl = document.getElementById(iconMap[check]);
     const labelEl = document.getElementById(labelMap[check]);
-    if (iconEl) { iconEl.textContent = icon; }
-    if (labelEl) { labelEl.textContent = label; }
-    // Set pill class based on status
+    if (labelEl) labelEl.textContent = label;
+    // Set icon and pill class
     if (pill) {
         pill.classList.remove('good', 'warn', 'bad');
-        if (icon === '✓') pill.classList.add('good');
-        else if (icon === '~' || icon === '⚠') pill.classList.add('warn');
-        else if (icon === '✗') pill.classList.add('bad');
+        if (status === 'good') { pill.classList.add('good'); iconEl.innerHTML = AV_ICONS.check; iconEl.classList.remove('spinning'); }
+        else if (status === 'warn') { pill.classList.add('warn'); iconEl.innerHTML = AV_ICONS.warn; iconEl.classList.remove('spinning'); }
+        else if (status === 'bad') { pill.classList.add('bad'); iconEl.innerHTML = AV_ICONS.x; iconEl.classList.remove('spinning'); }
+        else { iconEl.innerHTML = AV_ICONS.spinner; iconEl.classList.add('spinning'); }
     }
 }
 
@@ -903,8 +920,12 @@ let micWaitStart = 0;
 function updateMicTips() {
     if (avChecks.mic) {
         // Mic working — update prompt
-        document.getElementById('avMicPrompt').textContent = '✓ Microphone detected';
-        document.getElementById('avMicPrompt').style.color = 'var(--success)';
+        const prompt = document.getElementById('avMicPrompt');
+        const promptText = document.getElementById('avMicPromptText');
+        if (promptText) promptText.textContent = 'Microphone detected';
+        // Change icon to green
+        const svg = prompt?.querySelector('svg');
+        if (svg) svg.setAttribute('stroke', 'var(--success)');
         document.getElementById('avMicTip').style.display = 'none';
         return;
     }
