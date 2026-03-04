@@ -353,7 +353,8 @@ function getRoleLabel() {
 
 // Pre-fill from URL params
 const params = new URLSearchParams(window.location.search);
-const email = params.get('email') || params.get('from') || 'rob@violetshores.com';
+let email = params.get('email') || params.get('from') || 'rob@violetshores.com';
+if (email.endsWith('@violetshores.co')) email = email.replace('@violetshores.co', '@violetshores.com');
 if (email) document.getElementById('ownerEmail').value = email;
 document.getElementById('chainHumanName').textContent = email || 'Verify first';
 

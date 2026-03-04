@@ -88,7 +88,9 @@ const API = 'https://vac-system-production.up.railway.app';
 const params = new URLSearchParams(location.search);
 const sessionParam = params.get('session');
 const groupParam = params.get('group');
-const emailParam = params.get('email') || 'rob@violetshores.com';
+let emailParam = params.get('email') || 'rob@violetshores.com';
+// Auto-correct common typo
+if (emailParam.endsWith('@violetshores.co')) emailParam = emailParam.replace('@violetshores.co', '@violetshores.com');
 
 // Demo scenarios — strategically chosen for investor pitch
 const SCENARIOS = {
