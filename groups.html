@@ -456,6 +456,9 @@ async function loadGroup(gid) {
     try {
         const g = await(await fetch(API+'/v1/groups/'+gid)).json();
         currentGroup = g;
+        // Match group to scenario for session defaults
+        const match = Object.entries(SCENARIOS).find(([k,s]) => s.group_name === g.name);
+        if (match) activeScenario = match[0];
         let sessions = [];
         try { sessions = (await(await fetch(API+'/v1/groups/sessions?group_id='+gid)).json()).sessions||[]; } catch(e){}
         renderGroupDetail(g, sessions);
@@ -491,7 +494,7 @@ function showStartSession() {
     const s = SCENARIOS[activeScenario] || {};
     const defProp = s.default_proposal || 'Approve budget allocation';
     const defDesc = s.default_description || 'Describe the proposal for committee review.';
-    document.getElementById('sessionForm').innerHTML = '<div class="card animate"><div class="card-body"><div class="card-header">Start Governance Session</div><div class="form-group"><label class="form-label">Proposal</label><input id="sessAction" value="'+defProp.replace(/"/g,'&quot;')+'"></div><div class="form-group"><label class="form-label">Description</label><textarea id="sessDesc">'+defDesc+'</textarea></div><div class="form-row"><div class="form-group"><label class="form-label">Voting Window (minutes)</label><select id="sessTimeout" class="form-input" style="cursor:pointer;"><option value="15">15 min</option><option value="30">30 min</option><option value="60" selected>1 hour</option><option value="1440">24 hours</option><option value="10080">7 days</option></select></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="startSession()">Start Session</button><button class="btn" style="border-color:var(--border);color:var(--text-tertiary)" onclick="document.getElementById(\'sessionForm\').innerHTML=\'\'">Cancel</button></div></div></div>';
+    document.getElementById('sessionForm').innerHTML = '<div class="card animate"><div class="card-body"><div class="card-header">Start Governance Session</div><div class="form-group"><label class="form-label">Proposal</label><textarea id="sessAction" rows="2" style="resize:vertical;">'+defProp+'</textarea></div><div class="form-group"><label class="form-label">Description</label><textarea id="sessDesc">'+defDesc+'</textarea></div><div class="form-row"><div class="form-group"><label class="form-label">Voting Window (minutes)</label><select id="sessTimeout" class="form-input" style="cursor:pointer;"><option value="15">15 min</option><option value="30">30 min</option><option value="60" selected>1 hour</option><option value="1440">24 hours</option><option value="10080">7 days</option></select></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="startSession()">Start Session</button><button class="btn" style="border-color:var(--border);color:var(--text-tertiary)" onclick="document.getElementById(\'sessionForm\').innerHTML=\'\'">Cancel</button></div></div></div>';
 }
 
 async function startSession() {
