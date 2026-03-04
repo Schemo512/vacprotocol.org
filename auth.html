@@ -558,6 +558,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 
     <!-- Proof section -->
 
+    <!-- Enter full app -->
+    <div style="margin-top:20px;text-align:center;">
+        <a id="enterAppBtn" href="#" onclick="enterApp()" style="display:inline-block;background:var(--purple);color:white;font-family:var(--mono);font-size:13px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;cursor:pointer;">Enter VAC Protocol →</a>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:8px;">Messages · Agents · Governance</div>
+    </div>
+
     <!-- Share card -->
     <!-- Share card div below -->
     <div class="share-card" style="border-color:var(--teal);border-width:1.5px">
@@ -1894,6 +1900,11 @@ function showSuccess() {
 }
 
 // Share actions
+function enterApp() {
+    const email = userData().email || new URLSearchParams(window.location.search).get('email') || '';
+    window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#messages';
+}
+
 function copyShareUrl() {
     const url = authResult?.share_url;
     if (!url) return;
@@ -2137,46 +2148,31 @@ setTimeout(checkScroll, 200);
 const _origGoToStep = goToStep;
 goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
 
-// Restore verified state on refresh
+// Restore verified state on refresh — redirect to full app
 (function() {
     const p = new URLSearchParams(window.location.search);
     const email = p.get('email');
     
-    // Case 1: Returning from completed auth (verified=true in URL)
-    // Case 2: Just has email param — check if they're verified
-    if (email) {
+    if (email && p.get('verified') === 'true') {
+        // Already verified — go straight to the full app
+        window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify';
+        return;
+    }
+    
+    if (email && !p.get('verified')) {
+        // Has email but not verified flag — check backend
         fetch(API_BASE + '/v1/trust-profile/' + encodeURIComponent(email))
         .then(r => r.json())
         .then(d => {
             const hasVouches = d.vouches?.received?.length > 0;
             const hasAuth = d.authorizations?.authorized_me?.length > 0;
             const hasTrust = d.trust_score?.score > 0;
-            const hasTokens = d.token_count > 0;
-            const isVerified = p.get('verified') === 'true';
-            
-            if (hasTokens || hasVouches || hasAuth || hasTrust || d.verified || isVerified) {
-                document.getElementById('inputName').value = p.get('name') || email.split('@')[0];
-                document.getElementById('inputEmail').value = email;
-                goToStep(4);
-                const successName = document.getElementById('successName');
-                if (successName) successName.textContent = email.split('@')[0];
-                const successEmail = document.getElementById('successEmail');
-                if (successEmail) successEmail.textContent = email;
-                // Ensure URL has verified flag for future refreshes
-                if (!isVerified) {
-                    const url = new URL(window.location);
-                    url.searchParams.set('verified', 'true');
-                    window.history.replaceState({}, '', url);
-                }
+            if (hasVouches || hasAuth || hasTrust || d.verified) {
+                // Verified — redirect to app
+                window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify';
             }
         })
-        .catch(() => {
-            if (p.get('verified') === 'true') {
-                document.getElementById('inputName').value = email.split('@')[0];
-                document.getElementById('inputEmail').value = email;
-                goToStep(4);
-            }
-        });
+        .catch(() => {});
     }
 })();
 </script>
