@@ -235,8 +235,22 @@ function showLanding() {
             <div id="locationMapPreview"></div>
         </div>
         <div id="presenceNote" style="display:none;font-family:var(--mono);font-size:10px;color:var(--teal);margin:8px 0;padding:6px 10px;background:var(--teal-bg);border-radius:4px;">
-            ⊡ Geolocation required: All voters must be within the specified radius of the meeting point. Browser location API verifies physical co-presence.
+            ⊡ Geolocation required: All voters must be within the specified radius of the meeting point.
         </div>
+        
+        <div class="form-group" style="margin-top:12px;">
+            <label class="form-label">Chair Governance Rules</label>
+            <div style="padding:10px;background:var(--surface-raised);border-radius:6px;display:flex;flex-direction:column;gap:8px;">
+                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;">
+                    <input type="checkbox" id="cfgProxy" onchange="updateChairConfig()"> Allow proxy voting
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;">
+                    <input type="checkbox" id="cfgVoteChange" checked onchange="updateChairConfig()"> Allow vote changes before quorum
+                </label>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:2px;" id="cfgNote">These rules are set by the Chair at group creation and cannot be weakened after. Monotonic narrowing applies.</div>
+            </div>
+        </div>
+        
         <button class="btn" onclick="createGroup()" style="margin-top:8px;">Create Governance Group</button>
     </div></div>
     
@@ -285,6 +299,14 @@ function applyScenario(key) {
     }
     renderScenarioChips();
     renderModelChips();
+    
+    // Set chair config from scenario
+    const proxyBox = document.getElementById('cfgProxy');
+    if (proxyBox) {
+        const isPresence = MODELS[s.model]?.presence;
+        proxyBox.checked = !isPresence; // No proxy for presence-required models
+        proxyBox.disabled = isPresence;
+    }
 }
 
 function updateLocationFromSelect() {
@@ -311,6 +333,19 @@ function updateLocationFromSelect() {
     // Show map preview
     if (preview) {
         preview.innerHTML = renderPresenceMap({lat, lng, name}, radius);
+    }
+}
+
+function updateChairConfig() {
+    const proxy = document.getElementById('cfgProxy');
+    const presence = MODELS[selectedModel]?.presence;
+    const note = document.getElementById('cfgNote');
+    
+    if (presence && proxy?.checked) {
+        proxy.checked = false;
+        if (note) note.textContent = '⊘ Proxy voting is blocked when geolocation is required. Physical presence cannot be delegated.';
+        note.style.color = 'var(--warning)';
+        setTimeout(() => { note.textContent = 'These rules are set by the Chair at group creation and cannot be weakened after. Monotonic narrowing applies.'; note.style.color = ''; }, 3000);
     }
 }
 
@@ -341,7 +376,9 @@ async function createGroup() {
     const name = document.getElementById('grpName').value.trim();
     const members = document.getElementById('grpMembers').value.trim().split('\n').map(e=>e.trim()).filter(Boolean);
     if (!name || members.length < 2) { alert('Need name + 2 members'); return; }
-    const body = { name, description: document.getElementById('grpDesc').value.trim(), members, quorum_model: selectedModel, require_presence: MODELS[selectedModel].presence, presence_radius_km: parseFloat(document.getElementById('grpRadius')?.value)||0.5 };
+    const allowProxy = document.getElementById('cfgProxy')?.checked || false;
+    const allowVoteChange = document.getElementById('cfgVoteChange')?.checked || true;
+    const body = { name, description: document.getElementById('grpDesc').value.trim(), members, quorum_model: selectedModel, require_presence: MODELS[selectedModel].presence, presence_radius_km: parseFloat(document.getElementById('grpRadius')?.value)||0.5, allow_proxy: allowProxy, allow_vote_change: allowVoteChange };
     if (MODELS[selectedModel].presence) {
         const sel = document.getElementById('grpLocationSelect');
         const opt = sel?.options[sel.selectedIndex];
@@ -561,7 +598,7 @@ function renderSession(group, session) {
                 waitingMembers.forEach(wm => {
                     const wname = (wm.name || wm.email.split('@')[0]).replace(/\b\w/g, c=>c.toUpperCase());
                     const wemail = wm.email || '';
-                    const allowProxy = !group.require_presence; // Presence-required = no proxy
+                    const allowProxy = group.allow_proxy || false;
                     h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">';
                     h += '<div class="member-dot pending"></div>';
                     h += '<div style="flex:1"><div style="font-size:12px;color:var(--text-primary);">'+wname+'</div><div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">'+wemail+'</div></div>';
@@ -569,12 +606,12 @@ function renderSession(group, session) {
                         h += '<button class="btn success" onclick="proxyVote(\''+wemail+'\',\'approve\')" style="font-size:9px;padding:3px 8px;">Proxy Approve</button>';
                         h += '<button class="btn danger" onclick="proxyVote(\''+wemail+'\',\'deny\')" style="font-size:9px;padding:3px 8px;">Deny</button>';
                     } else {
-                        h += '<span style="font-family:var(--mono);font-size:9px;color:var(--warning);">⊘ Presence required — no proxy</span>';
+                        h += '<span style="font-family:var(--mono);font-size:9px;color:var(--warning);">⊘ Proxy not permitted by Chair</span>';
                     }
                     h += '</div>';
                 });
                 
-                if (!group.require_presence) {
+                if (group.allow_proxy) {
                     h += '<div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">';
                     h += '<button class="btn success" onclick="simulateVotes(\'approve\')" style="font-size:10px;">All Proxies Approve</button>';
                     h += '<button class="btn danger" onclick="simulateVotes(\'deny\')" style="font-size:10px;">All Proxies Deny</button>';
