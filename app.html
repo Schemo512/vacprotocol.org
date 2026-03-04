@@ -3654,20 +3654,24 @@ if (email) document.getElementById('ownerEmail').value = email;
 document.getElementById('chainHumanName').textContent = email || 'Verify first';
 
 async function runTask() {
+    console.log("[AGENT] runTask called");
     await createAndRun(false);
 }
 
 async function runStepByStep() {
+    console.log("[AGENT] runStepByStep called");
     await createAndRun(true);
 }
 
 async function createAndRun(stepMode) {
+    console.log('[AGENT] createAndRun called, stepMode:', stepMode);
     const ownerEmail = document.getElementById('ownerEmail').value.trim();
     const prompt = document.getElementById('taskPrompt').value.trim();
     let tokenBudget = parseInt(document.getElementById('tokenBudget').value) || 4000;
     let spendCap = parseFloat(document.getElementById('spendCap').value) || 0.08;
     let maxCalls = parseInt(document.getElementById('maxCalls').value) || 3;
 
+    console.log('[AGENT] ownerEmail:', ownerEmail, 'prompt length:', prompt.length);
     if (!ownerEmail || !prompt) { alert('Enter your email and a task prompt.'); return; }
     
     // Enforce human ceiling (monotonic narrowing)
