@@ -743,7 +743,7 @@ function handleHash() {
 const urlParams = new URLSearchParams(window.location.search);
 const sharedEmail = urlParams.get('email') || '';
 if (sharedEmail) {
-    document.getElementById('spaUser').innerHTML = '<span>&#x25C9;</span> ' + sharedEmail;
+    document.getElementById('spaUser').innerHTML = '<span>&#x25C9;</span> ' + sharedEmail + ' <span style="color:var(--text-quaternary);margin-left:4px;">VERIFIED ROOT</span>';
 }
 
 // ============================================================
