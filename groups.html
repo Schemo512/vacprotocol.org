@@ -76,7 +76,10 @@ textarea { min-height: 60px; resize: vertical; }
 </head>
 <body>
 <div class="nav"><div class="nav-inner">
-    <a href="/" class="nav-brand">\u2B21 VAC <span>GROUPS</span></a>
+    <a href="/" class="nav-brand">
+        <svg width="18" height="18" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
+        VAC <span>PROTOCOL</span>
+    </a>
     <div class="nav-status" id="navStatus">GOVERNANCE</div>
 </div></div>
 <div class="page" id="content"></div>
@@ -85,7 +88,45 @@ const API = 'https://vac-system-production.up.railway.app';
 const params = new URLSearchParams(location.search);
 const sessionParam = params.get('session');
 const groupParam = params.get('group');
-const emailParam = params.get('email') || '';
+const emailParam = params.get('email') || 'rob@violetshores.com';
+
+// Demo scenarios — strategically chosen for investor pitch
+const SCENARIOS = {
+    gov_committee: {
+        name: 'US Government Committee',
+        desc: 'Defense budget authorization requiring physical co-presence of cleared officials',
+        group_name: 'DoD AI Budget Committee',
+        group_desc: 'Authorized officials must be physically co-present in the Pentagon SCIF to approve AI agent spending above $10K',
+        members: ['director@defense.gov', 'analyst@nsa.gov', 'oversight@congress.gov', 'rob@violetshores.com'],
+        model: 'cultural_hui',
+        location: 'Pentagon, Arlington VA',
+        location_coords: { lat: 38.8719, lng: -77.0563 },
+        radius: 0.3,
+    },
+    maori_hui: {
+        name: 'Māori Land Trust Hui',
+        desc: 'Iwi governance requiring kanohi ki te kanohi (face to face) for land decisions',
+        group_name: 'Te Rūnanga o Ngāi Tahu',
+        group_desc: 'Trustees must gather kanohi ki te kanohi (face to face) at the marae. Digital proxies not accepted for whenua decisions.',
+        members: ['kaiwhakahaere@ngaitahu.iwi.nz', 'kaumatua@ngaitahu.iwi.nz', 'rangatahi@ngaitahu.iwi.nz', 'rob@violetshores.com'],
+        model: 'cultural_hui',
+        location: 'Ngā Hau e Whā Marae, Christchurch',
+        location_coords: { lat: -43.5321, lng: 172.6362 },
+        radius: 0.2,
+    },
+    board_vote: {
+        name: 'Corporate Board Vote',
+        desc: 'Board of directors authorizing an AI agent with a $50K spending card',
+        group_name: 'Violet Shores Board',
+        group_desc: 'Board members vote to authorize AI research agent. Supermajority required.',
+        members: ['rob@violetshores.com', 'investor@vc.fund', 'advisor@techcorp.com', 'legal@counsel.io'],
+        model: 'supermajority',
+        location: null,
+        location_coords: null,
+        radius: 0,
+    },
+};
+let activeScenario = 'gov_committee';
 const MODELS = {
     majority: { name:'Majority', desc:'More than 50% of verified members must approve.', icon:'\u{1F5F3}\uFE0F', threshold:50, presence:false },
     supermajority: { name:'Supermajority', desc:'At least 67% of verified members must approve.', icon:'\u2696\uFE0F', threshold:67, presence:false },
@@ -105,34 +146,87 @@ function showLanding() {
     document.getElementById('content').innerHTML = `
     <div class="hero">
         <div class="hero-eyebrow">Claims 168\u2013241 \u00B7 Collective Governance</div>
-        <div class="hero-title">Groups & Governance</div>
-        <div class="hero-sub">Verified identity + physical co-presence. Decisions enforced by math, not minutes.</div>
+        <div class="hero-title">Group Governance</div>
+        <div class="hero-sub">What if an AI agent needed board approval before getting its spending card? Quorum-verified delegation with optional geolocation-enforced presence.</div>
     </div>
+    
+    <!-- Scenario Selector -->
+    <div class="card"><div class="card-body">
+        <div class="card-header">Demo Scenario</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:10px;padding:6px 10px;background:var(--surface-raised);border-radius:4px;">
+            Same protocol, different governance models. The math adapts to any culture, jurisdiction, or org structure.
+        </div>
+        <div class="model-chips" id="scenarioChips"></div>
+        <div class="model-desc" id="scenarioDesc"></div>
+    </div></div>
+    
     <div id="groupList"></div>
     <div class="section-title">Create Group</div>
     <div class="card"><div class="card-body">
-        <div class="form-group"><label class="form-label">Group Name</label><input id="grpName" value="VAC Protocol Council"></div>
-        <div class="form-group"><label class="form-label">Description</label><input id="grpDesc" value="Core governance body for VAC Protocol decisions"></div>
-        <div class="form-group"><label class="form-label">Members (email, one per line)</label><textarea id="grpMembers" rows="4">rob@violetshores.com\nrobzag@gmail.com\njason@calacanis.com\nshan@folioai.com</textarea></div>
+        <div class="form-group"><label class="form-label">Group Name</label><input id="grpName" value="DoD AI Budget Committee"></div>
+        <div class="form-group"><label class="form-label">Description</label><input id="grpDesc" value="Authorized officials must be physically co-present in the Pentagon SCIF to approve AI agent spending above $10K"></div>
+        <div class="form-group"><label class="form-label">Members (email, one per line)</label><textarea id="grpMembers" rows="4">director@defense.gov\nanalyst@nsa.gov\noversight@congress.gov\nrob@violetshores.com</textarea></div>
         <div class="card-header" style="margin-top:16px;">Quorum Model</div>
         <div class="model-chips" id="modelChips"></div>
         <div class="model-desc" id="modelDesc"></div>
         <div class="form-row" id="presenceRow" style="display:none;">
-            <div class="form-group"><label class="form-label">Meeting Location</label><input id="grpLocation" value="Sydney CBD"></div>
-            <div class="form-group"><label class="form-label">Radius (km)</label><input id="grpRadius" type="number" value="0.5" step="0.1"></div>
+            <div class="form-group"><label class="form-label">Meeting Location</label><input id="grpLocation" value="Pentagon, Arlington VA"></div>
+            <div class="form-group"><label class="form-label">Radius (km)</label><input id="grpRadius" type="number" value="0.3" step="0.1"></div>
         </div>
-        <button class="btn" onclick="createGroup()" style="margin-top:8px;">Create Group</button>
-    </div></div>`;
+        <div id="presenceNote" style="display:none;font-family:var(--mono);font-size:10px;color:var(--teal);margin:8px 0;padding:6px 10px;background:var(--teal-bg);border-radius:4px;">
+            ⊡ Geolocation required: All voters must be within the specified radius of the meeting point. Browser location API verifies physical co-presence.
+        </div>
+        <button class="btn" onclick="createGroup()" style="margin-top:8px;">Create Governance Group</button>
+    </div></div>
+    
+    <!-- Bridge to Agents -->
+    <div class="card" style="border-color:var(--purple-border);background:var(--purple-bg);text-align:center;margin-top:16px;">
+        <div class="card-body">
+            <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--purple);margin-bottom:6px;">FROM INDIVIDUAL TO COLLECTIVE · CLAIMS 39\u2013241</div>
+            <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px;">Group approves → Agent gets its spending card → Same math, same chain</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">The agent demo shows individual delegation. This page shows what happens when the ROOT is a group instead of a single human.</div>
+        </div>
+    </div>`;
+    renderScenarioChips();
+    renderModelChips();
+    loadGroupList();
+}
+
+function renderScenarioChips() {
+    const el = document.getElementById('scenarioChips');
+    el.innerHTML = Object.entries(SCENARIOS).map(([k,v]) =>
+        '<div class="model-chip '+(k===activeScenario?'active':'')+'" onclick="applyScenario(\''+k+'\')">'+v.name+'</div>'
+    ).join('');
+    document.getElementById('scenarioDesc').textContent = SCENARIOS[activeScenario].desc;
+}
+
+function applyScenario(key) {
+    activeScenario = key;
+    const s = SCENARIOS[key];
+    document.getElementById('grpName').value = s.group_name;
+    document.getElementById('grpDesc').value = s.group_desc;
+    document.getElementById('grpMembers').value = s.members.join('\n');
+    selectedModel = s.model;
+    if (s.location) {
+        document.getElementById('grpLocation').value = s.location;
+        document.getElementById('grpRadius').value = s.radius;
+    }
+    renderScenarioChips();
+    renderModelChips();
+}
     renderModelChips();
     loadGroupList();
 }
 
 function renderModelChips() {
     document.getElementById('modelChips').innerHTML = Object.entries(MODELS).map(([k,v]) =>
-        '<div class="model-chip '+(k===selectedModel?'active':'')+'" onclick="selectModel(\''+k+'\')">'+v.icon+' '+v.name+'</div>'
+        '<div class="model-chip '+(k===selectedModel?'active':'')+'" onclick="selectModel(\''+k+'\')">' +v.name+'</div>'
     ).join('');
     document.getElementById('modelDesc').textContent = MODELS[selectedModel].desc;
-    document.getElementById('presenceRow').style.display = MODELS[selectedModel].presence ? 'grid' : 'none';
+    const presRow = document.getElementById('presenceRow');
+    const presNote = document.getElementById('presenceNote');
+    if (presRow) presRow.style.display = MODELS[selectedModel].presence ? 'grid' : 'none';
+    if (presNote) presNote.style.display = MODELS[selectedModel].presence ? 'block' : 'none';
 }
 function selectModel(m) { selectedModel = m; renderModelChips(); }
 
