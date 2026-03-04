@@ -434,13 +434,15 @@ function renderSession(group, session) {
         }
         h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 12px;background:var(--surface-raised);border-radius:6px;">';
         h += '<div style="font-family:var(--mono);font-size:11px;">'+timerHtml+'</div>';
-        h += '<button class="btn danger" onclick="cancelSession()" style="font-size:10px;padding:4px 10px;">Cancel Session</button>';
+        h += '<span onclick="cancelSession()" style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);cursor:pointer;text-decoration:underline;">cancel session</span>';
         h += '</div>';
     } else if (session.status === 'cancelled') {
         h += '<div style="margin-top:8px;padding:8px 12px;background:var(--error-bg);border:1px solid var(--error-border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--error);">SESSION CANCELLED BY INITIATOR'+(session.cancel_reason && session.cancel_reason !== 'Cancelled by initiator' ?' — '+session.cancel_reason:'')+'</div>';
+        h += '<div style="margin-top:8px;text-align:center;"><a href="/groups?group='+session.group_id+'&email='+encodeURIComponent(emailParam)+'" class="btn" style="text-decoration:none;font-size:11px;">Back to Group — Start New Session</a></div>';
     } else if (session.status === 'expired') {
         const expMin = session.timeout_minutes || '?';
         h += '<div style="margin-top:8px;padding:8px 12px;background:var(--warning-bg);border:1px solid rgba(210,153,34,0.3);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--warning);">SESSION EXPIRED — voting window ('+expMin+' min) closed before quorum was reached. '+(session.votes||[]).length+' of '+(group.member_count||'?')+' members voted.</div>';
+        h += '<div style="margin-top:8px;text-align:center;"><a href="/groups?group='+session.group_id+'&email='+encodeURIComponent(emailParam)+'" class="btn" style="text-decoration:none;font-size:11px;">Back to Group — Start New Session</a></div>';
     }
     h += '</div>';
 
@@ -741,11 +743,13 @@ async function proxyVote(memberEmail, voteType) {
 
 async function cancelSession() {
     if (!currentSession) return;
-    const reason = prompt('Reason for cancellation (optional):') || 'Cancelled by initiator';
+    if (!confirm('Are you sure you want to cancel this session? All votes will be preserved but the session will be closed.')) return;
+    const reason = prompt('Reason for cancellation (optional):');
+    if (reason === null) return; // User clicked Cancel on prompt
     try {
         await fetch(API+'/v1/groups/session/'+currentSession.session_id+'/cancel', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ reason, cancelled_by: emailParam })
+            body: JSON.stringify({ reason: reason || 'Cancelled by initiator', cancelled_by: emailParam })
         });
         await loadSession(currentSession.session_id);
     } catch(e) { alert(e.message); }
