@@ -181,6 +181,11 @@ const SCENARIOS = {
 };
 let activeScenario = 'gov_committee';
 
+const GLYPHS = {
+    session: '◈', presence: '◉', approve: '⊕', deny: '⊗',
+    abstain: '⊘', pending: '◇', met: '◈', geofence: '⊡', info: 'ⓘ',
+};
+
 function fmtTime(iso) {
     if (!iso) return '';
     try {
