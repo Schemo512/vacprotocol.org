@@ -243,14 +243,14 @@ function showLanding() {
         
         <div class="form-group" style="margin-top:12px;">
             <label class="form-label">Chair Governance Rules</label>
-            <div style="padding:10px;background:var(--surface-raised);border-radius:6px;display:flex;flex-direction:column;gap:8px;">
-                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;">
-                    <input type="checkbox" id="cfgProxy" onchange="updateChairConfig()"> Allow proxy voting
+            <div style="padding:10px 12px;background:var(--surface-raised);border-radius:6px;">
+                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;margin-bottom:6px;">
+                    <input type="checkbox" id="cfgProxy" onchange="updateChairConfig()" style="width:14px;height:14px;accent-color:var(--purple);flex-shrink:0;"> <span>Allow proxy voting</span>
                 </label>
-                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;">
-                    <input type="checkbox" id="cfgVoteChange" checked onchange="updateChairConfig()"> Allow vote changes before quorum
+                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;margin-bottom:6px;">
+                    <input type="checkbox" id="cfgVoteChange" checked onchange="updateChairConfig()" style="width:14px;height:14px;accent-color:var(--purple);flex-shrink:0;"> <span>Allow vote changes before quorum</span>
                 </label>
-                <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:2px;" id="cfgNote">These rules are set by the Chair at group creation and cannot be weakened after. Monotonic narrowing applies.</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:4px;" id="cfgNote">Set by Chair at creation. Cannot be weakened after. Monotonic narrowing.</div>
             </div>
         </div>
         
@@ -639,7 +639,7 @@ function renderSession(group, session) {
             h += '<div class="card"><div class="card-body"><div class="card-header">Cast Your Vote</div><div class="form-group"><label class="form-label">Your Email</label><input id="voteEmail" value="'+emailParam+'"></div>';
             if (group.require_presence) {
                 h += '<div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:4px;display:flex;align-items:center;gap:8px;">';
-                h += '<label style="cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="demoLocationOverride" checked> Demo Mode: simulate presence at '+(group.presence_location?.name||'meeting point')+'</label>';
+                h += '<label style="cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="demoLocationOverride" checked style="width:14px;height:14px;accent-color:var(--teal);flex-shrink:0;"> Demo Mode: simulate presence at '+(group.presence_location?.name||'meeting point')+'</label>';
                 h += '</div>';
             }
             h += '<div class="vote-bar"><button class="btn success" onclick="submitVote(\'approve\')">\u2713 Approve</button><button class="btn danger" onclick="submitVote(\'deny\')">\u2717 Deny</button><button class="btn warn" onclick="submitVote(\'abstain\')">\u2014 Abstain</button></div></div></div>';
