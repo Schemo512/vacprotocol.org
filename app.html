@@ -1417,7 +1417,9 @@ function handleHash() {
 const urlParams=new URLSearchParams(window.location.search);
 const sharedEmail=urlParams.get('email')||'';
 if(sharedEmail) {
-    document.getElementById('spaUser').innerHTML='<span>&#x25C9;</span> '+sharedEmail.split('@')[0]+'<div style="font-size:8px;color:var(--success);letter-spacing:0.5px;">VERIFIED</div>';
+    const isRoot = sharedEmail.includes('rob@violetshores');
+    const label = isRoot ? 'VERIFIED ROOT' : 'VERIFIED';
+    document.getElementById('spaUser').innerHTML='<span>&#x25C9;</span> '+sharedEmail.split('@')[0]+'<div style="font-size:8px;color:var(--success);letter-spacing:0.5px;">'+label+'</div>';
 }
 
 // Auth
@@ -2951,7 +2953,14 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
     
     if (email && p.get('verified') === 'true') {
         // Already verified — go straight to the full app
-        if (typeof route === 'function') { /* already in SPA */ } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
+        if (typeof route === 'function') {
+            // In SPA: show verified screen directly
+            document.getElementById('inputName').value = email.split('@')[0];
+            document.getElementById('inputEmail').value = email;
+            goToStep(4);
+            const sn = document.getElementById('successName');
+            if (sn) sn.textContent = email.split('@')[0];
+        } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
         return;
     }
     
@@ -2965,7 +2974,13 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
             const hasTrust = d.trust_score?.score > 0;
             if (hasVouches || hasAuth || hasTrust || d.verified) {
                 // Verified — redirect to app
-                if (typeof route === 'function') { /* already in SPA */ } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
+                if (typeof route === 'function') {
+                    document.getElementById('inputName').value = email.split('@')[0];
+                    document.getElementById('inputEmail').value = email;
+                    goToStep(4);
+                    const sn2 = document.getElementById('successName');
+                    if (sn2) sn2.textContent = email.split('@')[0];
+                } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
             }
         })
         .catch(() => {});
