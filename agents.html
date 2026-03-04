@@ -198,10 +198,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         </div>
     </div>
 
-    <!-- Steps (appear one by one) -->
-    <div id="stepsContainer"></div>
-
-    <!-- Escalation (appears when budget exceeded) -->
+    <!-- Escalation (appears when budget exceeded — ABOVE steps for visibility) -->
     <div id="escalationContainer"></div>
 
     <!-- Loading -->
@@ -213,6 +210,9 @@ textarea.form-input { min-height: 80px; resize: vertical; }
             <span>Agent working — tokens flowing through delegation chain...</span>
         </div>
     </div>
+
+    <!-- Steps (appear one by one, newest first) -->
+    <div id="stepsContainer"></div>
 
     <!-- Footer -->
     <div class="footer">
@@ -448,6 +448,7 @@ function showComplete() {
     `;
     document.getElementById('escalationContainer').innerHTML = '';
     document.getElementById('escalationContainer').appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function approveEscalation() {
