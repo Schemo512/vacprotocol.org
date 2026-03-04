@@ -165,6 +165,7 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
         <a class="spa-tab" id="tab-verify" onclick="route('verify')" href="#verify"><span class="tab-dot verify"></span>Verify</a>
         <a class="spa-tab" id="tab-agents" onclick="route('agents')" href="#agents"><span class="tab-dot agents"></span>Agents</a>
         <a class="spa-tab" id="tab-governance" onclick="route('governance')" href="#governance"><span class="tab-dot govern"></span>Governance</a>
+        <a class="spa-tab" id="tab-admin" onclick="route('admin')" href="#admin" style="display:none;"><span class="tab-dot" style="background:var(--error);"></span>Admin</a>
     </div>
     <div class="spa-user" id="spaUser"></div>
 </nav>
@@ -710,6 +711,35 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
 <div class="page" id="content"></div>
 </section>
 
+<section class="tab-content" id="page-admin">
+<div style="max-width:600px;margin:40px auto;padding:0 20px;">
+<div style="font-family:var(--mono);font-size:11px;color:var(--error);letter-spacing:2px;margin-bottom:8px;">ADMIN CONTROLS</div>
+<div style="font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Data Management</div>
+<div style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);margin-bottom:20px;">Clear data for demo preparation. Auth tokens and vouches are preserved unless you select "Everything".</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;" id="adminButtons">
+<button onclick="adminReset('sessions')" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;color:var(--text-primary);font-family:var(--mono);font-size:12px;">
+<div style="font-weight:600;">Clear Sessions Only</div>
+<div style="font-size:10px;color:var(--text-quaternary);margin-top:2px;">Remove all voting sessions. Groups preserved.</div>
+</button>
+<button onclick="adminReset('groups')" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;color:var(--text-primary);font-family:var(--mono);font-size:12px;">
+<div style="font-weight:600;">Clear Groups + Sessions</div>
+<div style="font-size:10px;color:var(--text-quaternary);margin-top:2px;">Remove all governance groups and their sessions. Auth preserved.</div>
+</button>
+<button onclick="adminReset('all')" style="background:var(--surface);border:1px solid var(--error-border);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;color:var(--error);font-family:var(--mono);font-size:12px;">
+<div style="font-weight:600;">Clear Everything</div>
+<div style="font-size:10px;color:var(--text-quaternary);margin-top:2px;">Nuclear option. Clears groups, sessions, tokens, vouches, authorizations.</div>
+</button>
+</div>
+<div id="adminResult" style="margin-top:16px;font-family:var(--mono);font-size:11px;color:var(--text-quaternary);"></div>
+
+<div style="margin-top:32px;border-top:1px solid var(--border);padding-top:16px;">
+<div style="font-family:var(--mono);font-size:11px;color:var(--text-quaternary);letter-spacing:1px;margin-bottom:8px;">SYSTEM STATUS</div>
+<div id="adminHealth" style="font-family:var(--mono);font-size:11px;color:var(--text-tertiary);">Loading...</div>
+</div>
+</div>
+</section>
+
 <script>
 // ============================================================
 // SPA Router
@@ -727,15 +757,39 @@ function route(tab) {
     window.location.hash = tab;
     
     // Initialize tab content on first view
+    if (tab === 'admin' && typeof loadAdminHealth === 'function') {
+        loadAdminHealth();
+    }
     if (tab === 'governance' && typeof groupsInit === 'function' && !window._groupsInited) {
         window._groupsInited = true;
         groupsInit();
     }
 }
 
+async function adminReset(scope) {
+    if (!confirm('Clear ' + scope + '? This cannot be undone.')) return;
+    try {
+        const r = await fetch(API_BASE + '/v1/admin/reset?scope=' + scope + '&confirm=yes-clear-data', { method: 'POST' });
+        const d = await r.json();
+        document.getElementById('adminResult').innerHTML = '<span style="color:var(--success);">Cleared: ' + d.cleared.join(', ') + '</span>';
+        loadAdminHealth();
+    } catch(e) { document.getElementById('adminResult').innerHTML = '<span style="color:var(--error);">Error: ' + e.message + '</span>'; }
+}
+
+async function loadAdminHealth() {
+    try {
+        const d = await(await fetch(API_BASE + '/health')).json();
+        document.getElementById('adminHealth').innerHTML = 
+            'Groups: ' + (d.groups||0) + ' · Sessions: ' + (d.sessions||0) + 
+            ' · Tokens (memory): ' + d.vat_tokens_memory + 
+            ' · Tokens (SQLite): ' + d.persistent.tokens +
+            ' · Vouches: ' + d.persistent.vouches;
+    } catch(e) {}
+}
+
 function handleHash() {
     const hash = window.location.hash.replace('#', '') || 'verify';
-    const valid = ['verify', 'agents', 'governance'];
+    const valid = ['verify', 'agents', 'governance', 'admin'];
     route(valid.includes(hash) ? hash : 'verify');
 }
 
@@ -3521,6 +3575,10 @@ async function cancelSession() {
 // ============================================================
 window.addEventListener('hashchange', handleHash);
 handleHash();
+// Show admin tab if ?admin=true
+if (urlParams.get('admin') === 'true') {
+    document.getElementById('tab-admin').style.display = 'flex';
+}
 </script>
 </body>
 </html>
