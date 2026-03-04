@@ -49,6 +49,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-second
 .model-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
 .model-chip { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
 .model-chip:hover { border-color: var(--purple-border); color: var(--purple); }
+.chip-info { font-size: 9px; opacity: 0.5; margin-left: 2px; cursor: help; }
+.chip-info:hover { opacity: 1; }
+.chip-tooltip { position: absolute; top: calc(100% + 6px); left: 0; right: 0; min-width: 200px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-family: var(--mono); font-size: 9px; color: var(--text-secondary); line-height: 1.6; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: normal; }
 .model-chip.active { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); }
 .model-desc { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); padding: 8px 12px; background: var(--surface-raised); border-radius: 6px; margin-bottom: 12px; }
 .btn { font-family: var(--mono); font-size: 11px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; transition: all 0.15s; }
@@ -181,11 +184,11 @@ function renderPresenceMap(loc, radius) {
     return h;
 }
 const MODELS = {
-    majority: { name:'Majority', desc:'More than 50% of verified members must approve.', icon:'\u{1F5F3}\uFE0F', threshold:50, presence:false },
-    supermajority: { name:'Supermajority', desc:'At least 67% of verified members must approve.', icon:'\u2696\uFE0F', threshold:67, presence:false },
-    unanimous: { name:'Unanimous', desc:'Every member must verify and approve. One objection blocks.', icon:'\u{1F91D}', threshold:100, presence:false },
-    n_of_m: { name:'N-of-M', desc:'A specific number (N) of total members (M) must approve.', icon:'\u{1F522}', threshold:null, presence:false },
-    cultural_hui: { name:'Cultural Hui', desc:'Physical co-presence required. Supermajority of present members approve. Inspired by M\u0101ori hui \u2014 kanohi ki te kanohi.', icon:'\u{1F3DB}\uFE0F', threshold:67, presence:true },
+    majority: { name:'Majority', desc:'More than 50% of verified members must approve.', threshold:50, presence:false, info:'Threshold: >50% · Geo: No · Proxy: Chair decides · Vote change: Chair decides' },
+    supermajority: { name:'Supermajority', desc:'At least 67% of verified members must approve.', threshold:67, presence:false, info:'Threshold: ≥67% · Geo: No · Proxy: Chair decides · Vote change: Chair decides' },
+    unanimous: { name:'Unanimous', desc:'Every member must verify and approve. One objection blocks.', threshold:100, presence:false, info:'Threshold: 100% · Geo: No · Proxy: Chair decides · Vote change: Chair decides' },
+    n_of_m: { name:'N-of-M', desc:'A specific number (N) of total members (M) must approve.', threshold:null, presence:false, info:'Threshold: Custom · Geo: No · Proxy: Chair decides · Vote change: Chair decides' },
+    cultural_hui: { name:'Cultural Hui', desc:'Physical co-presence required. Supermajority of present members approve. Inspired by Māori hui — kanohi ki te kanohi.', threshold:67, presence:true, info:'Threshold: ≥67% · Geo: Required · Proxy: Blocked · Vote change: Chair decides' },
 };
 let currentGroup = null, currentSession = null, selectedModel = 'cultural_hui';
 
@@ -271,9 +274,11 @@ function showLanding() {
 
 function renderScenarioChips() {
     const el = document.getElementById('scenarioChips');
-    el.innerHTML = Object.entries(SCENARIOS).map(([k,v]) =>
-        '<div class="model-chip '+(k===activeScenario?'active':'')+'" onclick="applyScenario(\''+k+'\')">'+v.name+'</div>'
-    ).join('');
+    el.innerHTML = Object.entries(SCENARIOS).map(([k,v]) => {
+        const m = MODELS[v.model] || {};
+        const tip = (m.presence ? 'Geo: Required' : 'Geo: No') + ' \u00B7 ' + (m.presence ? 'Proxy: Blocked' : 'Proxy: Allowed') + ' \u00B7 Model: ' + (m.name||v.model);
+        return '<div class="model-chip '+(k===activeScenario?'active':'')+'" onclick="applyScenario(\''+k+'\')" title="'+tip+'">'+v.name+'</div>';
+    }).join('');
     document.getElementById('scenarioDesc').textContent = SCENARIOS[activeScenario].desc;
 }
 
@@ -351,13 +356,22 @@ function updateChairConfig() {
 
 function renderModelChips() {
     document.getElementById('modelChips').innerHTML = Object.entries(MODELS).map(([k,v]) =>
-        '<div class="model-chip '+(k===selectedModel?'active':'')+'" onclick="selectModel(\''+k+'\')">' +v.name+'</div>'
+        '<div class="model-chip '+(k===selectedModel?'active':'')+'" onclick="selectModel(\''+k+'\')" style="position:relative;">' +v.name+
+        '<span class="chip-info" onclick="event.stopPropagation();toggleInfo(\''+k+'\')" title="'+v.info+'"> \u24D8</span>'+
+        '<div id="info-'+k+'" class="chip-tooltip" style="display:none;">'+v.info+'</div>'+
+        '</div>'
     ).join('');
     document.getElementById('modelDesc').textContent = MODELS[selectedModel].desc;
     const presRow = document.getElementById('presenceRow');
     const presNote = document.getElementById('presenceNote');
     if (presRow) presRow.style.display = MODELS[selectedModel].presence ? 'grid' : 'none';
     if (presNote) presNote.style.display = MODELS[selectedModel].presence ? 'block' : 'none';
+}
+function toggleInfo(key) {
+    const el = document.getElementById('info-'+key);
+    if (!el) return;
+    document.querySelectorAll('.chip-tooltip').forEach(t => { if (t.id !== 'info-'+key) t.style.display = 'none'; });
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 function selectModel(m) { selectedModel = m; renderModelChips(); }
 
