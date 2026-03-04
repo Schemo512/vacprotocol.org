@@ -172,7 +172,7 @@ function showLanding() {
     <div class="section-title">Create Group</div>
     <div class="card"><div class="card-body">
         <div class="form-group"><label class="form-label">Group Name</label><input id="grpName" value="DoD AI Budget Committee"></div>
-        <div class="form-group"><label class="form-label">Description</label><input id="grpDesc" value="Authorized officials must be physically co-present in the Pentagon SCIF to approve AI agent spending above $10K"></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea id="grpDesc" rows="2" style="resize:vertical;">Authorized officials must be physically co-present in the Pentagon SCIF to approve AI agent spending above $10K</textarea></div>
         <div class="form-group"><label class="form-label">Members (email, one per line)</label><textarea id="grpMembers" rows="4">director@defense.gov\nanalyst@nsa.gov\noversight@congress.gov\nrob@violetshores.com</textarea></div>
         <div class="card-header" style="margin-top:16px;">Quorum Model</div>
         <div class="model-chips" id="modelChips"></div>
@@ -482,7 +482,13 @@ function renderSession(group, session) {
                 h += '</div></div>';
             }
         } else {
-            h += '<div class="card"><div class="card-body"><div class="card-header">Cast Your Vote</div><div class="form-group"><label class="form-label">Your Email</label><input id="voteEmail" value="'+emailParam+'"></div><div class="vote-bar"><button class="btn success" onclick="submitVote(\'approve\')">\u2713 Approve</button><button class="btn danger" onclick="submitVote(\'deny\')">\u2717 Deny</button><button class="btn warn" onclick="submitVote(\'abstain\')">\u2014 Abstain</button></div></div></div>';
+            h += '<div class="card"><div class="card-body"><div class="card-header">Cast Your Vote</div><div class="form-group"><label class="form-label">Your Email</label><input id="voteEmail" value="'+emailParam+'"></div>';
+            if (group.require_presence) {
+                h += '<div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:4px;display:flex;align-items:center;gap:8px;">';
+                h += '<label style="cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="demoLocationOverride" checked> Demo Mode: simulate presence at '+(group.presence_location?.name||'meeting point')+'</label>';
+                h += '</div>';
+            }
+            h += '<div class="vote-bar"><button class="btn success" onclick="submitVote(\'approve\')">\u2713 Approve</button><button class="btn danger" onclick="submitVote(\'deny\')">\u2717 Deny</button><button class="btn warn" onclick="submitVote(\'abstain\')">\u2014 Abstain</button></div></div></div>';
         }
     } else if (session.status === 'approved') {
         h += '<div class="card" style="border-color:var(--success-border)"><div class="card-body" style="text-align:center"><div style="font-size:20px;margin-bottom:4px">\u2713</div><div style="font-size:14px;font-weight:700;color:var(--success)">Decision Approved</div><div style="font-size:12px;color:var(--text-tertiary)">Quorum met. Decision recorded on-chain.</div></div></div>';
@@ -511,7 +517,13 @@ async function submitVote(voteType) {
     const email = document.getElementById('voteEmail')?.value.trim();
     if (!email) { alert('Enter email'); return; }
     let loc = null;
-    if (currentGroup?.require_presence && navigator.geolocation) {
+    
+    // Demo mode: override location to meeting point
+    const demoOverride = document.getElementById('demoLocationOverride');
+    if (demoOverride && demoOverride.checked && currentGroup?.presence_location) {
+        const base = currentGroup.presence_location;
+        loc = { lat: base.lat + (Math.random()-0.5)*0.001, lng: base.lng + (Math.random()-0.5)*0.001 };
+    } else if (currentGroup?.require_presence && navigator.geolocation) {
         try { const p = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000})); loc = {lat:p.coords.latitude,lng:p.coords.longitude}; } catch(e){}
     }
     try {
