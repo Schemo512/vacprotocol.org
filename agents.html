@@ -325,10 +325,11 @@ async function runNextStep() {
         document.getElementById('loadingEl').style.display = 'none';
 
         // Render step
-        renderStep(data.step, data.budget);
+        const budget = data.budget || { tokens_remaining: 0, tokens_pct: 100, spend_remaining_usd: 0, api_calls_remaining: 0 };
+        renderStep(data.step, budget);
 
         // Update budget
-        updateBudget(data.budget, data.total_tokens_used, data.total_spend_usd,
+        updateBudget(budget, data.total_tokens_used, data.total_spend_usd,
             data.step?.step || 0, data.status);
 
         // Check if budget exceeded
@@ -390,6 +391,7 @@ function renderStep(step, budget) {
 }
 
 function updateBudget(budget, tokensUsed, spendUsd, calls, status) {
+    budget = budget || {};
     const total = (budget.tokens_remaining || 0) + (tokensUsed || 0);
     const pct = total > 0 ? ((tokensUsed || 0) / total) * 100 : 0;
 
@@ -469,7 +471,7 @@ async function approveEscalation() {
                 <span class="step-label" style="color:var(--success);">HUMAN APPROVED</span>
                 <span class="step-tokens ok">+4,000 tokens granted</span>
             </div>
-            <div class="step-content" style="color:var(--success);">${data.message}</div>
+            <div class="step-content" style="color:var(--success);">${data.message || 'Budget increased. Agent can resume.'}</div>
         `;
         document.getElementById('stepsContainer').prepend(el);
 
