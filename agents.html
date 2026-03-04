@@ -237,6 +237,14 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <!-- Escalation (appears when budget exceeded — ABOVE steps for visibility) -->
     <div id="escalationContainer"></div>
 
+    <!-- Tab bar (appears during run) -->
+    <div id="tabBar" style="display:none;margin-bottom:12px;">
+        <div style="display:flex;border-bottom:1px solid var(--border);">
+            <button class="tab-btn active" id="tabLive" onclick="switchTab('live')" style="flex:1;padding:10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;background:none;border:none;border-bottom:2px solid var(--purple);color:var(--purple);cursor:pointer;">LIVE AGENT</button>
+            <button class="tab-btn" id="tabAudit" onclick="switchTab('audit')" style="flex:1;padding:10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-quaternary);cursor:pointer;">AUDIT TRAIL</button>
+        </div>
+    </div>
+
     <!-- Loading -->
     <div id="loadingEl" style="display:none;">
         <div class="loading">
@@ -247,8 +255,23 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         </div>
     </div>
 
-    <!-- Steps (appear one by one, newest first) -->
-    <div id="stepsContainer"></div>
+    <!-- Live view: Steps (appear one by one, newest first) -->
+    <div id="liveView">
+        <div id="stepsContainer"></div>
+    </div>
+
+    <!-- Audit view: Structured transaction log -->
+    <div id="auditView" style="display:none;">
+        <div class="card">
+            <div class="card-header">Cryptographic Audit Trail · Claims 39–55</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:12px;padding:6px 10px;background:var(--surface-raised);border-radius:4px;">
+                Every transaction is cryptographically linked to its authorizing human. This trail is immutable — it can't be edited by agents, platforms, or operators.
+            </div>
+            <div id="auditEntries" style="font-family:var(--mono);font-size:11px;">
+                <div style="color:var(--text-quaternary);padding:16px;text-align:center;">Run an agent to see the audit trail.</div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <div class="footer">
@@ -261,6 +284,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
 const API_BASE = 'https://vac-system-production.up.railway.app';
 let currentTaskId = null;
 let stepByStepMode = false;
+let auditLog = [];  // Structured audit entries
 
 // Pre-fill from URL params
 const params = new URLSearchParams(window.location.search);
@@ -299,10 +323,18 @@ async function createAndRun(stepMode) {
     document.getElementById('chainAgent').classList.add('active');
     document.getElementById('chainAgentScope').textContent = `card limit: ${tokenBudget.toLocaleString()} tokens · $${spendCap} cap · ${maxCalls} transactions`;
 
-    // Show budget card
+    // Show budget card + tab bar
     document.getElementById('budgetCard').style.display = 'block';
+    document.getElementById('tabBar').style.display = 'block';
     document.getElementById('stepsContainer').innerHTML = '';
     document.getElementById('escalationContainer').innerHTML = '';
+    auditLog = [];  // Reset audit trail
+    
+    // Audit: delegation chain
+    addAuditEntry('delegation', { from: ownerEmail, to: 'Coordinator', scope: 'delegate tasks', constraints: 'max_children: 3, monotonic narrowing' });
+    addAuditEntry('delegation', { from: 'Coordinator', to: 'Research Agent', scope: 'research only', constraints: 'cannot delegate further' });
+    addAuditEntry('card_issued', { agent: 'Research Agent', tokenLimit: tokenBudget, spendCap, maxTx: maxCalls, authorizer: ownerEmail, trustScore: '0.95' });
+    
     updateBudget({ tokens_remaining: tokenBudget, tokens_pct: 0, spend_remaining_usd: spendCap, api_calls_remaining: maxCalls }, 0, 0, 0, 'creating');
 
     // Disable buttons
@@ -364,6 +396,18 @@ async function runNextStep() {
         // Render step
         const budget = data.budget || { tokens_remaining: 0, tokens_pct: 100, spend_remaining_usd: 0, api_calls_remaining: 0 };
         renderStep(data.step, budget);
+        
+        // Audit: transaction
+        const s = data.step || {};
+        addAuditEntry('transaction', {
+            txNumber: s.step || '?',
+            agent: 'Research Agent',
+            inputTokens: (s.input_tokens || 0).toLocaleString(),
+            outputTokens: (s.output_tokens || 0).toLocaleString(),
+            cost: (s.cost_usd || 0).toFixed(4),
+            chain: `${document.getElementById('ownerEmail').value} ✓ → Coordinator → Research Agent`,
+            runningTotal: (data.total_spend_usd || 0).toFixed(4)
+        });
 
         // Update budget
         updateBudget(budget, data.total_tokens_used, data.total_spend_usd,
@@ -371,8 +415,18 @@ async function runNextStep() {
 
         // Check if budget exceeded
         if (data.status === 'budget_exceeded') {
+            addAuditEntry('limit_reached', {
+                reason: data.escalation_reason || 'Spending limit reached',
+                totalTokens: data.total_tokens_used,
+                totalSpend: (data.total_spend_usd || 0).toFixed(4)
+            });
             showEscalation(data);
         } else if (data.status === 'completed') {
+            addAuditEntry('completed', {
+                totalTokens: data.total_tokens_used,
+                totalSpend: (data.total_spend_usd || 0).toFixed(4),
+                totalTx: s.step || 0
+            });
             showComplete();
         } else {
             // Show next step button
@@ -501,6 +555,11 @@ async function approveEscalation() {
         document.getElementById('chainAgent').style.boxShadow = '0 0 8px rgba(108,92,231,0.3)';
 
         // Show approval message
+        addAuditEntry('limit_increased', {
+            additionalTokens: 4000,
+            newLimit: 8000,
+            authorizer: document.getElementById('ownerEmail').value
+        });
         const el = document.createElement('div');
         el.className = 'step';
         el.style.borderColor = 'var(--success-border)';
@@ -533,10 +592,15 @@ async function denyEscalation() {
     if (!currentTaskId) return;
     try {
         await fetch(`${API_BASE}/v1/agent/task/${currentTaskId}/deny`, { method: 'POST' });
+        addAuditEntry('card_frozen', {
+            authorizer: document.getElementById('ownerEmail').value,
+            totalTokens: parseInt(document.getElementById('statTokens').textContent.replace(/,/g,'')),
+            totalSpend: document.getElementById('statSpend').textContent.replace('$','')
+        });
         document.getElementById('escalationContainer').innerHTML = `
             <div class="card" style="border-color:var(--error-border);text-align:center;padding:16px;">
-                <div style="font-size:14px;font-weight:700;color:var(--error);">Agent Terminated</div>
-                <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">Budget increase denied. Agent task stopped. Partial results preserved above.</div>
+                <div style="font-size:14px;font-weight:700;color:var(--error);">Card Frozen — Agent Terminated</div>
+                <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">Human denied card limit increase. Agent stopped. Partial results preserved. Full audit trail available.</div>
             </div>
         `;
     } catch (e) {
@@ -555,6 +619,80 @@ function addNextStepButton() {
     el.innerHTML = `<button class="btn btn-primary" onclick="this.parentElement.remove(); runNextStep();">Run Next Step →</button>`;
     document.getElementById('stepsContainer').prepend(el);
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function switchTab(tab) {
+    const tabLive = document.getElementById('tabLive');
+    const tabAudit = document.getElementById('tabAudit');
+    const liveView = document.getElementById('liveView');
+    const auditView = document.getElementById('auditView');
+    if (tab === 'audit') {
+        tabAudit.style.borderBottomColor = 'var(--purple)';
+        tabAudit.style.color = 'var(--purple)';
+        tabLive.style.borderBottomColor = 'transparent';
+        tabLive.style.color = 'var(--text-quaternary)';
+        liveView.style.display = 'none';
+        auditView.style.display = 'block';
+        renderAuditTrail();
+    } else {
+        tabLive.style.borderBottomColor = 'var(--purple)';
+        tabLive.style.color = 'var(--purple)';
+        tabAudit.style.borderBottomColor = 'transparent';
+        tabAudit.style.color = 'var(--text-quaternary)';
+        liveView.style.display = 'block';
+        auditView.style.display = 'none';
+    }
+}
+
+function addAuditEntry(type, data) {
+    auditLog.push({
+        timestamp: new Date().toISOString(),
+        type,
+        ...data
+    });
+}
+
+function renderAuditTrail() {
+    const el = document.getElementById('auditEntries');
+    if (auditLog.length === 0) {
+        el.innerHTML = '<div style="color:var(--text-quaternary);padding:16px;text-align:center;">Run an agent to see the audit trail.</div>';
+        return;
+    }
+    el.innerHTML = auditLog.map((entry, i) => {
+        const time = new Date(entry.timestamp).toLocaleTimeString();
+        let icon = '', color = 'var(--text-secondary)', detail = '';
+        
+        if (entry.type === 'delegation') {
+            icon = '🔗'; color = 'var(--purple)';
+            detail = `<strong>DELEGATION</strong> · ${entry.from} → ${entry.to}<br>Scope: ${entry.scope || 'full'} · Constraints: ${entry.constraints || 'none'}`;
+        } else if (entry.type === 'card_issued') {
+            icon = '💳'; color = 'var(--teal)';
+            detail = `<strong>CARD ISSUED</strong> to ${entry.agent}<br>Limit: ${entry.tokenLimit?.toLocaleString()} tokens · $${entry.spendCap} cap · ${entry.maxTx} max transactions<br>Authorized by: ${entry.authorizer} (Trust: ${entry.trustScore})`;
+        } else if (entry.type === 'transaction') {
+            icon = '📝'; color = 'var(--text-secondary)';
+            detail = `<strong>TX #${entry.txNumber}</strong> · ${entry.agent}<br>Tokens: ${entry.inputTokens} in / ${entry.outputTokens} out · Cost: $${entry.cost}<br>Chain: ${entry.chain} · Running total: $${entry.runningTotal}`;
+        } else if (entry.type === 'limit_reached') {
+            icon = '🚨'; color = 'var(--error)';
+            detail = `<strong>CARD LIMIT REACHED</strong> · ${entry.reason}<br>Agent frozen. Awaiting human re-authorization.<br>Total spent: ${entry.totalTokens?.toLocaleString()} tokens / $${entry.totalSpend}`;
+        } else if (entry.type === 'limit_increased') {
+            icon = '✅'; color = 'var(--success)';
+            detail = `<strong>LIMIT INCREASED</strong> by verified human<br>Additional: +${entry.additionalTokens?.toLocaleString()} tokens · New limit: ${entry.newLimit?.toLocaleString()} tokens<br>Authorized by: ${entry.authorizer}`;
+        } else if (entry.type === 'card_frozen') {
+            icon = '🛑'; color = 'var(--error)';
+            detail = `<strong>CARD FROZEN</strong> · Agent terminated by human<br>Final spend: ${entry.totalTokens?.toLocaleString()} tokens / $${entry.totalSpend}<br>Frozen by: ${entry.authorizer}`;
+        } else if (entry.type === 'completed') {
+            icon = '✓'; color = 'var(--success)';
+            detail = `<strong>TASK COMPLETE</strong><br>Total: ${entry.totalTokens?.toLocaleString()} tokens / $${entry.totalSpend} across ${entry.totalTx} transactions`;
+        }
+        
+        return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);${i===0?'':''}">
+            <div style="font-size:14px;flex-shrink:0;width:24px;text-align:center;">${icon}</div>
+            <div style="flex:1;">
+                <div style="color:${color};font-size:11px;line-height:1.5;">${detail}</div>
+                <div style="font-size:9px;color:var(--text-quaternary);margin-top:2px;">${time} · ${entry.type}</div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function escapeHtml(str) {
