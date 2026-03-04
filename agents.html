@@ -127,15 +127,44 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         <div class="hero-sub">Real AI agent. Real API calls. Real budget enforcement. The math prevents overspend — not policy.</div>
     </div>
 
-    <!-- Delegation Chain -->
+    <!-- Delegation Chain — the verified human is the root of all authority -->
     <div class="card" id="chainCard">
-        <div class="card-header">Delegation Chain</div>
-        <div class="chain" id="delegationChain">
-            <div class="chain-node human">👤 <span id="chainHuman">Verify first</span></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-node agent">🤖 Coordinator</div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-node agent" id="chainAgent">🤖 Research Agent</div>
+        <div class="card-header">Authority Chain · Human → Agent Delegation</div>
+        
+        <!-- Human root — this is the differentiator -->
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--success-bg);border:1px solid var(--success-border);border-radius:8px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>
+            <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;color:var(--success);" id="chainHumanName">Verify first</div>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--text-tertiary);">VERIFIED HUMAN · Face + Voice + Challenge</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--success);" id="chainTrustScore">0.95</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">TRUST SCORE</div>
+            </div>
+        </div>
+        
+        <!-- Delegation arrows -->
+        <div style="display:flex;align-items:stretch;gap:0;margin-left:20px;border-left:2px solid var(--purple-border);padding-left:16px;">
+            <div style="flex:1;">
+                <!-- Coordinator -->
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;position:relative;">
+                    <div style="position:absolute;left:-22px;width:12px;height:2px;background:var(--purple-border);"></div>
+                    <div class="chain-node agent" id="chainCoordinator">🤖 Coordinator</div>
+                    <span style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">scope: delegate tasks · max_children: 3</span>
+                </div>
+                
+                <!-- Research Agent -->
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;margin-left:24px;border-left:2px solid var(--purple-border);padding-left:16px;position:relative;">
+                    <div style="position:absolute;left:-22px;width:12px;height:2px;background:var(--purple-border);"></div>
+                    <div class="chain-node agent active" id="chainAgent">🤖 Research Agent</div>
+                    <span style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);" id="chainAgentScope">scope: research only · budget: 4,000 tokens</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:10px;padding:6px 10px;background:var(--surface-raised);border-radius:4px;">
+            Every API call traces back to the verified human. Monotonic narrowing: agent permissions can only restrict, never expand, without human re-verification.
         </div>
     </div>
 
@@ -234,7 +263,7 @@ let stepByStepMode = false;
 const params = new URLSearchParams(window.location.search);
 const email = params.get('email') || params.get('from') || '';
 if (email) document.getElementById('ownerEmail').value = email;
-document.getElementById('chainHuman').textContent = email || 'Verify first';
+document.getElementById('chainHumanName').textContent = email || 'Verify first';
 
 async function runTask() {
     await createAndRun(false);
@@ -263,8 +292,9 @@ async function createAndRun(stepMode) {
     }
 
     // Update chain
-    document.getElementById('chainHuman').textContent = ownerEmail;
+    document.getElementById('chainHumanName').textContent = ownerEmail;
     document.getElementById('chainAgent').classList.add('active');
+    document.getElementById('chainAgentScope').textContent = `scope: research only · budget: ${tokenBudget.toLocaleString()} tokens · $${spendCap}`;
 
     // Show budget card
     document.getElementById('budgetCard').style.display = 'block';
@@ -380,9 +410,10 @@ function renderStep(step, budget) {
     el.style.animation = 'escalation-in 0.3s ease';
     el.innerHTML = `
         <div class="step-header">
-            <span class="step-label">API Call #${step.step || '?'}</span>
+            <span class="step-label">🤖 Research Agent · API Call #${step.step || '?'}</span>
             <span class="step-tokens ${tokenCls}">${(step.total_tokens || 0).toLocaleString()} tokens</span>
         </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-bottom:6px;">Chain: Human ✓ → Coordinator → Research Agent · Authorized by delegation</div>
         <div class="step-content">${escapeHtml(step.content)}</div>
         <div class="step-cost">
             Input: ${(step.input_tokens || 0).toLocaleString()} · Output: ${(step.output_tokens || 0).toLocaleString()} · Cost: $${(step.cost_usd || 0).toFixed(4)}
