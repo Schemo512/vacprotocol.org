@@ -51,8 +51,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-second
 .model-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
 .model-chip { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
 .model-chip:hover { border-color: var(--purple-border); color: var(--purple); }
-.chip-info { font-size: 9px; opacity: 0.5; margin-left: 2px; cursor: help; }
-.chip-info:hover { opacity: 1; }
+.chip-info { font-family: var(--mono); font-size: 8px; padding: 1px 5px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; color: var(--text-tertiary); cursor: help; margin-left: 4px; transition: all 0.15s; vertical-align: middle; }
+.chip-info:hover { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple); }
 .chip-tooltip { position: absolute; top: calc(100% + 6px); left: 0; right: 0; min-width: 200px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-family: var(--mono); font-size: 9px; color: var(--text-secondary); line-height: 1.6; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: normal; }
 .model-chip.active { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); }
 .model-desc { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); padding: 8px 12px; background: var(--surface-raised); border-radius: 6px; margin-bottom: 12px; }
