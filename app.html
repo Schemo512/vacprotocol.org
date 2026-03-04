@@ -589,14 +589,9 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
     </div>
     <div class="spa-user" id="spaUser"></div>
 </nav>
-
 <div id="welcomeScreen" style="display:none;max-width:500px;margin:80px auto;text-align:center;padding:0 20px;">
     <div style="font-family:var(--mono);font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:12px;">VAC PROTOCOL</div>
-    <div style="font-size:28px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Verified Agent Chain</div>
-    <div style="font-size:14px;color:var(--text-tertiary);margin-bottom:32px;">Cryptographic human provenance for AI agents.<br>Math enforces what neither party trusts the other to honour.</div>
-    <a href="/auth" style="display:inline-block;background:var(--purple);color:white;font-family:var(--mono);font-size:13px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">Verify Your Identity →</a>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:12px;">Face · Voice · Email · Location</div>
-</div>
+
 <section class="tab-content" id="page-verify"><!-- NAV -->
 <div class="nav">
 <div class="nav-inner">
@@ -4314,8 +4309,23 @@ const MODELS = {
 let currentGroup = null, currentSession = null, selectedModel = 'cultural_hui';
 
 function groupsInit() {
+    // Check URL params first
     if (sessionParam) return loadSession(sessionParam);
     if (groupParam) return loadGroup(groupParam);
+    
+    // Auto-find active session for this user
+    autoFindSession();
+}
+
+async function autoFindSession() {
+    try {
+        const resp = await fetch(API + '/v1/groups/sessions');
+        const d = await resp.json();
+        const active = (d.sessions || []).find(s => s.status === 'open');
+        if (active) {
+            return loadSession(active.session_id);
+        }
+    } catch(e) {}
     showLanding();
 }
 
