@@ -1393,7 +1393,7 @@ async function adminReset(scope) {
 }
 async function loadAdminHealth() {
     try { const d=await(await fetch(API_BASE+'/health')).json();
-    document.getElementById('adminHealth').innerHTML='Groups: '+(d.groups||0)+' · Sessions: '+(d.sessions||0)+' · Tokens: '+d.vat_tokens_memory+' · SQLite: '+d.persistent.tokens;
+    document.getElementById('adminHealth').innerHTML='Groups: '+(d.groups||0)+' · Sessions: '+(d.sessions||0)+' · Tokens: '+d.vat_tokens_memory+' · ffmpeg: '+(d.ffmpeg||'?');
     } catch(e) {}
 }
 function route(tab) {
@@ -2953,14 +2953,7 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
     
     if (email && p.get('verified') === 'true') {
         // Already verified — go straight to the full app
-        if (typeof route === 'function') {
-            // In SPA: show verified screen directly
-            document.getElementById('inputName').value = email.split('@')[0];
-            document.getElementById('inputEmail').value = email;
-            goToStep(4);
-            const sn = document.getElementById('successName');
-            if (sn) sn.textContent = email.split('@')[0];
-        } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
+        if (typeof route === 'function') { document.getElementById('inputName').value = email.split('@')[0]; document.getElementById('inputEmail').value = email; goToStep(4); } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
         return;
     }
     
@@ -2974,13 +2967,7 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
             const hasTrust = d.trust_score?.score > 0;
             if (hasVouches || hasAuth || hasTrust || d.verified) {
                 // Verified — redirect to app
-                if (typeof route === 'function') {
-                    document.getElementById('inputName').value = email.split('@')[0];
-                    document.getElementById('inputEmail').value = email;
-                    goToStep(4);
-                    const sn2 = document.getElementById('successName');
-                    if (sn2) sn2.textContent = email.split('@')[0];
-                } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
+                if (typeof route === 'function') { document.getElementById('inputName').value = email.split('@')[0]; document.getElementById('inputEmail').value = email; goToStep(4); } else { window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify'; }
             }
         })
         .catch(() => {});
@@ -3026,13 +3013,21 @@ async function initMsgMedia(type) {
             ? { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: { noiseSuppression: true, echoCancellation: true } }
             : { audio: { noiseSuppression: true, echoCancellation: true } };
         msgStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const audioTracks = msgStream.getAudioTracks();
+        const videoTracks = msgStream.getVideoTracks();
         if (type === 'video_clip') {
             const vid = document.getElementById('msgVideoPreview');
             vid.srcObject = msgStream;
             vid.muted = true;
             await vid.play();
         }
-        document.getElementById('msgRecordStatus').textContent = 'Ready — tap Record';
+        let status = 'Ready — tap Record';
+        if (type === 'video_clip' && audioTracks.length === 0) {
+            status = '⚠ No microphone detected — video will have no audio. Check browser permissions.';
+        } else if (type === 'voice_note' && audioTracks.length === 0) {
+            status = '⚠ No microphone detected. Check browser permissions.';
+        }
+        document.getElementById('msgRecordStatus').textContent = status;
     } catch (e) {
         document.getElementById('msgRecordStatus').textContent = 'Permission denied: ' + e.message;
     }
@@ -3041,17 +3036,27 @@ async function initMsgMedia(type) {
 function startMsgRecord() {
     if (!msgStream) return;
     msgChunks = [];
+    
+    // Log tracks for debugging
+    const aTracks = msgStream.getAudioTracks();
+    const vTracks = msgStream.getVideoTracks();
+    console.log('[MSG] Audio tracks:', aTracks.length, aTracks.map(t => t.label));
+    console.log('[MSG] Video tracks:', vTracks.length, vTracks.map(t => t.label));
+    
     const mimeTypes = [
-        'video/mp4',  // Safari/iOS — native MP4, universally playable
-        'video/webm;codecs=vp9,opus', 
-        'video/webm;codecs=vp8,opus', 
-        'video/webm', 
-        'audio/webm'
+        'video/webm;codecs=vp9,opus',   // Best quality WebM with audio
+        'video/webm;codecs=vp8,opus',   // Fallback WebM with audio
+        'video/webm;codecs=h264,opus',  // H264 in WebM container
+        'video/webm',                    // Generic WebM
+        'video/mp4',                     // Safari/iOS native
+        'audio/webm;codecs=opus',        // Voice-only
+        'audio/webm'                     // Voice-only fallback
     ];
     let mime = '';
     for (const mt of mimeTypes) {
         if (MediaRecorder.isTypeSupported(mt)) { mime = mt; break; }
     }
+    console.log('[MSG] Recording with MIME:', mime || 'browser default');
     msgRecorder = new MediaRecorder(msgStream, mime ? { mimeType: mime } : undefined);
     msgRecorder.ondataavailable = e => { if (e.data.size > 0) msgChunks.push(e.data); };
     msgRecorder.onstop = () => {
