@@ -114,7 +114,7 @@ const SCENARIOS = {
         location: 'Pentagon, Arlington VA',
         location_coords: { lat: 38.8719, lng: -77.0563 },
         radius: 0.3,
-        default_proposal: 'Authorize AI research agent with $50K spending card',
+        default_proposal: 'Authorize AI research agent — scope: classified + OSINT APIs, $50K token budget, 24hr window',
         default_description: 'Deploy autonomous research agent to analyze adversary AI capabilities. Agent requires $50K token budget across classified and open-source intelligence APIs. All committee members must be physically present at an approved secure facility.',
     },
     maori_hui: {
@@ -137,7 +137,7 @@ const SCENARIOS = {
     },
     board_vote: {
         name: 'Corporate Board Vote',
-        desc: 'Board of directors authorizing an AI agent with a $50K spending card',
+        desc: 'Board of directors authorizing an AI agent with a $50K authority card',
         group_name: 'Violet Shores Board',
         group_desc: 'Board members vote to authorize AI research agent. Supermajority required.',
         members: ['rob@violetshores.com', 'jason@calacanis.com', 'launch@launch.co', 'advisor@techcorp.com'],
@@ -203,7 +203,7 @@ function showLanding() {
     <div class="hero">
         <div class="hero-eyebrow">Claims 168\u2013241 \u00B7 Collective Governance</div>
         <div class="hero-title">Group Governance</div>
-        <div class="hero-sub">What if an AI agent needed board approval before getting its spending card? Quorum-verified delegation with optional geolocation-enforced presence.</div>
+        <div class="hero-sub">What if an AI agent needed board approval before it could act? Quorum-verified delegation with scope constraints, spending limits, and optional geolocation-enforced presence.</div>
     </div>
     
     <!-- Scenario Selector -->
@@ -245,6 +245,9 @@ function showLanding() {
             <label class="form-label">Chair Governance Rules</label>
             <div style="padding:10px 12px;background:var(--surface-raised);border-radius:6px;">
                 <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;margin-bottom:6px;">
+                    <input type="checkbox" id="cfgGeo" onchange="updateChairConfig()" style="width:14px;height:14px;accent-color:var(--teal);flex-shrink:0;"> <span>Require geolocation verification</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;margin-bottom:6px;">
                     <input type="checkbox" id="cfgProxy" onchange="updateChairConfig()" style="width:14px;height:14px;accent-color:var(--purple);flex-shrink:0;"> <span>Allow proxy voting</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);cursor:pointer;margin-bottom:6px;">
@@ -261,7 +264,7 @@ function showLanding() {
     <div class="card" style="border-color:var(--purple-border);background:var(--purple-bg);text-align:center;margin-top:16px;">
         <div class="card-body">
             <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--purple);margin-bottom:6px;">FROM INDIVIDUAL TO COLLECTIVE · CLAIMS 39\u2013241</div>
-            <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px;">Group approves → Agent gets its spending card → Same math, same chain</div>
+            <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px;">Group approves → Agent receives scoped authority → Same math, same chain</div>
             <div style="font-size:11px;color:var(--text-tertiary);">The agent demo shows individual delegation. This page shows what happens when the ROOT is a group instead of a single human.</div>
         </div>
     </div>`;
@@ -306,12 +309,15 @@ function applyScenario(key) {
     renderModelChips();
     
     // Set chair config from scenario
+    const isPresence = MODELS[s.model]?.presence || false;
+    const geoBox = document.getElementById('cfgGeo');
     const proxyBox = document.getElementById('cfgProxy');
+    if (geoBox) geoBox.checked = isPresence;
     if (proxyBox) {
-        const isPresence = MODELS[s.model]?.presence;
-        proxyBox.checked = !isPresence; // No proxy for presence-required models
-        proxyBox.disabled = isPresence;
+        proxyBox.checked = !isPresence;
+        proxyBox.disabled = false; // Chair can always toggle
     }
+    updateChairConfig();
 }
 
 function updateLocationFromSelect() {
@@ -342,15 +348,24 @@ function updateLocationFromSelect() {
 }
 
 function updateChairConfig() {
+    const geo = document.getElementById('cfgGeo');
     const proxy = document.getElementById('cfgProxy');
-    const presence = MODELS[selectedModel]?.presence;
     const note = document.getElementById('cfgNote');
+    const presRow = document.getElementById('presenceRow');
+    const presNote = document.getElementById('presenceNote');
     
-    if (presence && proxy?.checked) {
+    // Show/hide location section based on geo toggle
+    if (presRow) presRow.style.display = geo?.checked ? 'grid' : 'none';
+    if (presNote) presNote.style.display = geo?.checked ? 'block' : 'none';
+    
+    // Geo + proxy conflict
+    if (geo?.checked && proxy?.checked) {
         proxy.checked = false;
-        if (note) note.textContent = '⊘ Proxy voting is blocked when geolocation is required. Physical presence cannot be delegated.';
-        note.style.color = 'var(--warning)';
-        setTimeout(() => { note.textContent = 'These rules are set by the Chair at group creation and cannot be weakened after. Monotonic narrowing applies.'; note.style.color = ''; }, 3000);
+        if (note) {
+            note.textContent = '⊘ Proxy blocked — geolocation requires physical presence. Cannot be delegated.';
+            note.style.color = 'var(--warning)';
+            setTimeout(() => { note.textContent = 'Set by Chair at creation. Cannot be weakened after. Monotonic narrowing.'; note.style.color = ''; }, 3000);
+        }
     }
 }
 
@@ -364,8 +379,6 @@ function renderModelChips() {
     document.getElementById('modelDesc').textContent = MODELS[selectedModel].desc;
     const presRow = document.getElementById('presenceRow');
     const presNote = document.getElementById('presenceNote');
-    if (presRow) presRow.style.display = MODELS[selectedModel].presence ? 'grid' : 'none';
-    if (presNote) presNote.style.display = MODELS[selectedModel].presence ? 'block' : 'none';
 }
 function toggleInfo(key) {
     const el = document.getElementById('info-'+key);
@@ -392,7 +405,7 @@ async function createGroup() {
     if (!name || members.length < 2) { alert('Need name + 2 members'); return; }
     const allowProxy = document.getElementById('cfgProxy')?.checked || false;
     const allowVoteChange = document.getElementById('cfgVoteChange')?.checked || true;
-    const body = { name, description: document.getElementById('grpDesc').value.trim(), members, quorum_model: selectedModel, require_presence: MODELS[selectedModel].presence, presence_radius_km: parseFloat(document.getElementById('grpRadius')?.value)||0.5, allow_proxy: allowProxy, allow_vote_change: allowVoteChange };
+    const body = { name, description: document.getElementById('grpDesc').value.trim(), members, quorum_model: selectedModel, require_presence: document.getElementById('cfgGeo')?.checked || false, presence_radius_km: parseFloat(document.getElementById('grpRadius')?.value)||0.5, allow_proxy: allowProxy, allow_vote_change: allowVoteChange };
     if (MODELS[selectedModel].presence) {
         const sel = document.getElementById('grpLocationSelect');
         const opt = sel?.options[sel.selectedIndex];
@@ -571,10 +584,10 @@ function renderSession(group, session) {
     h += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+(met?'var(--teal)':'var(--text-quaternary)')+'" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5" fill="'+(met?'var(--teal)':'var(--text-quaternary)')+'"/><circle cx="16" cy="12" r="1.5" fill="'+(met?'var(--teal)':'var(--text-quaternary)')+'"/><path d="M9 2h6M12 2v4"/></svg>';
     if (met) {
         h += '<div style="flex:1;"><div style="font-size:12px;color:var(--teal);">Agent Authorized</div>';
-        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Quorum met → Agent receives spending card · <a href="/agents?email='+encodeURIComponent(emailParam)+'" style="color:var(--teal);text-decoration:none;">Launch Agent →</a></div></div>';
+        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Quorum met → Agent receives authority card · <a href="/agents?email='+encodeURIComponent(emailParam)+'" style="color:var(--teal);text-decoration:none;">Launch Agent →</a></div></div>';
     } else {
         h += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-quaternary);">Agent Pending Authorization</div>';
-        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Waiting for quorum before agent can receive spending card</div></div>';
+        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Waiting for quorum before agent can receive authority card</div></div>';
     }
     h += '</div></div>';
     
@@ -718,7 +731,7 @@ function renderSession(group, session) {
         h += '<div class="card" style="border-color:var(--success-border);"><div class="card-body">';
         h += '<div style="font-family:var(--mono);font-size:10px;color:var(--success);letter-spacing:1px;margin-bottom:8px;">DECISION APPROVED · AGENT AUTHORIZED</div>';
         h += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Quorum reached. The group has collectively authorized the agent. The delegation chain now flows:</div>';
-        h += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-primary);padding:10px;background:var(--surface-raised);border-radius:6px;margin-bottom:10px;">'+group.name+' (GROUP ROOT) → Agent Spending Card → Monotonically Narrowed Scope</div>';
+        h += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-primary);padding:10px;background:var(--surface-raised);border-radius:6px;margin-bottom:10px;">'+group.name+' (GROUP ROOT) → Agent Authority Card → Monotonically Narrowed Scope</div>';
         h += '<div style="display:flex;gap:8px;justify-content:center;">';
         h += '<a href="/agents?email='+encodeURIComponent(emailParam)+'" class="btn success" style="text-decoration:none;">Launch Agent with Group Authority →</a>';
         h += '</div>';
