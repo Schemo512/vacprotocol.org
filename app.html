@@ -4188,7 +4188,7 @@ async function autoFindSession() {
         console.error('[GOV] autoFindSession error:', e);
     }
     console.log('[GOV] calling showLanding');
-    try { showLanding(); } catch(e) { console.error('[GOV] showLanding error:', e); }
+    try { showLanding(); console.log('[GOV] showLanding done, content length:', document.getElementById('content').innerHTML.length, 'page display:', getComputedStyle(document.getElementById('page-governance')).display); } catch(e) { console.error('[GOV] showLanding error:', e); }
 }
 
 function showLanding() {
