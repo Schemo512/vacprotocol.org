@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Protocol</title><link rel="icon" type="image/svg+xml" href="/branding/vac-logo-square-dark.png">
 <style>
 :root { --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128; --border: #30363D; --text-primary: #F0F6FC; --text-secondary: #C9D1D9; --text-tertiary: #9CA3AF; --text-quaternary: #848D97; --purple: #6C5CE7; --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25); --teal: #00CEC9; --teal-bg: rgba(0,206,201,0.08); --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2); --warning: #D29922; --warning-bg: rgba(210,153,34,0.08); --error: #F85149; --error-bg: rgba(248,81,73,0.08); --error-border: rgba(248,81,73,0.2); --radius: 10px; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
@@ -15,8 +14,7 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
 .spa-tab .tab-dot { width: 5px; height: 5px; border-radius: 50%; margin-right: 5px; }
 .spa-user { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); margin-left: auto; white-space: nowrap; text-align: right; padding-right: 8px; }
 .spa-user span { color: var(--teal); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content { display: none; } .tab-content.active { display: block; }
 #page-verify /* ─── Theme defaults (overridden by vac-themes.js at runtime) ─── */
 
 
@@ -468,22 +466,17 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
 #page-governance .animate { animation: fadeIn 0.3s ease; }
 </style></head><body>
 <nav class="spa-nav">
-    <div class="spa-brand" onclick="route('verify')"><span>VAC</span> PROTOCOL</div>
-    <div class="spa-tabs">
-        <a class="spa-tab" id="tab-verify" onclick="route('verify')" href="#verify"><span class="tab-dot" style="background:var(--teal);"></span>Verify</a>
-        <a class="spa-tab" id="tab-messages" onclick="route('messages')" href="#messages"><span class="tab-dot" style="background:var(--teal);opacity:0.6;"></span>Messages</a>
-        <a class="spa-tab" id="tab-agents" onclick="route('agents')" href="#agents"><span class="tab-dot" style="background:var(--purple);"></span>Agents</a>
-        <a class="spa-tab" id="tab-governance" onclick="route('governance')" href="#governance"><span class="tab-dot" style="background:var(--success);"></span>Governance</a>
-        <a class="spa-tab" id="tab-admin" onclick="route('admin')" href="#admin" style="display:none;"><span class="tab-dot" style="background:var(--error);"></span>Admin</a>
-    </div>
-    <div class="spa-user" id="spaUser"></div>
-</nav>
+<div class="spa-brand" onclick="route('verify')"><span>VAC</span> PROTOCOL</div>
+<div class="spa-tabs">
+<a class="spa-tab" id="tab-verify" onclick="route('verify')" href="#verify"><span class="tab-dot" style="background:var(--teal)"></span>Verify</a>
+<a class="spa-tab" id="tab-messages" onclick="route('messages')" href="#messages"><span class="tab-dot" style="background:var(--teal);opacity:0.6"></span>Messages</a>
+<a class="spa-tab" id="tab-agents" onclick="route('agents')" href="#agents"><span class="tab-dot" style="background:var(--purple)"></span>Agents</a>
+<a class="spa-tab" id="tab-governance" onclick="route('governance')" href="#governance"><span class="tab-dot" style="background:var(--success)"></span>Governance</a>
+<a class="spa-tab" id="tab-admin" onclick="route('admin')" href="#admin" style="display:none"><span class="tab-dot" style="background:var(--error)"></span>Admin</a>
+</div><div class="spa-user" id="spaUser"></div></nav>
 <div id="welcomeScreen" style="display:none;max-width:500px;margin:80px auto;text-align:center;padding:0 20px;">
     <div style="font-family:var(--mono);font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:12px;">VAC PROTOCOL</div>
-    <div style="font-size:28px;font-weight:800;margin-bottom:8px;">Verified Agent Chain</div>
-    <div style="font-size:14px;color:var(--text-tertiary);margin-bottom:32px;">Cryptographic human provenance for AI agents.<br>Math enforces what neither party trusts the other to honour.</div>
-    <a href="/auth" style="display:inline-block;background:var(--purple);color:white;font-family:var(--mono);font-size:13px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;">Verify Your Identity &rarr;</a>
-</div>
+
 <section class="tab-content" id="page-verify"><!-- NAV -->
 <div class="nav">
 <div class="nav-inner">
@@ -1280,48 +1273,13 @@ body { background: var(--bg); color: var(--text-primary); font-family: var(--fon
 </section>
 <script>
 let currentTab = 'verify';
-async function adminReset(scope) {
-    if (!confirm('Clear ' + scope + '?')) return;
-    try { const d = await(await fetch(API_BASE+'/v1/admin/reset?scope='+scope+'&confirm=yes-clear-data',{method:'POST'})).json();
-    document.getElementById('adminResult').innerHTML='<span style="color:var(--success)">Cleared: '+d.cleared.join(', ')+'</span>'; loadAdminHealth();
-    } catch(e) { document.getElementById('adminResult').innerHTML='<span style="color:var(--error)">'+e.message+'</span>'; }
-}
-async function loadAdminHealth() {
-    try { const d=await(await fetch(API_BASE+'/health')).json();
-    document.getElementById('adminHealth').innerHTML='Groups: '+(d.groups||0)+' · Sessions: '+(d.sessions||0)+' · Tokens: '+d.vat_tokens_memory+' · ffmpeg: '+(d.ffmpeg||'?');
-    } catch(e) {}
-}
-function route(tab) {
-    currentTab = tab;
-    const ws = document.getElementById('welcomeScreen');
-    if (ws) ws.style.display = 'none';
-    document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-    document.querySelectorAll('.spa-tab').forEach(el=>el.classList.remove('active'));
-    const page=document.getElementById('page-'+tab);
-    const tabEl=document.getElementById('tab-'+tab);
-    if(page) page.classList.add('active');
-    if(tabEl) tabEl.classList.add('active');
-    window.location.hash = tab;
-    if(tab==='admin') loadAdminHealth();
-    if(tab==='messages'&&typeof msgInit==='function'&&!window._msgInited){ window._msgInited=true; msgInit(); }
-    if(tab==='governance'&&typeof groupsInit==='function'&&!window._groupsInited){ window._groupsInited=true; groupsInit(); }
-}
-function handleHash() {
-    const hash=window.location.hash.replace('#','')||'verify';
-    const valid=['verify','messages','agents','governance','admin'];
-    route(valid.includes(hash)?hash:'verify');
-}
-const urlParams=new URLSearchParams(window.location.search);
-const sharedEmail=urlParams.get('email')||'';
-if (!sharedEmail) {
-    document.getElementById('welcomeScreen').style.display = 'block';
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-}
-if(sharedEmail) {
-    const isRoot = sharedEmail.includes('rob@violetshores');
-    const label = isRoot ? 'VERIFIED ROOT' : 'VERIFIED';
-    document.getElementById('spaUser').innerHTML='<span>&#x25C9;</span> '+sharedEmail.split('@')[0]+'<div style="font-size:8px;color:var(--success);letter-spacing:0.5px;">'+label+'</div>';
-}
+async function adminReset(scope) { if (!confirm('Clear ' + scope + '?')) return; try { const d = await(await fetch(API_BASE+'/v1/admin/reset?scope='+scope+'&confirm=yes-clear-data',{method:'POST'})).json(); document.getElementById('adminResult').innerHTML='<span style="color:var(--success)">Cleared: '+d.cleared.join(', ')+'</span>'; loadAdminHealth(); } catch(e) { document.getElementById('adminResult').innerHTML='<span style="color:var(--error)">'+e.message+'</span>'; } }
+async function loadAdminHealth() { try { const d=await(await fetch(API_BASE+'/health')).json(); document.getElementById('adminHealth').innerHTML='Groups: '+(d.groups||0)+' · Sessions: '+(d.sessions||0)+' · Tokens: '+d.vat_tokens_memory+' · ffmpeg: '+(d.ffmpeg||'?'); } catch(e) {} }
+function route(tab) { currentTab = tab; const ws=document.getElementById('welcomeScreen'); if(ws) ws.style.display='none'; document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active')); document.querySelectorAll('.spa-tab').forEach(el=>el.classList.remove('active')); const page=document.getElementById('page-'+tab); const tabEl=document.getElementById('tab-'+tab); if(page) page.classList.add('active'); if(tabEl) tabEl.classList.add('active'); window.location.hash=tab; if(tab==='admin') loadAdminHealth(); if(tab==='messages'&&typeof msgInit==='function'&&!window._msgInited){ window._msgInited=true; msgInit(); } if(tab==='governance'&&typeof groupsInit==='function'&&!window._groupsInited){ window._groupsInited=true; groupsInit(); } }
+function handleHash() { const hash=window.location.hash.replace('#','')||'verify'; const valid=['verify','messages','agents','governance','admin']; route(valid.includes(hash)?hash:'verify'); }
+const urlParams=new URLSearchParams(window.location.search); const sharedEmail=urlParams.get('email')||'';
+if(!sharedEmail) { const ws=document.getElementById('welcomeScreen'); if(ws) ws.style.display='block'; document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active')); }
+if(sharedEmail) { const isRoot=sharedEmail.includes('rob@violetshores'); const label=isRoot?'VERIFIED ROOT':'VERIFIED'; document.getElementById('spaUser').innerHTML='<span>&#x25C9;</span> '+sharedEmail.split('@')[0]+'<div style="font-size:8px;color:var(--success);letter-spacing:0.5px;">'+label+'</div>'; }
 // Auth
 const API_BASE = 'https://vac-system-production.up.railway.app';
 
@@ -4423,7 +4381,7 @@ async function loadGroupList() {
         const d = await r.json();
         if (d.groups && d.groups.length > 0) {
             document.getElementById('groupList').innerHTML = '<div class="section-title">Your Groups</div>' +
-                d.groups.map(g => '<div class="card animate" style="cursor:pointer" onclick="loadGroup(g.group_id)"><div class="card-body" style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">'+g.name+'</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary)">'+g.member_count+' members \u00B7 '+(MODELS[g.quorum_model]?.icon||'')+' '+g.quorum_model+'</div></div><span style="font-family:var(--mono);font-size:10px;color:var(--purple)">\u2192</span></div></div>').join('');
+                d.groups.map(g => '<div class="card animate" style="cursor:pointer" onclick="loadGroup(\''+g.group_id+'\')"><div class="card-body" style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">'+g.name+'</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary)">'+g.member_count+' members \u00B7 '+(MODELS[g.quorum_model]?.icon||'')+' '+g.quorum_model+'</div></div><span style="font-family:var(--mono);font-size:10px;color:var(--purple)">\u2192</span></div></div>').join('');
         }
     } catch(e) {}
 }
@@ -4904,7 +4862,6 @@ async function cancelSession() {
 }
 
 // groupsInit() called by SPA router
-window.addEventListener('hashchange', handleHash);
-handleHash();
+window.addEventListener('hashchange', handleHash); handleHash();
 if(urlParams.get('admin')==='true') document.getElementById('tab-admin').style.display='flex';
 </script></body></html>
