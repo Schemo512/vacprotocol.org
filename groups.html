@@ -41,6 +41,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-second
 .member-vote { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; }
 .member-vote.approve { background: var(--success-bg); color: var(--success); }
 .member-vote.deny { background: var(--error-bg); color: var(--error); }
+.member-vote.waiting { background: var(--surface-raised); color: var(--text-quaternary); }
+.member-vote.abstain { background: var(--warning-bg); color: var(--warning); }
 .member-vote.abstain { background: var(--warning-bg); color: var(--warning); }
 .member-vote.waiting { background: var(--surface-raised); color: var(--text-quaternary); }
 .presence-map { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
@@ -472,11 +474,22 @@ function renderGroupDetail(group, sessions) {
     h += '<div style="font-size:13px;color:var(--text-tertiary);margin-top:4px">'+(group.description||'')+'</div>';
     h += '<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--purple)">'+m.name+'</span><span style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary)">\u00B7 '+group.member_count+' members \u00B7 '+verified+' verified</span></div></div>';
     if (group.require_presence && group.presence_location) h += renderPresenceMap(group.presence_location, group.presence_radius_km);
-    h += '<div class="section-title">Members</div><div class="card"><div class="card-body">';
+    h += '<div class="section-title">Members <span class="chip-info" onclick="toggleInfo(\'verified-info\')" style="font-size:10px;cursor:help;" title="What does verified mean?"> ⓘ</span></div>';
+    h += '<div id="info-verified-info" class="chip-tooltip" style="display:none;position:relative;margin:-8px 0 8px 0;">'+
+        '<div style="margin-bottom:4px;color:var(--success);font-weight:600;">VERIFIED</div>'+
+        '<div style="margin-bottom:6px;">This member has completed VAC identity verification — face liveness, voiceprint, and email OTP. Their vote is cryptographically bound to a confirmed human.</div>'+
+        '<div style="margin-bottom:4px;color:var(--warning);font-weight:600;">NOT VERIFIED</div>'+
+        '<div style="margin-bottom:6px;">This member has not yet completed verification. They can still be added to groups but cannot cast a verified vote until they complete the auth flow at /auth.</div>'+
+        '<div style="margin-bottom:4px;color:var(--text-quaternary);font-weight:600;">IN THIS DEMO</div>'+
+        '<div>Only rob@violetshores.com is verified (completed auth flow). Other members are simulated. In production, each member would verify independently before voting.</div>'+
+        '</div>';
+    h += '<div class="card"><div class="card-body">';
     (group.members_detail||group.members.map(e=>({email:e,verified:false,trust_score:0}))).forEach(mem => {
         const name = (mem.name||mem.email.split('@')[0]).replace(/\b\w/g,c=>c.toUpperCase());
-        const statusText = mem.verified ? (mem.trust_score > 0 ? 'Trust: '+(mem.trust_score*100).toFixed(0)+'%' : 'VERIFIED') : 'not verified';
-        h += '<div class="member-row"><div class="member-dot '+(mem.verified?'verified':'pending')+'"></div><div class="member-name">'+name+'</div><div class="member-meta">'+mem.email+' \u00B7 '+statusText+'</div></div>';
+        const isVerified = mem.verified;
+        const statusColor = isVerified ? 'var(--success)' : 'var(--warning)';
+        const statusText = isVerified ? (mem.trust_score > 0 ? 'Trust: '+(mem.trust_score*100).toFixed(0)+'%' : 'VERIFIED') : 'NOT VERIFIED';
+        h += '<div class="member-row"><div class="member-dot '+(isVerified?'verified':'pending')+'"></div><div class="member-name">'+name+'</div><div class="member-meta">'+mem.email+' \u00B7 <span style="color:'+statusColor+';">'+statusText+'</span></div></div>';
     });
     h += '</div></div>';
     h += '<div class="section-title">Sessions <button class="btn" onclick="showStartSession()" style="font-size:10px;padding:4px 10px">+ Start Session</button></div><div id="sessionForm"></div>';
