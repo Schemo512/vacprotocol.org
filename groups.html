@@ -367,6 +367,66 @@ function renderSession(group, session) {
 
     if (group.require_presence && group.presence_location) h += '<div class="presence-map">◉ '+(group.presence_location.name||'Meeting point')+' \u00B7 Within '+group.presence_radius_km+'km</div>';
 
+    // Governance Authority Tree
+    const treeMembers = group.members_detail || group.members.map(e=>({email:e,name:e.split('@')[0],verified:false}));
+    h += '<div class="card"><div class="card-body">';
+    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);letter-spacing:1.5px;margin-bottom:12px;">AUTHORITY CHAIN · GROUP → MEMBERS → AGENT DELEGATION</div>';
+    
+    // Group ROOT node
+    h += '<div style="border:1.5px solid var(--purple-border);border-radius:8px;padding:12px;background:var(--purple-bg);margin-bottom:4px;">';
+    h += '<div style="display:flex;align-items:center;gap:10px;">';
+    h += '<div style="width:36px;height:36px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>';
+    h += '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--purple);">'+group.name+'</div>';
+    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-tertiary);">ROOT · GROUP GOVERNANCE · '+(m.name)+' · '+group.member_count+' members</div></div>';
+    h += '<div style="text-align:right;"><div style="font-family:var(--mono);font-size:14px;font-weight:700;color:'+(met?'var(--success)':'var(--warning)')+';">'+effectivePct+'%</div>';
+    h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">QUORUM</div></div>';
+    h += '</div></div>';
+    
+    // Tree lines to members
+    treeMembers.forEach((mem, i) => {
+        const email = (mem.email||'').toLowerCase();
+        const vote = votes.find(v=>v.email===email);
+        const isPresent = (session.present_members||[]).includes(email);
+        const name = (mem.name||email.split('@')[0]).replace(/\b\w/g,c=>c.toUpperCase());
+        const borderColor = vote ? (vote.vote==='approve' ? 'var(--success-border)' : vote.vote==='deny' ? 'var(--error-border)' : 'var(--warning-border)') : 'var(--border)';
+        const bgColor = vote ? (vote.vote==='approve' ? 'var(--success-bg)' : vote.vote==='deny' ? 'var(--error-bg)' : 'var(--warning-bg)') : 'var(--surface-raised)';
+        const dotColor = vote?.verified ? (isPresent ? 'var(--teal)' : 'var(--success)') : 'var(--text-quaternary)';
+        const statusLabel = vote ? vote.vote.toUpperCase() + (vote.proxy ? ' (PROXY)' : '') : 'WAITING';
+        const statusColor = vote ? (vote.vote==='approve' ? 'var(--success)' : 'var(--error)') : 'var(--text-quaternary)';
+        
+        h += '<div style="display:flex;align-items:stretch;margin-left:18px;">';
+        h += '<div style="width:20px;display:flex;flex-direction:column;align-items:center;">';
+        h += '<div style="width:1.5px;height:6px;background:var(--border);"></div>';
+        h += '<div style="width:8px;height:1.5px;background:var(--border);margin-left:8px;"></div>';
+        h += '</div>';
+        h += '<div style="flex:1;border:1px solid '+borderColor+';border-radius:6px;padding:8px 12px;background:'+bgColor+';margin-bottom:2px;display:flex;align-items:center;gap:8px;">';
+        h += '<div style="width:8px;height:8px;border-radius:50%;background:'+dotColor+';flex-shrink:0;'+(vote?.verified?'box-shadow:0 0 4px '+dotColor+';':'')+'"></div>';
+        h += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-primary);">'+name+'</div>';
+        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">'+email+(isPresent?' · ◉ Present':'')+(vote?.proxy?' · Proxy: '+vote.proxy.proxy_by:'')+'</div></div>';
+        h += '<span style="font-family:var(--mono);font-size:10px;font-weight:600;color:'+statusColor+';">'+statusLabel+'</span>';
+        h += '</div></div>';
+    });
+    
+    // Agent delegation node (shows what happens after quorum)
+    h += '<div style="display:flex;align-items:stretch;margin-left:18px;">';
+    h += '<div style="width:20px;display:flex;flex-direction:column;align-items:center;">';
+    h += '<div style="width:1.5px;height:6px;background:var(--border);"></div>';
+    h += '<div style="width:8px;height:1.5px;background:var(--border);margin-left:8px;"></div>';
+    h += '</div>';
+    h += '<div style="flex:1;border:1px dashed '+(met?'var(--teal)':'var(--border)')+';border-radius:6px;padding:8px 12px;background:'+(met?'var(--teal-bg)':'var(--surface-raised)')+';margin-bottom:2px;display:flex;align-items:center;gap:8px;">';
+    h += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+(met?'var(--teal)':'var(--text-quaternary)')+'" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5" fill="'+(met?'var(--teal)':'var(--text-quaternary)')+'"/><circle cx="16" cy="12" r="1.5" fill="'+(met?'var(--teal)':'var(--text-quaternary)')+'"/><path d="M9 2h6M12 2v4"/></svg>';
+    if (met) {
+        h += '<div style="flex:1;"><div style="font-size:12px;color:var(--teal);">Agent Authorized</div>';
+        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Quorum met → Agent receives spending card · <a href="/agents?email='+encodeURIComponent(emailParam)+'" style="color:var(--teal);text-decoration:none;">Launch Agent →</a></div></div>';
+    } else {
+        h += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-quaternary);">Agent Pending Authorization</div>';
+        h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);">Waiting for quorum before agent can receive spending card</div></div>';
+    }
+    h += '</div></div>';
+    
+    h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:8px;padding:6px 10px;background:var(--surface-raised);border-radius:4px;">Monotonic narrowing: group authority flows down the chain. Agent permissions can only restrict, never expand, without group re-vote.</div>';
+    h += '</div></div>';
+
     h += '<div class="card"><div class="card-body"><div style="display:flex;align-items:center;gap:24px">';
     h += '<div class="quorum-ring"><svg viewBox="0 0 120 120"><circle class="quorum-ring-bg" cx="60" cy="60" r="52"/><circle class="quorum-ring-fill" cx="60" cy="60" r="52" stroke="'+ringColor+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+dashOff+'"/></svg><div class="quorum-ring-text"><div class="quorum-pct">'+effectivePct+'%</div><div class="quorum-label">'+(group.require_presence?'Present':'Approved')+'</div></div></div>';
     h += '<div style="flex:1"><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:6px">THRESHOLD: '+threshPct+'%</div>';
