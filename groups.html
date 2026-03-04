@@ -299,14 +299,15 @@ function showStartSession() {
     const s = SCENARIOS[activeScenario] || {};
     const defProp = s.default_proposal || 'Approve budget allocation';
     const defDesc = s.default_description || 'Describe the proposal for committee review.';
-    document.getElementById('sessionForm').innerHTML = '<div class="card animate"><div class="card-body"><div class="card-header">Start Governance Session</div><div class="form-group"><label class="form-label">Proposal</label><input id="sessAction" value="'+defProp.replace(/"/g,'&quot;')+'"></div><div class="form-group"><label class="form-label">Description</label><textarea id="sessDesc">'+defDesc+'</textarea></div><div style="display:flex;gap:8px"><button class="btn" onclick="startSession()">Start Session</button><button class="btn" style="border-color:var(--border);color:var(--text-tertiary)" onclick="document.getElementById(\'sessionForm\').innerHTML=\'\'">Cancel</button></div></div></div>';
+    document.getElementById('sessionForm').innerHTML = '<div class="card animate"><div class="card-body"><div class="card-header">Start Governance Session</div><div class="form-group"><label class="form-label">Proposal</label><input id="sessAction" value="'+defProp.replace(/"/g,'&quot;')+'"></div><div class="form-group"><label class="form-label">Description</label><textarea id="sessDesc">'+defDesc+'</textarea></div><div class="form-row"><div class="form-group"><label class="form-label">Voting Window (minutes)</label><select id="sessTimeout" class="form-input" style="cursor:pointer;"><option value="15">15 min</option><option value="30">30 min</option><option value="60" selected>1 hour</option><option value="1440">24 hours</option><option value="10080">7 days</option></select></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="startSession()">Start Session</button><button class="btn" style="border-color:var(--border);color:var(--text-tertiary)" onclick="document.getElementById(\'sessionForm\').innerHTML=\'\'">Cancel</button></div></div></div>';
 }
 
 async function startSession() {
     const action = document.getElementById('sessAction').value.trim();
     if (!action) return;
+    const timeout = parseInt(document.getElementById('sessTimeout')?.value || '60');
     try {
-        const d = await(await fetch(API+'/v1/groups/session', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ group_id:currentGroup.group_id, action, description:document.getElementById('sessDesc').value.trim() }) })).json();
+        const d = await(await fetch(API+'/v1/groups/session', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ group_id:currentGroup.group_id, action, description:document.getElementById('sessDesc').value.trim(), timeout_minutes:timeout, initiated_by:emailParam }) })).json();
         if (d.session_id) location.href = '/groups?session='+d.session_id+'&email='+encodeURIComponent(emailParam);
     } catch(e) { alert(e.message); }
 }
@@ -338,7 +339,31 @@ function renderSession(group, session) {
     let h = '<div style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--purple)">'+m.name+'</span><span class="status-pill '+sc+'">'+session.status.toUpperCase()+'</span></div>';
     h += '<div style="font-size:20px;font-weight:800;color:var(--text-primary)">'+session.action+'</div>';
     h += '<div style="font-size:13px;color:var(--text-tertiary);margin-top:4px">'+(session.description||'')+'</div>';
-    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:8px">'+group.name+'</div></div>';
+    h += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:8px">'+group.name+'</div>';
+    
+    // Session timer + cancel
+    if (session.status === 'open') {
+        let timerHtml = '';
+        if (session.expires_at) {
+            const expires = new Date(session.expires_at);
+            const now = new Date();
+            const remaining = Math.max(0, expires - now);
+            const mins = Math.floor(remaining / 60000);
+            const hrs = Math.floor(mins / 60);
+            const timeStr = hrs > 0 ? hrs + 'h ' + (mins % 60) + 'm' : mins + 'm';
+            const urgent = mins < 10;
+            timerHtml = '<span style="color:'+(urgent?'var(--error)':'var(--text-secondary)')+'">⏱ '+timeStr+' remaining</span>';
+        }
+        h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 12px;background:var(--surface-raised);border-radius:6px;">';
+        h += '<div style="font-family:var(--mono);font-size:11px;">'+timerHtml+'</div>';
+        h += '<button class="btn danger" onclick="cancelSession()" style="font-size:10px;padding:4px 10px;">Cancel Session</button>';
+        h += '</div>';
+    } else if (session.status === 'cancelled') {
+        h += '<div style="margin-top:8px;padding:8px 12px;background:var(--error-bg);border:1px solid var(--error-border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--error);">SESSION CANCELLED'+(session.cancel_reason?' — '+session.cancel_reason:'')+'</div>';
+    } else if (session.status === 'expired') {
+        h += '<div style="margin-top:8px;padding:8px 12px;background:var(--warning-bg);border:1px solid rgba(210,153,34,0.3);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--warning);">SESSION EXPIRED — voting window closed before quorum was reached</div>';
+    }
+    h += '</div>';
 
     if (group.require_presence && group.presence_location) h += '<div class="presence-map">◉ '+(group.presence_location.name||'Meeting point')+' \u00B7 Within '+group.presence_radius_km+'km</div>';
 
@@ -491,12 +516,22 @@ async function changeVote(newVote) {
 
 async function proxyVote(memberEmail, voteType) {
     if (!currentSession) return;
-    let loc = null;
-    // Proxy votes don't get presence — that's the point
     try {
         await fetch(API+'/v1/groups/session/'+currentSession.session_id+'/vote', {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ email: memberEmail, vote: voteType, proxy_by: emailParam })
+        });
+        await loadSession(currentSession.session_id);
+    } catch(e) { alert(e.message); }
+}
+
+async function cancelSession() {
+    if (!currentSession) return;
+    const reason = prompt('Reason for cancellation (optional):') || 'Cancelled by initiator';
+    try {
+        await fetch(API+'/v1/groups/session/'+currentSession.session_id+'/cancel', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ reason, cancelled_by: emailParam })
         });
         await loadSession(currentSession.session_id);
     } catch(e) { alert(e.message); }
