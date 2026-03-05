@@ -1,6 +1,10 @@
 {
     "rewrites": [
         {
+            "source": "/roadmap",
+            "destination": "/roadmap.html"
+        },
+        {
             "source": "/sdk",
             "destination": "/sdk.html"
         },

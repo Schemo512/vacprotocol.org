@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D0F17;--surface:#151821;--border:#1E2230;--teal:#2DD4BF;--purple:#7C3AED;--emerald:#10B981;--coral:#F96167;--amber:#F59E0B;--white:#FFF;--gray:#9CA3AF;--muted:#6B7280;--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:100vh}
+.nav{height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px}
+.nav img{width:24px;height:24px}
+.nav-text{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:1.5px}
+.nav-text .v{color:var(--teal)}.nav-text .p{color:var(--white)}
+.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}
+.hero{text-align:center;margin-bottom:40px}
+.hero-title{font-size:32px;font-weight:700;margin-bottom:8px}
+.hero-sub{font-size:14px;color:var(--gray);max-width:500px;margin:0 auto}
+.phase{margin-bottom:40px}
+.phase-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.phase-dot{width:12px;height:12px;border-radius:50%}
+.phase-title{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:2px}
+.phase-sub{font-size:12px;color:var(--muted);margin-left:auto}
+.item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.item-status{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;white-space:nowrap;margin-top:2px}
+.item-status.shipped{color:var(--emerald);background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)}
+.item-status.building{color:var(--teal);background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.2)}
+.item-status.planned{color:var(--purple);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2)}
+.item-status.exploring{color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)}
+.item-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.item-desc{font-size:12px;color:var(--gray);line-height:1.5}
+.footer{text-align:center;padding:40px 0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.footer a{color:var(--teal);text-decoration:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<img src="/branding/vac-logo-icon-dark.png" onerror="this.style.display='none'">
+<div class="nav-text"><span class="v">VAC</span> <span class="p">PROTOCOL</span></div>
+</nav>
+
+<div class="page">
+<div class="hero">
+<div class="hero-title">Product Roadmap</div>
+<div class="hero-sub">Cryptographic human provenance for AI agents. Here's what we've built and where we're heading.</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-dot" style="background:var(--emerald)"></div>
+<div class="phase-title" style="color:var(--emerald)">SHIPPED</div>
+<div class="phase-sub">Live at vacprotocol.org</div>
+</div>
+<div class="item"><div><div class="item-name">Multi-Modal Biometric Verification</div><div class="item-desc">6 simultaneous modalities: face liveness, deepfake detection, voiceprint, lip-sync, challenge response, finger gesture. Powered by Gemini + Deepgram.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">Verifiable Authority Tokens (VAT)</div><div class="item-desc">Cryptographic delegation chains from human to agent to sub-agent. Scope, budget, and time constraints enforced via monotonic narrowing.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">Trust Graph + Vouch Network</div><div class="item-desc">Verified humans vouch for each other. Inside the trust graph, verification is lightweight. Outside, full verification required. D3 force-directed visualisation.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">Agent Task Runner</div><div class="item-desc">Scoped authority cards with real-time budget tracking. Spending limits enforced cryptographically. Sub-agent delegation with narrowing constraints.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">Group Governance</div><div class="item-desc">Multi-party quorum voting before agents act. Unanimous, majority, or supermajority models. Cultural governance support (Māori Land Trust, corporate boards).</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">Verified Messaging</div><div class="item-desc">End-to-end messages with cryptographic provenance. Ephemeral mode, attention-gated, geo-fenced options.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">REST API</div><div class="item-desc">68 endpoints covering identity, delegation, trust graph, governance, messaging, and admin. Full OpenAPI documentation.</div></div><div class="item-status shipped">LIVE</div></div>
+<div class="item"><div><div class="item-name">SDK + Pluggable Verification</div><div class="item-desc">VAC sits underneath existing identity providers. Sumsub, iProov, Veriff, FaceTec can plug in. VAC handles delegation chains and trust graph.</div></div><div class="item-status shipped">LIVE</div></div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-dot" style="background:var(--teal)"></div>
+<div class="phase-title" style="color:var(--teal)">BUILDING NOW</div>
+<div class="phase-sub">March 2026</div>
+</div>
+<div class="item"><div><div class="item-name">Engine Configuration System</div><div class="item-desc">All verification timing, thresholds, and behavioural constants configurable via admin API. Zero hardcoded magic numbers.</div></div><div class="item-status building">IN PROGRESS</div></div>
+<div class="item"><div><div class="item-name">Adversarial Testing Suite</div><div class="item-desc">Systematic testing of each biometric modality against attack vectors: photo attacks, deepfakes, voice replay, wrong person.</div></div><div class="item-status building">IN PROGRESS</div></div>
+<div class="item"><div><div class="item-name">Trust Graph Relationship Types</div><div class="item-desc">Family, professional, tribal, institutional vouch types. Weighted trust scoring based on relationship diversity.</div></div><div class="item-status building">IN PROGRESS</div></div>
+<div class="item"><div><div class="item-name">NIST AI Agent Standards Submission</div><div class="item-desc">Formal submission to NIST's AI Agent Standards Initiative RFI, positioning VAC architecture in the standards conversation.</div></div><div class="item-status building">IN PROGRESS</div></div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-dot" style="background:var(--purple)"></div>
+<div class="phase-title" style="color:var(--purple)">PLANNED</div>
+<div class="phase-sub">Q2 2026</div>
+</div>
+<div class="item"><div><div class="item-name">Multi-Email Identity Federation</div><div class="item-desc">One human, multiple email addresses. Unified trust score across identities. Patent supplement filed.</div></div><div class="item-status planned">PLANNED</div></div>
+<div class="item"><div><div class="item-name">Proxy Voting + Timeout Logic</div><div class="item-desc">Delegated voting authority with expiry. If a board member can't vote, their proxy inherits their authority within constraints.</div></div><div class="item-status planned">PLANNED</div></div>
+<div class="item"><div><div class="item-name">Chair Authority as Governance Root</div><div class="item-desc">Foundation chair as the root of governance authority. Mathematical enforcement of governance hierarchy. Patent supplement filed.</div></div><div class="item-status planned">PLANNED</div></div>
+<div class="item"><div><div class="item-name">Enterprise API Keys + Rate Limiting</div><div class="item-desc">Production API access controls. Usage metering, rate limits, API key management for enterprise integration.</div></div><div class="item-status planned">PLANNED</div></div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-dot" style="background:var(--amber)"></div>
+<div class="phase-title" style="color:var(--amber)">EXPLORING</div>
+<div class="phase-sub">Strategic initiatives</div>
+</div>
+<div class="item"><div><div class="item-name">VAC Token Economics</div><div class="item-desc">Proof of human / proof of trust incentive model. Network-level token for verification and vouch incentives. Maximum theoretical supply = global population.</div></div><div class="item-status exploring">EXPLORING</div></div>
+<div class="item"><div><div class="item-name">VAC Protocol Foundation</div><div class="item-desc">Foundation structure for protocol governance. Chair authority as cryptographic root. Open protocol, protected architecture.</div></div><div class="item-status exploring">EXPLORING</div></div>
+<div class="item"><div><div class="item-name">Payment Rails Integration</div><div class="item-desc">Visa/Mastercard agent payment rails integration. VAT-bound spending cards for AI agents with real financial settlement.</div></div><div class="item-status exploring">EXPLORING</div></div>
+</div>
+
+<div class="footer">
+<a href="/">vacprotocol.org</a> · Violet Shores Pty Ltd · 285+ Patent Claims Filed<br>
+<a href="/sdk">SDK</a> · <a href="/api">API Docs</a> · <a href="/auth">Try It Live</a>
+</div>
+</div>
+
+</body>
+</html>
