@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — SDK</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D0F17;--surface:#151821;--border:#1E2230;--teal:#2DD4BF;--purple:#7C3AED;--emerald:#10B981;--coral:#F96167;--amber:#F59E0B;--white:#FFF;--gray:#9CA3AF;--muted:#6B7280;--light:#D1D5DB;--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:100vh}
+.nav{height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px}
+.nav img{width:24px;height:24px}
+.nav-text{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:1.5px}
+.nav-text .v{color:var(--teal)}.nav-text .p{color:var(--white)}
+.nav-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border:1px solid var(--purple);border-radius:4px;color:var(--purple);letter-spacing:1px;margin-left:8px}
+.hero{max-width:800px;margin:0 auto;padding:60px 24px 40px;text-align:center}
+.hero-eyebrow{font-family:var(--mono);font-size:12px;color:var(--teal);letter-spacing:3px;margin-bottom:12px}
+.hero-title{font-size:40px;font-weight:700;line-height:1.2;margin-bottom:16px}
+.hero-sub{font-size:16px;color:var(--gray);max-width:600px;margin:0 auto 32px;line-height:1.6}
+.section{max-width:800px;margin:0 auto;padding:0 24px 48px}
+.section-title{font-family:var(--mono);font-size:12px;color:var(--teal);letter-spacing:3px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px}
+.card-accent{border-top:3px solid var(--teal)}
+.card-purple{border-top-color:var(--purple)}
+.card-emerald{border-top-color:var(--emerald)}
+.card-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px}
+.card-body{font-size:13px;color:var(--gray);line-height:1.5}
+.code-block{background:#0A0C12;border:1px solid var(--border);border-radius:8px;padding:20px;font-family:var(--mono);font-size:13px;line-height:1.8;overflow-x:auto;margin:16px 0}
+.code-block .k{color:var(--purple)}.code-block .s{color:var(--teal)}.code-block .c{color:var(--muted);font-style:italic}.code-block .f{color:var(--amber)}.code-block .v{color:var(--light)}
+.endpoint-list{list-style:none;padding:0}
+.endpoint-list li{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.endpoint-list li:last-child{border-bottom:none}
+.method{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;min-width:50px;text-align:center}
+.method.post{background:rgba(124,58,237,0.15);color:var(--purple)}
+.method.get{background:rgba(16,185,129,0.15);color:var(--emerald)}
+.method.delete{background:rgba(249,97,103,0.15);color:var(--coral)}
+.ep-path{font-family:var(--mono);font-size:12px;color:var(--light)}
+.ep-desc{font-size:12px;color:var(--muted);margin-left:auto}
+.cta{text-align:center;padding:40px 24px 60px}
+.cta-btn{display:inline-block;padding:14px 32px;background:var(--teal);color:var(--bg);font-family:var(--mono);font-size:13px;font-weight:700;border-radius:8px;text-decoration:none;letter-spacing:0.5px}
+.cta-btn:hover{background:#26b8a5}
+.cta-sub{font-size:12px;color:var(--muted);margin-top:12px}
+.integrations{display:flex;gap:24px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.int-badge{font-family:var(--mono);font-size:11px;color:var(--gray);padding:6px 14px;border:1px solid var(--border);border-radius:6px}
+.footer{text-align:center;padding:24px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);font-family:var(--mono)}
+.footer a{color:var(--teal);text-decoration:none}
+@media(max-width:768px){.cards{grid-template-columns:1fr}.hero-title{font-size:28px}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<img src="/branding/vac-logo-icon-dark.png" onerror="this.style.display='none'">
+<div class="nav-text"><span class="v">VAC</span> <span class="p">PROTOCOL</span></div>
+<div class="nav-badge">SDK</div>
+</nav>
+
+<div class="hero">
+<div class="hero-eyebrow">DEVELOPER SDK</div>
+<div class="hero-title">Add cryptographic human provenance to any application</div>
+<div class="hero-sub">VAC Protocol sits underneath your existing identity stack. Verify humans, delegate authority to agents, enforce spending limits, and build trust graphs — all through a simple REST API.</div>
+</div>
+
+<div class="section">
+<div class="section-title">THREE ENGINES, ONE API</div>
+<div class="cards">
+<div class="card card-accent">
+<div class="card-title">Verification Engine</div>
+<div class="card-body">Multi-modal biometric verification. Pluggable — use our built-in engine or integrate iProov, Veriff, Sumsub, or your own provider. VAC handles the delegation chain regardless of who does the verification.</div>
+</div>
+<div class="card card-purple">
+<div class="card-title">VAT Engine</div>
+<div class="card-body">Mint Verifiable Authority Tokens with scope, budget, and time constraints. Create delegation chains from human to agent to sub-agent. Monotonic narrowing enforced at every level.</div>
+</div>
+<div class="card card-emerald">
+<div class="card-title">Trust Graph</div>
+<div class="card-body">Build vouch networks where verification gets cheaper over time. Query trust scores, check vouch relationships, and let the graph drive your verification economics.</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">QUICK START</div>
+<div class="code-block">
+<span class="c">// 1. Verify a human</span><br>
+<span class="k">const</span> <span class="v">auth</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://api.vacprotocol.org/v1/vat/auth/verify'</span>, {<br>
+&nbsp;&nbsp;<span class="v">method</span>: <span class="s">'POST'</span>,<br>
+&nbsp;&nbsp;<span class="v">body</span>: <span class="v">videoBlob</span> <span class="c">// 6-modality biometric capture</span><br>
+});<br><br>
+<span class="c">// 2. Mint an authority token</span><br>
+<span class="k">const</span> <span class="v">vat</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://api.vacprotocol.org/v1/vat/delegate'</span>, {<br>
+&nbsp;&nbsp;<span class="v">body</span>: { <span class="v">role</span>: <span class="s">'researcher'</span>, <span class="v">budget_usd</span>: <span class="f">500</span>, <span class="v">ttl_hours</span>: <span class="f">24</span> }<br>
+});<br><br>
+<span class="c">// 3. Agent acts within authority</span><br>
+<span class="k">const</span> <span class="v">action</span> = <span class="k">await</span> <span class="f">agentExecute</span>(<span class="v">vat.token</span>, <span class="s">'research task'</span>);<br><br>
+<span class="c">// 4. Provenance record — cryptographic proof of who authorised what</span><br>
+<span class="k">const</span> <span class="v">proof</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">`https://api.vacprotocol.org/v1/vat/verify/${vat.jti}`</span>);
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">API SURFACE — 68 ENDPOINTS</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+<ul class="endpoint-list">
+<li><span class="method post">POST</span><span class="ep-path">/v1/vat/auth/verify</span><span class="ep-desc">Biometric verification → root VAT</span></li>
+<li><span class="method post">POST</span><span class="ep-path">/v1/vat/delegate</span><span class="ep-desc">Create delegation chain</span></li>
+<li><span class="method get">GET</span><span class="ep-path">/v1/vat/chain/{jti}</span><span class="ep-desc">Full authority chain</span></li>
+<li><span class="method get">GET</span><span class="ep-path">/v1/vat/verify/{jti}</span><span class="ep-desc">Verify token + provenance</span></li>
+<li><span class="method post">POST</span><span class="ep-path">/v1/vat/spend/{jti}</span><span class="ep-desc">Record spend against budget</span></li>
+<li><span class="method post">POST</span><span class="ep-path">/v1/vouch/request</span><span class="ep-desc">Request vouch from another human</span></li>
+<li><span class="method post">POST</span><span class="ep-path">/v1/groups</span><span class="ep-desc">Create governance group</span></li>
+<li><span class="method post">POST</span><span class="ep-path">/v1/groups/session</span><span class="ep-desc">Start quorum vote</span></li>
+<li><span class="method get">GET</span><span class="ep-path">/v1/trust-profile/{email}</span><span class="ep-desc">Trust graph for a human</span></li>
+</ul>
+<div style="padding:12px 16px;border-top:1px solid var(--border);text-align:center">
+<a href="/api" style="font-family:var(--mono);font-size:11px;color:var(--teal);text-decoration:none">View full API documentation →</a>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">PLUGGABLE VERIFICATION</div>
+<div class="hero-sub" style="text-align:left;max-width:100%;margin-bottom:16px">VAC Protocol is the authority layer — not a verification provider. Use our built-in biometric engine for demos, or plug in your existing identity provider for production. The delegation chain and trust graph work regardless of who does the verification.</div>
+<div class="integrations">
+<div class="int-badge">iProov</div>
+<div class="int-badge">Veriff</div>
+<div class="int-badge">Sumsub</div>
+<div class="int-badge">FaceTec</div>
+<div class="int-badge">Incode</div>
+<div class="int-badge">Custom Provider</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">INTELLECTUAL PROPERTY</div>
+<div style="font-size:14px;color:var(--gray);line-height:1.6">285+ patent claims filed across six claim groups covering biometric identity binding, adaptive verification modalities, delegation chains, multi-agent authority, trust graph networks, and governance protocols. The protocol is open for integration — the claims protect the architecture.</div>
+</div>
+
+<div class="cta">
+<a href="/api" class="cta-btn">Explore the API →</a>
+<div class="cta-sub">vacprotocol.org/api · Full OpenAPI documentation</div>
+</div>
+
+<div class="footer">
+<a href="/">vacprotocol.org</a> · Violet Shores Pty Ltd · Patent Pending · 285+ Claims
+</div>
+
+</body>
+</html>
