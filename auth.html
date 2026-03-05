@@ -1265,7 +1265,7 @@ function beginRecording() {
     // Simultaneous: say greeting (4s), then say+show each digit (2s each)
     const digits = challengeData?.digits || [];
     const PHRASE_DURATION = 3;
-    const DIGIT_DURATION = 1.5;
+    const DIGIT_DURATION = 1;
     const BUFFER = 0;
     const totalDuration = PHRASE_DURATION + (digits.length * DIGIT_DURATION) + BUFFER;
     const totalSeconds = Math.ceil(totalDuration);
@@ -1415,7 +1415,7 @@ async function runRealVerification(videoBlob) {
         // Auto-open modality dropdown when results arrive
         const toggleEl = document.getElementById('modalityToggle');
         const listEl = document.getElementById('modalityList');
-        if (toggleEl && listEl) { toggleEl.classList.add('open'); listEl.classList.add('open'); }
+        // Dropdown stays collapsed — user clicks to expand
         for (const mod of mods) {
             const elId = {
                 'face_liveness': 'modFace',
