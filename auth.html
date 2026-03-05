@@ -1265,7 +1265,7 @@ function beginRecording() {
     // Simultaneous: say greeting (4s), then say+show each digit (2s each)
     const digits = challengeData?.digits || [];
     const PHRASE_DURATION = 3;
-    const DIGIT_DURATION = 2;
+    const DIGIT_DURATION = 1.5;
     const BUFFER = 0;
     const totalDuration = PHRASE_DURATION + (digits.length * DIGIT_DURATION) + BUFFER;
     const totalSeconds = Math.ceil(totalDuration);
