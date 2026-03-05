@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0D0F17;color:#fff;font-family:-apple-system,sans-serif;padding:32px;max-width:800px;margin:0 auto}
+h1{font-size:24px;margin-bottom:4px;color:#2DD4BF}
+.sub{font-size:12px;color:#6B7280;font-family:monospace;margin-bottom:32px}
+.card{background:#151821;border:1px solid #1E2230;border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:monospace;font-size:12px;font-weight:700;color:#9CA3AF;letter-spacing:2px;margin-bottom:12px}
+.stat{display:inline-flex;align-items:baseline;gap:6px;margin-right:24px;margin-bottom:8px}
+.stat-num{font-size:28px;font-weight:700;color:#2DD4BF;font-family:monospace}
+.stat-label{font-size:12px;color:#6B7280}
+input{background:#0D0F17;border:1px solid #1E2230;border-radius:6px;padding:10px 14px;color:#fff;font-size:14px;width:100%;margin-bottom:8px;font-family:monospace}
+input:focus{outline:none;border-color:#2DD4BF}
+.btn{padding:10px 20px;border:1px solid #1E2230;border-radius:6px;background:#151821;color:#9CA3AF;font-family:monospace;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn:hover{border-color:#2DD4BF;color:#2DD4BF}
+.btn-danger{border-color:#F96167;color:#F96167}
+.btn-danger:hover{background:rgba(249,97,103,0.1)}
+.btn-row{display:flex;gap:8px;margin-top:8px}
+.log{background:#0D0F17;border:1px solid #1E2230;border-radius:6px;padding:12px;font-family:monospace;font-size:12px;color:#10B981;max-height:200px;overflow-y:auto;margin-top:12px;white-space:pre-wrap;display:none}
+.section{margin-bottom:24px}
+</style>
+</head>
+<body>
+<h1>VAC Admin</h1>
+<div class="sub">vacprotocol.org/admin · Demo Controls</div>
+
+<div class="card">
+<div class="card-title">SYSTEM STATS</div>
+<div id="stats">Loading...</div>
+</div>
+
+<div class="card">
+<div class="card-title">CLEAR VOUCHES FOR USER</div>
+<input id="clearEmail" placeholder="email address" value="rob@violetshores.com">
+<div class="btn-row">
+<button class="btn btn-danger" onclick="clearVouches()">Clear Vouches</button>
+<button class="btn btn-danger" onclick="clearUser()">Clear User + Vouches</button>
+</div>
+<div class="log" id="clearLog"></div>
+</div>
+
+<div class="card">
+<div class="card-title">QUICK ACTIONS</div>
+<div class="btn-row">
+<button class="btn" onclick="clearVouchesFor('rob@violetshores.com')">Reset rob@violetshores.com</button>
+<button class="btn" onclick="clearVouchesFor('robzag@gmail.com')">Reset robzag@gmail.com</button>
+</div>
+<div class="btn-row">
+<button class="btn" onclick="resetBoth()">Reset Both (fresh demo)</button>
+</div>
+<div class="log" id="quickLog"></div>
+</div>
+
+<div class="card">
+<div class="card-title">LINKS</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<a href="/auth" class="btn" style="text-decoration:none">Auth Page</a>
+<a href="/agents?email=rob@violetshores.com" class="btn" style="text-decoration:none">Agents</a>
+<a href="/groups?email=rob@violetshores.com" class="btn" style="text-decoration:none">Governance</a>
+<a href="/teleprompter.html" class="btn" style="text-decoration:none">Teleprompter</a>
+<a href="/launch-demo" class="btn" style="text-decoration:none">Launch Demo</a>
+</div>
+</div>
+
+<script>
+const API = 'https://vac-system-production.up.railway.app';
+
+async function loadStats() {
+    try {
+        const r = await fetch(API + '/v1/admin/stats');
+        const d = await r.json();
+        document.getElementById('stats').innerHTML =
+            '<div class="stat"><span class="stat-num">' + d.users + '</span><span class="stat-label">users</span></div>' +
+            '<div class="stat"><span class="stat-num">' + d.tokens + '</span><span class="stat-label">tokens</span></div>' +
+            '<div class="stat"><span class="stat-num">' + d.vouches_confirmed + '</span><span class="stat-label">vouches</span></div>' +
+            '<div class="stat"><span class="stat-num">' + d.trust_edges + '</span><span class="stat-label">trust edges</span></div>' +
+            '<div class="stat"><span class="stat-num">' + d.groups + '</span><span class="stat-label">groups</span></div>';
+    } catch(e) { document.getElementById('stats').textContent = 'Error: ' + e.message; }
+}
+
+function log(el, msg) {
+    const d = document.getElementById(el);
+    d.style.display = 'block';
+    d.textContent += new Date().toLocaleTimeString() + ' ' + msg + '\n';
+    d.scrollTop = d.scrollHeight;
+}
+
+async function clearVouches() {
+    const email = document.getElementById('clearEmail').value;
+    const r = await fetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
+    const d = await r.json();
+    log('clearLog', JSON.stringify(d));
+    loadStats();
+}
+
+async function clearUser() {
+    const email = document.getElementById('clearEmail').value;
+    const r = await fetch(API + '/v1/admin/user/' + encodeURIComponent(email), {method:'DELETE'});
+    const d = await r.json();
+    log('clearLog', JSON.stringify(d));
+    loadStats();
+}
+
+async function clearVouchesFor(email) {
+    const r = await fetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
+    const d = await r.json();
+    log('quickLog', email + ': ' + JSON.stringify(d));
+    loadStats();
+}
+
+async function resetBoth() {
+    await clearVouchesFor('rob@violetshores.com');
+    await clearVouchesFor('robzag@gmail.com');
+    log('quickLog', '--- Both reset. Ready for fresh demo ---');
+}
+
+loadStats();
+</script>
+</body>
+</html>

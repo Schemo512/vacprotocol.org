@@ -274,7 +274,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </svg>
         <div class="nav-wordmark">VAC <span>VERIFY</span></div>
     </a>
-    <div style="display:flex;align-items:center;gap:10px"><a href="javascript:openDashboard()" id="navDashboard" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text-tertiary);text-decoration:none;letter-spacing:0.5px">DASHBOARD</a><div class="nav-mode">AUTHENTICATE</div></div>
+    <div style="display:flex;align-items:center;gap:10px"><a href="javascript:openDashboard()" id="navDashboard" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text-tertiary);text-decoration:none;letter-spacing:0.5px">DASHBOARD</a><div class="nav-mode" id="navStatus">AUTHENTICATE</div></div>
 </div>
 </div>
 
@@ -1771,6 +1771,9 @@ async function retryVerification() {
 // STEP 4: Success
 function showSuccess() {
     const d = userData();
+    // Update nav badge to show current state
+    const nav = document.getElementById('navStatus');
+    if (nav) { nav.textContent = 'AUTHENTICATED'; nav.style.color = '#2DD4BF'; nav.style.background = 'rgba(45,212,191,0.1)'; nav.style.borderColor = '#2DD4BF'; }
     // Start polling for vouches to unlock messaging
     startVouchPolling();
     // Dashboard hidden until vouch flow exists
@@ -2135,6 +2138,9 @@ function updateTrustStatus(vouchData) {
         if (progressText) progressText.textContent = 'Your identity is verified by the trust graph. Additional vouches strengthen your trust score.';
         if (eyebrow) { eyebrow.textContent = 'VERIFIED ✓'; eyebrow.style.color = '#10B981'; }
         if (title) title.textContent = "You're Verified";
+        // Update nav badge
+        const nav = document.getElementById('navStatus');
+        if (nav) { nav.textContent = 'VERIFIED'; nav.style.color = '#10B981'; nav.style.background = 'rgba(16,185,129,0.1)'; nav.style.borderColor = '#10B981'; }
     }
 
     // Update trust score display
