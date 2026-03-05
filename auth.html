@@ -344,7 +344,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </button>
         <div class="header-eyebrow">Step 2 of 4</div>
         <div class="header-title">Camera & Microphone</div>
-        <div class="header-sub">We'll record a short video of you speaking a challenge phrase, then showing fingers to match the digits. Takes about 15 seconds.</div>
+        <div class="header-sub">We'll record a short video of you speaking a challenge phrase, then showing fingers for each digit. Hold each pose briefly, then change to the next. Takes about 8 seconds.</div>
         <div id="deviceInfo" style="font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); margin-top: 4px;"></div>
     </div>
     <div class="camera-container" id="cameraBox">
@@ -689,7 +689,7 @@ const FAIL_REASONS = {
     },
     finger_gesture: {
         reason: 'Finger count sequence did not match the expected digits.',
-        tip: 'Hold up the correct number of fingers for each digit shown. Keep your hand near your face and fingers clearly spread.'
+        tip: 'Show each digit with your fingers near your face. Change your hand clearly between each number — hold, change, hold. Keep fingers spread.'
     },
     geolocation: {
         reason: 'Location could not be determined.',
@@ -1168,7 +1168,7 @@ function goToChallenge() {
     const digitStr = digits.join(', ');
     var greetPart = phrase.replace(/,\s*\d[\d\s,]*$/, '');
     var digitWords = digits.map(function(d) { return d; }).join(' then ');
-    document.getElementById('challengeText').innerHTML = '<span style="font-size:15px">Say: "' + greetPart + '"</span><br><span style="font-size:13px;opacity:0.7;margin-top:8px;display:inline-block">Then show fingers and say each number:<br><strong>' + digitWords + '</strong></span>';
+    document.getElementById('challengeText').innerHTML = '<span style="font-size:15px">Say: "' + greetPart + '"</span><br><span style="font-size:13px;opacity:0.7;margin-top:8px;display:inline-block">Then show fingers for each number (hold, change, hold):<br><strong>' + digitWords + '</strong></span>';
     // Accessibility fallback link
     if (!document.getElementById('fingerFallback')) {
         const fb = document.createElement('div');
@@ -1298,7 +1298,7 @@ function beginRecording() {
                 else if (di === digitIndex) circles += '<span style="display:inline-flex;width:52px;height:52px;border-radius:50%;border:2px solid var(--purple);background:rgba(124,92,252,0.15);color:white;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 4px">' + digits[di] + '</span>';
                 else circles += '<span style="display:inline-flex;width:36px;height:36px;border-radius:50%;background:var(--surface);color:var(--text-tertiary);align-items:center;justify-content:center;font-size:16px;font-weight:700;margin:0 4px">' + digits[di] + '</span>';
             }
-            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SAY + SHOW FINGERS</span><div style="display:flex;justify-content:center;margin:8px 0">' + circles + '</div><span style="font-size:13px;opacity:0.7">Say \u201c' + digit + '\u201d and show ' + digit + ' fingers</span>';
+            challengeEl.innerHTML = '<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:1px">SHOW FINGERS — hold, then change</span><div style="display:flex;justify-content:center;margin:8px 0">' + circles + '</div><span style="font-size:13px;opacity:0.7">Say \u201c' + digit + '\u201d and show ' + digit + ' fingers</span>';
         }
     }
     updatePhasePrompt(0);
