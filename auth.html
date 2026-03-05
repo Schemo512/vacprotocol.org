@@ -580,6 +580,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div style="margin-top:20px;text-align:center;">
         <a id="enterAppBtn" href="#" onclick="enterApp()" style="display:inline-block;background:var(--purple);color:white;font-family:var(--mono);font-size:13px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;cursor:pointer;">Enter VAC Protocol →</a>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:8px;">Messages · Agents · Governance</div>
+        <div style="margin-top:12px"><a href="#" onclick="clearAndRestart()" style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);text-decoration:underline;cursor:pointer;">Re-verify identity</a></div>
     </div>
 
     <!-- Share card -->
@@ -1766,6 +1767,13 @@ async function retryVerification() {
 // STEP 4: Success
 function showSuccess() {
     const d = userData();
+    // Save verified state to localStorage for persistence
+    try {
+        localStorage.setItem('vac_verified', JSON.stringify({
+            email: d.email, name: d.name, org: d.org, role: d.role,
+            authResult: authResult, timestamp: Date.now()
+        }));
+    } catch(e) {}
     // Update nav badge to show current state
     const nav = document.getElementById('navStatus');
     if (nav) { nav.textContent = 'AUTHENTICATED'; nav.style.color = '#2DD4BF'; nav.style.background = 'rgba(45,212,191,0.1)'; nav.style.borderColor = '#2DD4BF'; }
@@ -1923,6 +1931,11 @@ function showSuccess() {
 }
 
 // Share actions
+function clearAndRestart() {
+    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    window.location.href = '/auth';
+}
+
 function enterApp() {
     const email = userData().email || new URLSearchParams(window.location.search).get('email') || '';
     // If in iframe (SPA shell), tell parent to switch to agents tab
@@ -2238,32 +2251,32 @@ setTimeout(checkScroll, 200);
 const _origGoToStep = goToStep;
 goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
 
-// Restore verified state on refresh — redirect to full app
+// Restore verified state from localStorage
 (function() {
-    const p = new URLSearchParams(window.location.search);
-    const email = p.get('email');
-    
-    if (email && p.get('verified') === 'true') {
-        // Already verified — go straight to the full app
-        // auto-redirect disabled — stay on auth page
-        return;
-    }
-    
-    if (email && !p.get('verified')) {
-        // Has email but not verified flag — check backend
-        fetch(API_BASE + '/v1/trust-profile/' + encodeURIComponent(email))
-        .then(r => r.json())
-        .then(d => {
-            const hasVouches = d.vouches?.received?.length > 0;
-            const hasAuth = d.authorizations?.authorized_me?.length > 0;
-            const hasTrust = d.trust_score?.score > 0;
-            if (hasVouches || hasAuth || hasTrust || d.verified) {
-                // Verified — redirect to app
-                // auto-redirect disabled — stay on auth page
-            }
-        })
-        .catch(() => {});
-    }
+    try {
+        const saved = localStorage.getItem('vac_verified');
+        if (!saved) return;
+        const data = JSON.parse(saved);
+        // Check if less than 24 hours old
+        if (Date.now() - data.timestamp > 24 * 60 * 60 * 1000) {
+            localStorage.removeItem('vac_verified');
+            return;
+        }
+        if (!data.email || !data.authResult) return;
+        // Restore form fields
+        const nameInput = document.getElementById('inputName');
+        const emailInput = document.getElementById('inputEmail');
+        const orgInput = document.getElementById('inputOrg');
+        const roleInput = document.getElementById('inputRole');
+        if (nameInput) nameInput.value = data.name || '';
+        if (emailInput) emailInput.value = data.email || '';
+        if (orgInput) orgInput.value = data.org || '';
+        if (roleInput) roleInput.value = data.role || '';
+        // Restore auth result and skip to success
+        authResult = data.authResult;
+        showSuccess();
+        goToStep(4);
+    } catch(e) { console.log('Restore failed:', e); }
 })();
 </script>
 
