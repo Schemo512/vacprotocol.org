@@ -1769,6 +1769,8 @@ function showSuccess() {
     // Update nav badge to show current state
     const nav = document.getElementById('navStatus');
     if (nav) { nav.textContent = 'AUTHENTICATED'; nav.style.color = '#2DD4BF'; nav.style.background = 'rgba(45,212,191,0.1)'; nav.style.borderColor = '#2DD4BF'; }
+    // Notify parent frame (SPA shell) of auth success
+    try { if (window.parent !== window) { window.parent.postMessage({ type: 'vac-auth-success', email: d.email, name: d.name }, '*'); } } catch(e) {}
     // Start polling for vouches to unlock messaging
     startVouchPolling();
     // Dashboard hidden until vouch flow exists
@@ -1923,6 +1925,14 @@ function showSuccess() {
 // Share actions
 function enterApp() {
     const email = userData().email || new URLSearchParams(window.location.search).get('email') || '';
+    // If in iframe (SPA shell), tell parent to switch to agents tab
+    try {
+        if (window.parent !== window) {
+            window.parent.postMessage({ type: 'vac-go-tab', tab: 'agents' }, '*');
+            return;
+        }
+    } catch(e) {}
+    // Standalone: open agents page
     window.open('/agents?email=' + encodeURIComponent(email), '_blank');
 }
 
@@ -2136,6 +2146,8 @@ function updateTrustStatus(vouchData) {
         // Update nav badge
         const nav = document.getElementById('navStatus');
         if (nav) { nav.textContent = 'VERIFIED'; nav.style.color = '#10B981'; nav.style.background = 'rgba(16,185,129,0.1)'; nav.style.borderColor = '#10B981'; }
+        // Notify parent frame
+        try { if (window.parent !== window) { window.parent.postMessage({ type: 'vac-verified' }, '*'); } } catch(e) {}
     }
 
     // Update trust score display
