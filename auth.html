@@ -570,7 +570,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     </div>
 
     <details style="margin-top:14px">
-        <summary style="font-family:var(--mono);font-size:13px;color:var(--teal);letter-spacing:2px;cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-weight:600;"><span style="font-size:11px;transition:transform 0.2s;">▶</span> HOW WE AUTHENTICATED YOU</summary>
+        <summary style="font-family:var(--mono);font-size:13px;color:var(--teal);letter-spacing:2px;cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-weight:600;"><span style="font-size:11px;transition:transform 0.2s;">▶</span> How we authenticated you</summary>
         <div id="successModalities" style="text-align:left;margin-top:8px"></div>
     </details>
 
@@ -731,6 +731,18 @@ function goToCamera() {
     }
     errEl.style.display = 'none';
     
+    // Check if this email already has OTP confirmed (skip OTP)
+    try {
+        const confirmed = JSON.parse(localStorage.getItem('vac_otp_confirmed') || '{}');
+        const emailKey = userData().email.toLowerCase();
+        const confirmedAt = confirmed[emailKey];
+        // Skip OTP if confirmed within 7 days
+        if (confirmedAt && (Date.now() - confirmedAt) < 7 * 24 * 60 * 60 * 1000) {
+            console.log('[VAC] Email already OTP-confirmed, skipping to camera');
+            goToStep(1);
+            return;
+        }
+    } catch(e) {}
     // Send OTP and show verification input
     const btn = document.getElementById('btnIdentity');
     btn.disabled = true;
@@ -788,6 +800,12 @@ function verifyAuthOTP() {
     .then(data => {
         if (data.verified) {
             errEl.style.display = 'none';
+            // Remember this email is OTP-verified (skip OTP next time)
+            try { 
+                const confirmed = JSON.parse(localStorage.getItem('vac_otp_confirmed') || '{}');
+                confirmed[userData().email.toLowerCase()] = Date.now();
+                localStorage.setItem('vac_otp_confirmed', JSON.stringify(confirmed));
+            } catch(e) {}
             goToStep(1);
         }
     })
@@ -1932,7 +1950,7 @@ function showSuccess() {
 
 // Share actions
 function clearAndRestart() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     window.location.href = '/auth';
 }
 

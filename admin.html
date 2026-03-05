@@ -120,7 +120,7 @@ async function clearVouches() {
 }
 
 async function nuclearReset() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
@@ -143,7 +143,7 @@ async function clearUser() {
 }
 
 async function nuclearReset() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
@@ -165,7 +165,7 @@ async function clearVouchesFor(email) {
 }
 
 async function nuclearReset() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
@@ -176,7 +176,7 @@ loadStats();
 }
 
 async function resetBoth() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     await fetch(API + '/v1/admin/groups', {method:'DELETE'});
     await clearVouchesFor('rob@violetshores.com');
     await clearVouchesFor('robzag@gmail.com');
@@ -191,7 +191,7 @@ async function clearGroups() {
 }
 
 async function nuclearReset() {
-    try { localStorage.removeItem('vac_verified'); } catch(e) {}
+    try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
     const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
