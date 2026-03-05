@@ -1,6 +1,10 @@
 {
     "rewrites": [
         {
+            "source": "/launch-demo",
+            "destination": "/launch-demo.html"
+        },
+        {
             "source": "/app",
             "destination": "/app.html"
         },

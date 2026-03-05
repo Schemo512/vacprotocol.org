@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAC Protocol — Launch Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0D0F17;
+    --bg-card: #151821;
+    --bg-rail: #111318;
+    --border: #1E2230;
+    --teal: #2DD4BF;
+    --emerald: #10B981;
+    --purple: #7C3AED;
+    --coral: #F96167;
+    --amber: #F59E0B;
+    --white: #FFFFFF;
+    --gray: #9CA3AF;
+    --muted: #6B7280;
+    --light: #D1D5DB;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ═══════════ NARRATION RAIL ═══════════ */
+  .rail {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-rail);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+  }
+
+  .rail-header {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .rail-header img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+  }
+
+  .rail-header h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .rail-header p {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .rail-steps {
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  .rail-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 2px;
+  }
+
+  .rail-step:hover { background: rgba(45, 212, 191, 0.05); }
+
+  .rail-step.active {
+    background: rgba(45, 212, 191, 0.08);
+  }
+
+  .rail-step.completed .step-num {
+    background: var(--emerald);
+    color: var(--bg);
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--border);
+    color: var(--muted);
+    transition: all 0.3s ease;
+  }
+
+  .rail-step.active .step-num {
+    background: var(--teal);
+    color: var(--bg);
+    box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
+  }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.3s;
+    line-height: 1.3;
+  }
+
+  .step-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .rail-step.active .step-label { color: var(--white); }
+  .rail-step.active .step-sub { opacity: 1; }
+  .rail-step.completed .step-label { color: var(--emerald); }
+
+  .rail-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ═══════════ MAIN CONTENT ═══════════ */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    min-height: 56px;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar-left h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: 2px;
+  }
+
+  .topbar-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--emerald);
+    color: var(--emerald);
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 8px;
+  }
+
+  .topbar-nav button {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--gray);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .topbar-nav button:hover { border-color: var(--teal); color: var(--teal); }
+  .topbar-nav button.primary {
+    background: var(--teal);
+    color: var(--bg);
+    border-color: var(--teal);
+    font-weight: 600;
+  }
+
+  /* Step content area */
+  .content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+  }
+
+  .step-content { display: none; animation: fadeIn 0.4s ease; }
+  .step-content.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-accent {
+    border-left: 3px solid var(--teal);
+  }
+
+  .card-accent-purple { border-left-color: var(--purple); }
+  .card-accent-emerald { border-left-color: var(--emerald); }
+  .card-accent-amber { border-left-color: var(--amber); }
+  .card-accent-coral { border-left-color: var(--coral); }
+
+  /* Modality grid */
+  .modality-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .modality-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .modality-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--emerald);
+    margin-bottom: 4px;
+  }
+
+  .modality-name {
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 2px;
+  }
+
+  .modality-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--emerald);
+    letter-spacing: 1px;
+  }
+
+  /* Trust score hero */
+  .trust-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin: 24px 0;
+  }
+
+  .trust-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid var(--emerald);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  }
+
+  .trust-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  .trust-label {
+    font-size: 10px;
+    color: var(--gray);
+    letter-spacing: 1px;
+  }
+
+  /* Token display */
+  .token-block {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  .token-key { color: var(--purple); }
+  .token-val { color: var(--teal); }
+  .token-str { color: var(--emerald); }
+  .token-num { color: var(--amber); }
+
+  /* Delegation chain */
+  .chain {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 20px 0;
+  }
+
+  .chain-node {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .chain-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .chain-arrow {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    color: var(--muted);
+    font-size: 18px;
+  }
+
+  .chain-info h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .chain-info p {
+    font-size: 12px;
+    color: var(--gray);
+  }
+
+  .chain-badge {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  /* Agent action */
+  .action-log {
+    margin: 20px 0;
+  }
+
+  .action-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .action-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .action-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--light);
+  }
+
+  .action-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Provenance */
+  .provenance-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .provenance-field {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .provenance-field label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .provenance-field .val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* Budget gauge */
+  .budget-gauge {
+    margin: 16px 0;
+  }
+
+  .budget-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .budget-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .budget-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gray);
+  }
+
+  /* Narrowing indicator */
+  .narrowing-banner {
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .narrowing-banner .icon {
+    font-size: 20px;
+  }
+
+  .narrowing-banner .text {
+    font-size: 13px;
+    color: var(--purple);
+    font-weight: 600;
+  }
+
+  .narrowing-banner .sub {
+    font-size: 11px;
+    color: var(--gray);
+  }
+
+  /* Provenance stamp */
+  .provenance-stamp {
+    background: rgba(45, 212, 191, 0.08);
+    border: 2px solid var(--teal);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin: 24px 0;
+  }
+
+  .provenance-stamp h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .provenance-stamp p {
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  /* Two-col layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* Keyboard hint */
+  .keyboard-hint {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    z-index: 100;
+  }
+
+  .keyboard-hint kbd {
+    background: var(--border);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- NARRATION RAIL -->
+<div class="rail">
+  <div class="rail-header">
+    <img src="/branding/vac-logo-icon-dark.png" alt="VAC" onerror="this.style.display='none'">
+    <h2>VAC PROTOCOL</h2>
+    <p>Launch Demo Flow</p>
+  </div>
+
+  <div class="rail-steps">
+    <div class="rail-step active" data-step="1" onclick="goStep(1)">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-label">Verify Human</div>
+        <div class="step-sub">6-modality biometric check</div>
+      </div>
+    </div>
+    <div class="rail-step" data-step="2" onclick="goStep(2)">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-label">Mint Authority Token</div>
+        <div class="step-sub">Cryptographic VAT creation</div>
+      </div>
+    </div>
+    <div class="rail-step" data-step="3" onclick="goStep(3)">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-label">Delegate to Agent</div>
+        <div class="step-sub">Scoped authority chain</div>
+      </div>
+    </div>
+    <div class="rail-step" data-step="4" onclick="goStep(4)">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-label">Agent Executes</div>
+        <div class="step-sub">Actions within budget</div>
+      </div>
+    </div>
+    <div class="rail-step" data-step="5" onclick="goStep(5)">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-label">Provenance Record</div>
+        <div class="step-sub">Cryptographic audit trail</div>
+      </div>
+    </div>
+    <div class="rail-step" data-step="6" onclick="goStep(6)">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-label">Trust Graph</div>
+        <div class="step-sub">Network verification</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rail-footer">
+    vacprotocol.org/launch-demo
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>VAC PROTOCOL</h1>
+      <span class="topbar-badge">DEMO MODE</span>
+    </div>
+    <div class="topbar-nav">
+      <button onclick="prevStep()">← Back</button>
+      <button class="primary" onclick="nextStep()">Next Step →</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════ STEP 1: VERIFY HUMAN ═══════ -->
+    <div class="step-content active" id="step-1">
+      <div class="section-label">STEP 1 — VERIFICATION</div>
+      <div class="section-title">Human Identity Verified</div>
+
+      <div class="trust-hero">
+        <div class="trust-ring">
+          <div class="trust-score">0.95</div>
+          <div class="trust-label">TRUST</div>
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:4px">Rob Zagarella</div>
+          <div style="font-size:13px;color:var(--gray)">rob@violetshores.com · Violet Shores Pty Ltd</div>
+          <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--emerald);margin-top:6px;letter-spacing:1px">✓ VERIFIED HUMAN</div>
+        </div>
+      </div>
+
+      <div class="modality-grid">
+        <div class="modality-item">
+          <div class="modality-score">0.97</div>
+          <div class="modality-name">Face Liveness</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+        <div class="modality-item">
+          <div class="modality-score">0.94</div>
+          <div class="modality-name">Deepfake Detection</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+        <div class="modality-item">
+          <div class="modality-score">0.99</div>
+          <div class="modality-name">Voiceprint</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+        <div class="modality-item">
+          <div class="modality-score">0.91</div>
+          <div class="modality-name">Lip-sync Correlation</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+        <div class="modality-item">
+          <div class="modality-score">0.88</div>
+          <div class="modality-name">Challenge Response</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+        <div class="modality-item">
+          <div class="modality-score">1.00</div>
+          <div class="modality-name">Geolocation</div>
+          <div class="modality-status">✓ PASS</div>
+        </div>
+      </div>
+
+      <div class="card card-accent">
+        <div style="font-size:13px;color:var(--gray)">Six modalities verified simultaneously from a single recording. Face, voice, lip movement, challenge phrase, deepfake analysis, and device location — all bound to one cryptographic identity.</div>
+      </div>
+    </div>
+
+    <!-- ═══════ STEP 2: MINT VAT ═══════ -->
+    <div class="step-content" id="step-2">
+      <div class="section-label">STEP 2 — AUTHORITY TOKEN</div>
+      <div class="section-title">Verifiable Authority Token (VAT) Minted</div>
+
+      <div class="token-block">
+        <span class="token-key">{</span><br>
+        &nbsp;&nbsp;<span class="token-key">"type"</span>: <span class="token-str">"VAC_AUTHORITY_TOKEN"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"jti"</span>: <span class="token-str">"vat_root_8f4a2e91b7c3"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"subject"</span>: <span class="token-str">"rob@violetshores.com"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"trust_score"</span>: <span class="token-num">0.95</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"role"</span>: <span class="token-str">"root_authority"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"scope"</span>: <span class="token-str">"full_delegation"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"budget_usd"</span>: <span class="token-num">500.00</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"max_depth"</span>: <span class="token-num">3</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"expires"</span>: <span class="token-str">"2026-03-12T06:00:00Z"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"verification"</span>: <span class="token-str">"biometric_6_modality"</span>,<br>
+        &nbsp;&nbsp;<span class="token-key">"signature"</span>: <span class="token-str">"ed25519:9f8e7d...a3b2c1"</span><br>
+        <span class="token-key">}</span>
+      </div>
+
+      <div style="margin-top:20px" class="two-col">
+        <div class="card card-accent-purple">
+          <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:8px">WHAT THIS PROVES</div>
+          <div style="font-size:13px;color:var(--light)">This human was biometrically verified and authorised a $500 budget for AI agent delegation with a maximum chain depth of 3.</div>
+        </div>
+        <div class="card card-accent-emerald">
+          <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--emerald);letter-spacing:2px;margin-bottom:8px">CRYPTOGRAPHIC GUARANTEE</div>
+          <div style="font-size:13px;color:var(--light)">Token is cryptographically signed. Cannot be forged, modified, or expanded. Any downstream agent inherits these constraints.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ STEP 3: DELEGATION CHAIN ═══════ -->
+    <div class="step-content" id="step-3">
+      <div class="section-label">STEP 3 — DELEGATION</div>
+      <div class="section-title">Authority Delegated to AI Agent</div>
+
+      <div class="chain">
+        <div class="chain-node">
+          <div class="chain-icon" style="background:rgba(45,212,191,0.15);color:var(--teal)">👤</div>
+          <div class="chain-info">
+            <h4 style="color:var(--teal)">Rob Zagarella</h4>
+            <p>Verified Human · Root Authority · Trust: 0.95</p>
+          </div>
+          <div class="chain-badge" style="border-color:var(--teal);color:var(--teal)">$500 · FULL SCOPE</div>
+        </div>
+        <div class="chain-arrow">↓</div>
+        <div class="chain-node">
+          <div class="chain-icon" style="background:rgba(124,58,237,0.15);color:var(--purple)">🤖</div>
+          <div class="chain-info">
+            <h4 style="color:var(--purple)">Research Coordinator</h4>
+            <p>AI Agent · Delegated Authority · Depth 1</p>
+          </div>
+          <div class="chain-badge" style="border-color:var(--purple);color:var(--purple)">$200 · RESEARCH ONLY</div>
+        </div>
+        <div class="chain-arrow">↓</div>
+        <div class="chain-node">
+          <div class="chain-icon" style="background:rgba(245,158,11,0.15);color:var(--amber)">🤖</div>
+          <div class="chain-info">
+            <h4 style="color:var(--amber)">Data Analysis Agent</h4>
+            <p>Sub-agent · Inherited Authority · Depth 2</p>
+          </div>
+          <div class="chain-badge" style="border-color:var(--amber);color:var(--amber)">$50 · READ ONLY</div>
+        </div>
+      </div>
+
+      <div class="narrowing-banner">
+        <div class="icon">🔒</div>
+        <div>
+          <div class="text">Monotonic Narrowing</div>
+          <div class="sub">$500 → $200 → $50. Permissions tighten at every level. Sub-agents can never exceed parent authority.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ STEP 4: AGENT ACTION ═══════ -->
+    <div class="step-content" id="step-4">
+      <div class="section-label">STEP 4 — EXECUTION</div>
+      <div class="section-title">Agent Executing Within Authority</div>
+
+      <div class="two-col">
+        <div>
+          <div class="card card-accent-purple">
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:12px">RESEARCH COORDINATOR</div>
+            <div class="budget-gauge">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-family:'JetBrains Mono';font-size:24px;font-weight:700;color:var(--teal)">$152.40</span>
+                <span style="font-size:12px;color:var(--gray)">of $200.00</span>
+              </div>
+              <div class="budget-bar"><div class="budget-fill" style="width:76%"></div></div>
+              <div class="budget-labels">
+                <span>$47.60 spent</span>
+                <span>76% remaining</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-accent-amber">
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--amber);letter-spacing:2px;margin-bottom:12px">DATA ANALYSIS AGENT</div>
+            <div class="budget-gauge">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-family:'JetBrains Mono';font-size:24px;font-weight:700;color:var(--teal)">$38.70</span>
+                <span style="font-size:12px;color:var(--gray)">of $50.00</span>
+              </div>
+              <div class="budget-bar"><div class="budget-fill" style="width:77%"></div></div>
+              <div class="budget-labels">
+                <span>$11.30 spent</span>
+                <span>77% remaining</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="background:#0a0c12">
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--teal);letter-spacing:2px;margin-bottom:12px">AGENT ACTION LOG</div>
+            <div class="action-log">
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--emerald)"></div>
+                <div class="action-text">API call: search research papers on agent security</div>
+                <div class="action-time">$4.20</div>
+              </div>
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--emerald)"></div>
+                <div class="action-text">API call: summarise 12 papers</div>
+                <div class="action-time">$18.40</div>
+              </div>
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--emerald)"></div>
+                <div class="action-text">Delegate to Data Analysis Agent ($50 budget)</div>
+                <div class="action-time">$0.00</div>
+              </div>
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--emerald)"></div>
+                <div class="action-text">API call: generate comparison matrix</div>
+                <div class="action-time">$11.30</div>
+              </div>
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--emerald)"></div>
+                <div class="action-text">API call: compile final report</div>
+                <div class="action-time">$13.70</div>
+              </div>
+              <div class="action-entry">
+                <div class="action-dot" style="background:var(--teal)"></div>
+                <div class="action-text" style="color:var(--teal);font-weight:600">Task complete — $152.40 remaining of $200</div>
+                <div class="action-time" style="color:var(--teal)">✓</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ STEP 5: PROVENANCE ═══════ -->
+    <div class="step-content" id="step-5">
+      <div class="section-label">STEP 5 — PROVENANCE</div>
+      <div class="section-title">Cryptographic Human Provenance</div>
+
+      <div class="provenance-stamp">
+        <h3>✓ CRYPTOGRAPHIC HUMAN PROVENANCE</h3>
+        <p>Every action in this chain traces back to a biometrically verified human</p>
+      </div>
+
+      <div class="provenance-row">
+        <div class="provenance-field">
+          <label>HUMAN IDENTITY</label>
+          <div class="val">Rob Zagarella</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">rob@violetshores.com · 6-modality verified</div>
+        </div>
+        <div class="provenance-field">
+          <label>AUTHORITY TOKEN</label>
+          <div class="val" style="font-family:'JetBrains Mono';font-size:12px">vat_root_8f4a2e91b7c3</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">ed25519 signed · expires 12 Mar 2026</div>
+        </div>
+      </div>
+      <div class="provenance-row">
+        <div class="provenance-field">
+          <label>AGENT ACTION</label>
+          <div class="val">Research report compiled</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">5 API calls · $47.60 spent · 2 agents in chain</div>
+        </div>
+        <div class="provenance-field">
+          <label>TIMESTAMP</label>
+          <div class="val">5 March 2026, 07:42 AEDT</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">Chain depth: 2 · Monotonic narrowing enforced</div>
+        </div>
+      </div>
+
+      <div class="card card-accent">
+        <div style="font-size:14px;color:var(--white);font-weight:600;margin-bottom:8px">What this means</div>
+        <div style="font-size:13px;color:var(--gray);line-height:1.6">
+          Anyone can verify: this research report was produced by an AI agent that was authorised by Rob Zagarella, who was biometrically verified. The agent operated within a $200 budget, delegated $50 to a sub-agent, and completed the task for $47.60. Every step is cryptographically signed and auditable. <strong style="color:var(--teal)">Contracts can be overridden. This can't.</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ STEP 6: TRUST GRAPH ═══════ -->
+    <div class="step-content" id="step-6">
+      <div class="section-label">STEP 6 — TRUST GRAPH</div>
+      <div class="section-title">Network Verification</div>
+
+      <div class="two-col">
+        <div class="card card-accent-emerald">
+          <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--emerald);letter-spacing:2px;margin-bottom:12px">INSIDE TRUST GRAPH</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:8px">Streamlined</div>
+          <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:12px">Colleagues and vouched contacts get lightweight verification. 1 of 6 modalities. Nearly free.</div>
+          <div style="font-family:'JetBrains Mono';font-size:14px;color:var(--emerald);font-weight:700">COST: LOW</div>
+        </div>
+        <div class="card card-accent-coral">
+          <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--coral);letter-spacing:2px;margin-bottom:12px">OUTSIDE TRUST GRAPH</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:8px">Full Verification</div>
+          <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:12px">Cold contacts and cross-org interactions require 5–6 modalities. Certified provider integration.</div>
+          <div style="font-family:'JetBrains Mono';font-size:14px;color:var(--coral);font-weight:700">COST: HIGH → REVENUE</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;text-align:center;padding:20px">
+        <div style="font-size:16px;color:var(--white);font-weight:600">More users → denser trust graph → cheaper verification → more users</div>
+        <div style="font-size:13px;color:var(--teal);margin-top:8px;font-weight:600">Network effect meets unit economics</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="keyboard-hint">
+  <kbd>→</kbd> Next &nbsp; <kbd>←</kbd> Back
+</div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 6;
+
+  function goStep(n) {
+    if (n < 1 || n > totalSteps) return;
+
+    // Update rail
+    document.querySelectorAll('.rail-step').forEach(el => {
+      const s = parseInt(el.dataset.step);
+      el.classList.remove('active');
+      if (s < n) el.classList.add('completed');
+      else el.classList.remove('completed');
+      if (s === n) el.classList.add('active');
+    });
+
+    // Update content
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('step-' + n);
+    if (target) target.classList.add('active');
+
+    currentStep = n;
+  }
+
+  function nextStep() { goStep(currentStep + 1); }
+  function prevStep() { goStep(currentStep - 1); }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextStep(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+  });
+</script>
+</body>
+</html>
