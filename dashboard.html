@@ -4,273 +4,362 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAC Dashboard</title>
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/branding/vac-logo-square-dark.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
-:root { --bg: #0D1117; --surface: #161B22; --surface-raised: #1C2128; --border: #30363D; --border-light: #484F58; --text-primary: #F0F6FC; --text-secondary: #C9D1D9; --text-tertiary: #8B949E; --text-quaternary: #6E7681; --purple: #6C5CE7; --purple-bg: rgba(108,92,231,0.08); --purple-border: rgba(108,92,231,0.25); --teal: #00CEC9; --teal-bg: rgba(0,206,201,0.08); --success: #3FB950; --success-bg: rgba(63,185,80,0.08); --success-border: rgba(63,185,80,0.2); --warning: #D29922; --warning-bg: rgba(210,153,34,0.08); --warning-border: rgba(210,153,34,0.2); --error: #F85149; --error-bg: rgba(248,81,73,0.08); --error-border: rgba(248,81,73,0.2); --radius: 10px; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--font); background: var(--bg); color: var(--text-secondary); line-height: 1.6; }
-.nav { border-bottom: 1px solid var(--border); padding: 12px 20px; background: var(--bg); position: sticky; top: 0; z-index: 50; }
-.nav-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-.nav-brand { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; text-decoration: none; }
-.nav-brand span { font-weight: 400; color: var(--text-tertiary); }
-.nav-tabs { display: flex; gap: 0; }
-.nav-tab { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); padding: 6px 14px; cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 0.5px; transition: all 0.15s; }
-.nav-tab:hover { color: var(--text-tertiary); }
-.nav-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
-.page { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.freshness-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid; }
-.freshness-banner.success { background: var(--success-bg); border-color: var(--success-border); }
-.freshness-banner.teal { background: var(--teal-bg); border-color: rgba(0,206,201,0.2); }
-.freshness-banner.warning { background: var(--warning-bg); border-color: var(--warning-border); }
-.freshness-banner.error { background: var(--error-bg); border-color: var(--error-border); }
-.freshness-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.freshness-dot.success { background: var(--success); box-shadow: 0 0 6px var(--success); }
-.freshness-dot.teal { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
-.freshness-dot.warning { background: var(--warning); box-shadow: 0 0 6px var(--warning); animation: pulse 2s infinite; }
-.freshness-dot.error { background: var(--error); box-shadow: 0 0 6px var(--error); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.freshness-info { flex: 1; }
-.freshness-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.freshness-detail { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); }
-.freshness-action { font-family: var(--mono); font-size: 11px; padding: 5px 12px; border-radius: 4px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; text-decoration: none; white-space: nowrap; }
-.profile-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.profile-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--purple-bg); border: 2px solid var(--purple); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
-.profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.profile-meta { font-family: var(--mono); font-size: 11px; color: var(--text-quaternary); }
-.profile-score { font-family: var(--mono); font-size: 20px; font-weight: 700; text-align: right; }
-.profile-score-sub { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
-.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; text-align: center; }
-.stat-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.stat-label { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; }
-.section-header { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
-.section-title { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 1.5px; text-transform: uppercase; }
-.section-action { font-family: var(--mono); font-size: 10px; color: var(--purple); cursor: pointer; text-decoration: none; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
-.card-body { padding: 14px 16px; }
-.agent-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.agent-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
-.agent-icon.active { background: var(--success-bg); border: 1px solid var(--success-border); }
-.agent-name { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
-.agent-status { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; }
-.agent-status.active { background: var(--success-bg); color: var(--success); }
-.cap-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
-.cap-chip { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-quaternary); }
-.cap-chip.allowed { color: var(--teal); border-color: rgba(0,206,201,0.2); background: var(--teal-bg); }
-.cap-chip.excluded { color: var(--error); border-color: var(--error-border); background: var(--error-bg); text-decoration: line-through; }
-.gauge-row { display: flex; gap: 8px; margin: 8px 0; }
-.gauge { flex: 1; }
-.gauge-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
-.gauge-label { font-family: var(--mono); font-size: 9px; color: var(--text-quaternary); letter-spacing: 0.5px; text-transform: uppercase; }
-.gauge-value { font-family: var(--mono); font-size: 9px; color: var(--text-tertiary); }
-.gauge-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
-.gauge-fill { height: 100%; border-radius: 2px; }
-.gauge-fill.green { background: var(--success); }
-.gauge-fill.amber { background: var(--warning); }
-.gauge-fill.red { background: var(--error); }
-.agent-actions { display: flex; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-.agent-btn { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-tertiary); cursor: pointer; flex: 1; text-align: center; }
-.agent-btn:hover { border-color: var(--purple-border); color: var(--purple); }
-.agent-btn.danger { color: var(--error); }
-.agent-btn.danger:hover { background: var(--error-bg); border-color: var(--error-border); }
-.tier-label { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px 4px; }
-.contact-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-.contact-row:last-child { border-bottom: none; }
-.contact-ring { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; flex-shrink: 0; }
-.contact-ring.inner-circle { border: 2px solid var(--success); color: var(--success); background: var(--success-bg); }
-.contact-ring.trusted { border: 2px dashed var(--success); color: var(--success); }
-.contact-ring.verified { border: 2px solid var(--teal); color: var(--teal); }
-.contact-ring.invited { border: 2px dotted var(--text-quaternary); color: var(--text-quaternary); }
-.contact-ring.expired { border: 2px solid var(--error); color: var(--error); opacity: 0.5; }
-.contact-info { flex: 1; min-width: 0; }
-.contact-name { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-meta { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
-.contact-actions a { font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 3px; text-decoration: none; border: 1px solid var(--border); color: var(--text-tertiary); }
-.contact-actions a:hover { border-color: var(--purple-border); color: var(--purple); }
-.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.setting-row:last-child { border-bottom: none; }
-.setting-label { font-size: 13px; color: var(--text-secondary); }
-.setting-sub { font-family: var(--mono); font-size: 10px; color: var(--text-quaternary); }
-.setting-input { font-family: var(--mono); font-size: 12px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--text-primary); width: 90px; text-align: right; }
-.setting-toggle { position: relative; width: 36px; height: 20px; display: inline-block; }
-.setting-toggle input { opacity: 0; width: 0; height: 0; }
-.setting-toggle .slider { position: absolute; inset: 0; background: var(--border); border-radius: 10px; cursor: pointer; transition: 0.2s; }
-.setting-toggle .slider:before { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--text-tertiary); left: 2px; top: 2px; transition: 0.2s; }
-.setting-toggle input:checked + .slider { background: var(--purple); }
-.setting-toggle input:checked + .slider:before { transform: translateX(16px); background: white; }
-.save-btn { font-family: var(--mono); font-size: 11px; padding: 6px 16px; border-radius: 4px; border: 1px solid var(--purple-border); background: var(--purple-bg); color: var(--purple); cursor: pointer; margin-top: 12px; }
-.save-btn:hover { background: var(--purple); color: white; }
-.empty { text-align: center; padding: 20px; font-size: 13px; color: var(--text-quaternary); }
-.empty a { color: var(--purple); text-decoration: none; }
-.quick-links { display: flex; gap: 8px; margin-top: 16px; }
-.quick-link { flex: 1; text-align: center; font-family: var(--mono); font-size: 11px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-tertiary); text-decoration: none; }
-.quick-link:hover { border-color: var(--purple-border); color: var(--purple); }
-.quick-link.primary { border-color: var(--purple-border); background: var(--purple-bg); color: var(--purple); }
-@media (max-width: 600px) { .stat-row { grid-template-columns: repeat(2, 1fr); } .gauge-row { flex-direction: column; } .nav-tabs { gap: 0; } .nav-tab { padding: 6px 8px; font-size: 10px; } }
+:root{--bg:#0D0F17;--surface:#151821;--border:#1E2230;--teal:#2DD4BF;--purple:#7C3AED;--emerald:#10B981;--coral:#F96167;--amber:#F59E0B;--white:#FFF;--gray:#9CA3AF;--muted:#6B7280;--light:#D1D5DB;--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:100vh}
+.nav{height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px}
+.nav img{width:24px;height:24px}
+.nav-text{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:1.5px}
+.nav-text .v{color:var(--teal)}.nav-text .p{color:var(--white)}
+.nav-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:4px;letter-spacing:1px;margin-left:auto}
+.nav-badge.verified{border:1px solid var(--emerald);color:var(--emerald);background:rgba(16,185,129,0.1)}
+.nav-badge.auth{border:1px solid var(--teal);color:var(--teal);background:rgba(45,212,191,0.1)}
+.page{max-width:800px;margin:0 auto;padding:24px 20px 80px}
+
+/* Hero */
+.hero{text-align:center;padding:20px 0 24px}
+.hero-name{font-size:24px;font-weight:700;margin-bottom:4px}
+.hero-email{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:12px}
+.hero-score{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:8px;border:1px solid var(--emerald);background:rgba(16,185,129,0.08)}
+.hero-score-num{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--emerald)}
+.hero-score-label{font-size:12px;color:var(--gray)}
+.hero-verified{font-family:var(--mono);font-size:11px;color:var(--emerald);margin-top:8px;letter-spacing:1px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+
+/* Trust Graph SVG */
+#trustGraph{width:100%;height:300px;border-radius:8px;background:var(--bg);border:1px solid var(--border)}
+#trustGraph text{font-family:var(--mono);pointer-events:none}
+
+/* Contacts */
+.contact{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.contact:last-child{border-bottom:none}
+.contact-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.contact-avatar.mutual{background:rgba(16,185,129,0.15);border:1px solid var(--emerald);color:var(--emerald)}
+.contact-avatar.one-way{background:rgba(124,58,237,0.15);border:1px solid var(--purple);color:var(--purple)}
+.contact-avatar.pending{background:rgba(107,114,128,0.15);border:1px solid var(--muted);color:var(--muted)}
+.contact-name{font-size:14px;font-weight:600}
+.contact-email{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.contact-status{margin-left:auto;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px}
+.contact-status.mutual{color:var(--emerald);background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)}
+.contact-status.vouched{color:var(--purple);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2)}
+.contact-status.messaged{color:var(--teal);background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.2)}
+
+/* Actions */
+.action{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:var(--white)}
+.action:hover{border-color:var(--teal);background:rgba(45,212,191,0.03)}
+.action-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.action-text{font-size:13px;font-weight:600}
+.action-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.action-arrow{margin-left:auto;color:var(--muted);font-size:16px}
+
+/* Quick stats row */
+.stats{display:flex;gap:12px;margin-bottom:16px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat-num{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--teal)}
+.stat-label{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-top:4px}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);font-size:12px}
 </style>
 </head>
 <body>
-<div class="nav"><div class="nav-inner">
-    <a href="/" class="nav-brand">
-        <svg width="18" height="18" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
-        VAC <span>PROTOCOL</span>
-    </a>
-    <div class="nav-tabs">
-        <div class="nav-tab active" onclick="switchTab('overview')">Overview</div>
-        <div class="nav-tab" onclick="switchTab('agents')" id="nav-agents">Agents</div>
-        <div class="nav-tab" onclick="switchTab('contacts')">Contacts</div>
-        <div class="nav-tab" onclick="switchTab('settings')">Settings</div>
-    </div>
-</div></div>
-<div class="page" id="content"><div style="text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-quaternary);">Loading…</div></div>
+
+<nav class="nav">
+<img src="/branding/vac-logo-icon-dark.png" onerror="this.style.display='none'">
+<div class="nav-text"><span class="v">VAC</span> <span class="p">DASHBOARD</span></div>
+<div class="nav-badge auth" id="navBadge">LOADING</div>
+</nav>
+
+<div class="page">
+<div class="loading" id="loadingState">Loading your trust profile...</div>
+<div id="dashContent" style="display:none">
+
+<!-- Hero -->
+<div class="hero">
+<div class="hero-name" id="heroName"></div>
+<div class="hero-email" id="heroEmail"></div>
+<div class="hero-score">
+<span class="hero-score-num" id="heroScore">—</span>
+<span class="hero-score-label">Trust<br>Score</span>
+</div>
+<div class="hero-verified" id="heroStatus"></div>
+</div>
+
+<!-- Quick Stats -->
+<div class="stats">
+<div class="stat"><div class="stat-num" id="statVouches">0</div><div class="stat-label">VOUCHES</div></div>
+<div class="stat"><div class="stat-num" id="statContacts">0</div><div class="stat-label">CONTACTS</div></div>
+<div class="stat"><div class="stat-num" id="statVerifications">0</div><div class="stat-label">VERIFICATIONS</div></div>
+</div>
+
+<!-- Trust Graph -->
+<div class="card">
+<div class="card-title">YOUR TRUST GRAPH <span style="font-size:10px;color:var(--teal);font-weight:400">Live network</span></div>
+<svg id="trustGraph"></svg>
+</div>
+
+<!-- Next Actions -->
+<div class="card">
+<div class="card-title">WHAT TO DO NEXT</div>
+<div id="actionsList"></div>
+</div>
+
+<!-- Contacts -->
+<div class="card">
+<div class="card-title">CONTACTS <span id="contactCount" style="font-weight:400"></span></div>
+<div id="contactsList"></div>
+</div>
+
+<!-- Quick Links -->
+<div class="card">
+<div class="card-title">QUICK LINKS</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<a href="/auth" class="action" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(45,212,191,0.1)">🔐</div><div><div class="action-text">Verify</div></div></a>
+<a href="/agents?email=" class="action" id="linkAgents" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(124,58,237,0.1)">🤖</div><div><div class="action-text">Agents</div></div></a>
+<a href="/groups?email=" class="action" id="linkGroups" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(16,185,129,0.1)">👥</div><div><div class="action-text">Governance</div></div></a>
+<a href="/msg?from=" class="action" id="linkMsg" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(249,158,11,0.1)">✉️</div><div><div class="action-text">Messages</div></div></a>
+</div>
+</div>
+
+</div>
+</div>
+
 <script>
-const API='https://vac-system-production.up.railway.app';const params=new URLSearchParams(location.search);const email=params.get('email')||'';const isDemo=params.get('demo')==='true';let _data=null,_freshness=null;
-function switchTab(t){document.querySelectorAll('.nav-tab').forEach(n=>n.classList.remove('active'));document.querySelector(`.nav-tab[onclick*="${t}"]`).classList.add('active');document.querySelectorAll('.tab-content').forEach(n=>n.classList.remove('active'));const el=document.getElementById('tab-'+t);if(el)el.classList.add('active');}
-function timeAgo(iso){if(!iso)return'never';const ms=Date.now()-new Date(iso).getTime();const m=Math.floor(ms/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
-function gc(p){return p>90?'red':p>60?'amber':'green';}
-function enc(s){return encodeURIComponent(s||'');}
-function getContactTier(c){if(c.state==='mutual')return c.trust_score>0.8?'inner-circle':'trusted';if(['vouched','invited_back','verified'].includes(c.state))return'verified';if(c.state==='invited')return'invited';return'expired';}
-function tierLabel(t){return{'inner-circle':'Inner Circle','trusted':'Trusted','verified':'Verified','invited':'Invited','expired':'Needs Re-verification'}[t]||t;}
-function tierOrder(t){return{'inner-circle':0,'trusted':1,'verified':2,'invited':3,'expired':4}[t]??5;}
+const API = 'https://vac-system-production.up.railway.app';
+const params = new URLSearchParams(window.location.search);
+const email = params.get('email') || '';
 
-async function init(){
-if(isDemo){
-try{const r=await fetch(`${API}/v1/user/demo/dashboard-preview`);_data=await r.json();_data.protection_defaults=JSON.parse(_data.user.protection_defaults);_data.agent_budget_defaults=JSON.parse(_data.user.agent_budget_defaults);_freshness={freshness:'full',label:'Just Verified',color:'success',decay_factor:1.0,hours_since_verification:0.1,effective_trust_score:0.92,reverify_modality:'selfie_only',actions:{}};render();}catch(e){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;">Demo data failed to load. Check API.</div>';}return;}
-if(!email){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sign in required</div><div><a href="/auth">Verify your identity</a> to access your dashboard</div><div style="margin-top:12px;"><a href="/dashboard?demo=true" style="font-family:var(--mono);font-size:11px;color:var(--purple);">View demo dashboard →</a></div></div>';return;}
-try{const[ur,fr]=await Promise.all([fetch(`${API}/v1/user/${enc(email)}`),fetch(`${API}/v1/user/${enc(email)}/freshness`)]);if(!ur.ok)throw new Error();_data=await ur.json();_freshness=fr.ok?await fr.json():null;render();}
-catch(e){document.getElementById('content').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Not verified yet</div><div><a href="/auth">Complete verification</a> to create your profile</div></div>';}}
-
-function render(){const u=_data.user,f=_freshness,pd=_data.protection_defaults,ab=_data.agent_budget_defaults;
-const initials=u.name.split(' ').map(n=>n[0]).join('').toUpperCase();
-const contacts=(_data.contacts||[]).map(c=>({...c,_tier:getContactTier(c)})).sort((a,b)=>{const d=tierOrder(a._tier)-tierOrder(b._tier);return d!==0?d:(b.last_interaction||'').localeCompare(a.last_interaction||'');});
-let h='';
-// Freshness
-if(f){const col=f.color;const stale=f.freshness==='aging'||f.freshness==='stale';
-h+=`<div class="freshness-banner ${col}"><div class="freshness-dot ${col}"></div><div class="freshness-info"><div class="freshness-label">${f.label}</div><div class="freshness-detail">Verified ${f.hours_since_verification<1?'just now':Math.round(f.hours_since_verification)+'h ago'} · Effective trust: ${(f.effective_trust_score*100).toFixed(0)}% · Re-verify: ${f.reverify_modality.replace(/_/g,' ')}</div></div>${stale?'<a href="/auth" class="freshness-action">Re-verify</a>':''}</div>`;}
-
-const es=f?(f.effective_trust_score*100).toFixed(0):(u.trust_score*100).toFixed(0);
-const sc=es>80?'var(--success)':es>50?'var(--teal)':'var(--warning)';
-
-// Overview
-h+='<div class="tab-content active" id="tab-overview">';
-h+=`<div class="profile-row"><div class="profile-avatar">${initials}</div><div style="flex:1;"><div class="profile-name">${u.name}</div><div class="profile-meta">${u.org?u.org+' · ':''}${u.email}</div></div><div><div class="profile-score" style="color:${sc}">${es}%</div><div class="profile-score-sub">Trust Score</div></div></div>`;
-h+=`<div class="stat-row"><div class="stat-card"><div class="stat-value">${_data.contacts_count}</div><div class="stat-label">Contacts</div></div><div class="stat-card"><div class="stat-value">${_data.agents_count}</div><div class="stat-label">Agents</div></div><div class="stat-card"><div class="stat-value">${_data.messages.sent}</div><div class="stat-label">Sent</div></div><div class="stat-card"><div class="stat-value">${u.total_verifications}</div><div class="stat-label">Verifications</div></div></div>`;
-h+=`<div class="quick-links"><a href="/auth" class="quick-link">Re-verify</a><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}" class="quick-link primary">New Message</a></div></div>`;
-
-// Agents
-h+='<div class="tab-content" id="tab-agents">';
-h+=`<div class="section-header"><div class="section-title">Agent Chains · ${_data.agents_count}</div><a href="/auth" class="section-action">+ Create Agent</a></div>`;
-if(!_data.agents.length){h+='<div class="card"><div class="card-body"><div class="empty">No active agents. <a href="/auth">Verify to create your first chain.</a></div></div></div>';}
-else _data.agents.forEach(a=>{const c=a.constraints||{};const acts=c.allowed_actions||['read','write','execute'];const excl=c.exclusions||[];const dp=a.delegation_policy||{};
-const budgets=[];if(c.max_spend_usd)budgets.push({l:'USD',m:c.max_spend_usd,u:0,p:'$'});if(c.token_budget)budgets.push({l:'Tokens',m:c.token_budget,u:0,p:''});if(c.max_api_calls)budgets.push({l:'API',m:c.max_api_calls,u:0,p:''});
-h+=`<div class="card"><div class="card-body"><div class="agent-header"><div class="agent-icon active">⚡</div><div class="agent-name">${a.agent_id}</div><span class="agent-status active">Active</span></div><div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);">Depth ${a.depth} · Trust ${(a.trust_score*100).toFixed(0)}%</div><div class="cap-chips">${acts.map(x=>`<span class="cap-chip allowed">${x}</span>`).join('')}${excl.map(x=>`<span class="cap-chip excluded">${x}</span>`).join('')}</div>`;
-if(budgets.length){h+='<div class="gauge-row">';budgets.forEach(b=>{const pct=b.m>0?Math.round(b.u/b.m*100):0;h+=`<div class="gauge"><div class="gauge-header"><span class="gauge-label">${b.l}</span><span class="gauge-value">${b.p}${b.u.toLocaleString()} / ${b.p}${b.m.toLocaleString()}</span></div><div class="gauge-bar"><div class="gauge-fill ${gc(pct)}" style="width:${pct}%"></div></div></div>`;});h+='</div>';}
-// Delegation policy section
-h+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">';
-h+='<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Delegation Authority</div>';
-const canDelegate=dp.allowed!==false;
-const maxCh=dp.max_children||5;
-const childrenCanD=dp.children_can_delegate!==false;
-const needsApproval=dp.require_human_approval||false;
-h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">`;
-h+=`<span class="cap-chip ${canDelegate?'allowed':''}" style="${!canDelegate?'color:var(--error);border-color:var(--error-border);':''}">Can delegate: ${canDelegate?'Yes':'No'}</span>`;
-h+=`<span class="cap-chip">Max children: ${maxCh}</span>`;
-h+=`<span class="cap-chip">Used: ${a.children_count||0}/${maxCh}</span>`;
-h+=`<span class="cap-chip ${childrenCanD?'':'excluded'}">Sub-agents can delegate: ${childrenCanD?'Yes':'No'}</span>`;
-h+=`<span class="cap-chip ${needsApproval?'':'allowed'}">${needsApproval?'Requires human approval':'Auto-approved'}</span>`;
-h+=`</div>`;
-// Show children (sub-agents) as indented tree
-const children=a.children||[];
-if(children.length>0){
-h+='<div style="margin-top:6px;">';
-children.forEach(ch=>{
-const chTrust=(ch.trust_score*100).toFixed(0);
-const chStatus=ch.status==='revoked'?'<span style="color:var(--error);font-size:9px;">REVOKED</span>':'<span style="color:var(--success);font-size:9px;">ACTIVE</span>';
-const chDp=ch.delegation_policy||{};
-const chCanD=chDp.allowed!==false;
-h+=`<div style="margin-left:16px;padding:8px 10px;border-left:2px solid var(--purple-border);margin-bottom:4px;background:var(--surface-raised);border-radius:0 6px 6px 0;">`;
-h+=`<div style="display:flex;align-items:center;gap:8px;">`;
-h+=`<span style="font-family:var(--mono);font-size:9px;color:var(--purple);">↳</span>`;
-h+=`<span style="font-size:12px;font-weight:600;color:var(--text-primary);flex:1;">${ch.agent_id}</span>`;
-h+=chStatus;
-h+=`</div>`;
-h+=`<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:2px;">Depth ${ch.depth} · Trust ${chTrust}% · Can delegate: ${chCanD?'yes':'no'} · Sub-agents: ${ch.children_count||0}</div>`;
-h+=`<div style="display:flex;gap:4px;margin-top:4px;">`;
-h+=`<button class="agent-btn" style="flex:none;padding:2px 8px;font-size:9px;" onclick="window.open('${ch.verify_url}')">View</button>`;
-if(ch.status!=='revoked')h+=`<button class="agent-btn danger" style="flex:none;padding:2px 8px;font-size:9px;" onclick="revokeAgent('${ch.jti}')">Revoke</button>`;
-h+=`</div></div>`;
-});
-h+='</div>';}
-h+='</div>';
-h+=`<div class="agent-actions"><button class="agent-btn" onclick="window.open('${a.verify_url}')">View Chain</button><button class="agent-btn" onclick="adjustBudget('${a.jti}')">Budget</button><button class="agent-btn" onclick="adjustMaxChildren('${a.jti}')">Max Children</button><button class="agent-btn" onclick="adjustDelegationDepth('${a.jti}')">Max Depth</button><button class="agent-btn" onclick="toggleDelegation('${a.jti}',${canDelegate})">Delegation ${canDelegate?'Off':'Off'}</button><button class="agent-btn danger" onclick="revokeAgent('${a.jti}')">Revoke</button></div></div></div>`;});
-// Pending escalation requests
-const escalations=_data.pending_escalations||[];
-if(escalations.length>0){
-h+=`<div class="section-header"><div class="section-title" style="color:var(--warning);">⚠ Pending Approvals · ${escalations.length}</div></div>`;
-escalations.forEach(e=>{
-const typeLabels={'budget_increase':'Budget Increase','scope_expansion':'Scope Expansion','depth_extension':'Depth Extension','delegation_enable':'Enable Delegation','time_extension':'Time Extension'};
-const typeColors={'budget_increase':'var(--warning)','scope_expansion':'var(--purple)','depth_extension':'var(--teal)','delegation_enable':'var(--purple)','time_extension':'var(--teal)'};
-h+=`<div class="card" style="border-color:var(--warning-border);"><div class="card-body">`;
-h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`;
-h+=`<span style="font-size:16px;">🔔</span>`;
-h+=`<span style="font-size:13px;font-weight:600;color:var(--text-primary);flex:1;">${e.requesting_agent} requests ${typeLabels[e.escalation_type]||e.escalation_type}</span>`;
-h+=`<span style="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border);">PENDING</span>`;
-h+=`</div>`;
-h+=`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">${e.reason}</div>`;
-h+=`<div style="display:flex;gap:12px;font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:4px;">`;
-h+=`<span>Current: ${JSON.stringify(e.current_value)}</span>`;
-h+=`<span style="color:${typeColors[e.escalation_type]||'var(--text-tertiary)'};">Requested: ${JSON.stringify(e.requested_value)}</span>`;
-h+=`</div>`;
-if(e.context){h+=`<div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-bottom:6px;">Context: ${typeof e.context==='string'?e.context:JSON.stringify(e.context)}</div>`;}
-h+=`<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-bottom:8px;">Chain: ${e.chain.map(c=>(c.agent_id||c.email)+'(d'+c.depth+')').join(' → ')}</div>`;
-h+=`<div style="display:flex;gap:4px;">`;
-h+=`<button class="agent-btn" style="flex:1;background:var(--success-bg);color:var(--success);border-color:var(--success-border);" onclick="resolveEscalation('${e.id}',true)">Approve</button>`;
-h+=`<button class="agent-btn" style="flex:1;" onclick="resolveEscalation('${e.id}',false)">Deny</button>`;
-h+=`</div></div></div>`;
-});
+if (!email) {
+    document.getElementById('loadingState').textContent = 'No email provided. Go to vacprotocol.org/auth to verify.';
 }
-h+='</div>';
 
-// Contacts
-h+='<div class="tab-content" id="tab-contacts">';
-h+=`<div class="section-header"><div class="section-title">Authenticated Contacts · ${contacts.length}</div><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}" class="section-action">+ Message</a></div>`;
-if(!contacts.length){h+='<div class="card"><div class="card-body"><div class="empty">No contacts yet. Share your <a href="/auth">verification link</a> to grow your trust network.</div></div></div>';}
-else{h+='<div class="card">';let ct=null;contacts.forEach(c=>{if(c._tier!==ct){ct=c._tier;h+=`<div class="tier-label">${tierLabel(ct)}</div>`;}const ci=(c.name||c.email.split('@')[0]).substring(0,2).toUpperCase();const sc2=c.trust_score?(c.trust_score*100).toFixed(0)+'%':'';
-h+=`<div class="contact-row"><div class="contact-ring ${c._tier}">${ci}</div><div class="contact-info"><div class="contact-name">${c.name||c.email}</div><div class="contact-meta">${sc2?sc2+' · ':''}${timeAgo(c.last_interaction)}</div></div><div class="contact-actions"><a href="/msg?compose=1&from=${enc(email)}&name=${enc(u.name)}&to=${enc(c.email)}">MSG</a></div></div>`;});h+='</div>';}
-h+='</div>';
+// Update quick links with email
+document.getElementById('linkAgents').href = '/agents?email=' + encodeURIComponent(email);
+document.getElementById('linkGroups').href = '/groups?email=' + encodeURIComponent(email);
+document.getElementById('linkMsg').href = '/msg?from=' + encodeURIComponent(email);
 
-// Settings
-h+='<div class="tab-content" id="tab-settings">';
-h+='<div class="section-header"><div class="section-title">Message Protection Defaults</div></div><div class="card"><div class="card-body">';
-h+=stog('setEphemeral','Ephemeral','Never stored on device',pd.ephemeral);h+=stog('setAttention','Attention-gated','Blurs when not looking',pd.attention_gated);h+=stog('setGeo','Geo-fenced','Location restricted',pd.geo_fenced||false);
-h+='</div></div>';
-h+='<div class="section-header"><div class="section-title">Agent Budget Defaults</div></div><div class="card"><div class="card-body">';
-h+=sinp('setSpend','Max spend per agent','USD limit',ab.max_spend_usd||50,'$');h+=sinp('setTokens','Token budget','Per agent',ab.token_budget||500000,'');h+=sinp('setCalls','API calls limit','Per agent',ab.max_api_calls||1000,'');
-h+='<div style="text-align:right;"><button class="save-btn" onclick="saveDefaults()">Save Defaults</button></div></div></div>';
-h+='<div class="section-header"><div class="section-title">Verification History</div></div><div class="card"><div class="card-body">';
-h+=`<div class="setting-row"><span class="setting-label">Last verified</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);">${timeAgo(u.last_verified_at)}</span></div>`;
-h+=`<div class="setting-row"><span class="setting-label">Total verifications</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);">${u.total_verifications}</span></div>`;
-h+=`<div class="setting-row"><span class="setting-label">Method</span><span style="font-family:var(--mono);font-size:12px;color:var(--teal);">${(u.verification_method||'none').replace(/_/g,' ')}</span></div>`;
-h+='</div></div></div>';
-document.getElementById('content').innerHTML=h;
-// Show escalation badge on Agents tab
-const escCount=(_data.pending_escalations||[]).length;
-if(escCount>0){const navAgents=document.getElementById('nav-agents');if(navAgents)navAgents.innerHTML=`Agents <span style="background:var(--warning);color:var(--bg);font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;">${escCount}</span>`;}}
+async function loadDashboard() {
+    if (!email) return;
+    try {
+        const [userResp, profileResp, vouchResp] = await Promise.all([
+            fetch(API + '/v1/user/' + encodeURIComponent(email)),
+            fetch(API + '/v1/trust-profile/' + encodeURIComponent(email)),
+            fetch(API + '/v1/vouches?email=' + encodeURIComponent(email) + '&direction=received')
+        ]);
+        const userData = await userResp.json();
+        const profile = await profileResp.json();
+        const vouches = await vouchResp.json();
+        const user = userData.user || userData;
+        const contacts = userData.contacts || [];
 
-function stog(id,label,sub,checked){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><label class="setting-toggle"><input type="checkbox" id="${id}" ${checked?'checked':''}><span class="slider"></span></label></div>`;}
-function sinp(id,label,sub,val,pre){return`<div class="setting-row"><div><div class="setting-label">${label}</div><div class="setting-sub">${sub}</div></div><div style="display:flex;align-items:center;gap:4px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text-quaternary);">${pre}</span><input class="setting-input" type="number" id="${id}" value="${val}"></div></div>`;}
+        // Hero
+        document.getElementById('heroName').textContent = user.name || email;
+        document.getElementById('heroEmail').textContent = email;
+        const score = user.trust_score || profile.trust_score?.score || 0;
+        document.getElementById('heroScore').textContent = score.toFixed(2);
+        
+        const vouchCount = vouches.count || 0;
+        const isVerified = vouchCount > 0;
+        document.getElementById('heroStatus').textContent = isVerified ? 'VERIFIED · ' + vouchCount + ' VOUCH' + (vouchCount > 1 ? 'ES' : '') : 'AUTHENTICATED';
+        document.getElementById('heroStatus').style.color = isVerified ? 'var(--emerald)' : 'var(--teal)';
+        
+        const badge = document.getElementById('navBadge');
+        if (isVerified) { badge.textContent = 'VERIFIED'; badge.className = 'nav-badge verified'; }
+        else { badge.textContent = 'AUTHENTICATED'; badge.className = 'nav-badge auth'; }
 
-async function revokeAgent(jti){if(!confirm('Revoke this agent and all downstream chains?'))return;try{await fetch(`${API}/v1/vat/revoke/${jti}?cascade=true`,{method:'POST'});location.reload();}catch(e){alert('Failed: '+e.message);}}
-async function resolveEscalation(escId,approved){const note=approved?prompt('Approval note (optional):','Approved'):prompt('Denial reason:','Not needed for this task');try{const r=await fetch(`${API}/v1/vat/escalations/${escId}/resolve`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved,note:note||undefined})});if(r.ok){const d=await r.json();alert(`${d.status.toUpperCase()}: ${d.resolution_note}`);location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
-function adjustBudget(jti){const n=prompt('New USD budget limit:','50');if(!n||isNaN(n))return;fetch(`${API}/v1/vat/spend/${jti}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_spend_usd:parseFloat(n)})}).then(r=>r.json()).then(d=>{alert('Budget updated to $'+n);location.reload();}).catch(e=>alert('Failed: '+e.message));}
-async function adjustDelegationDepth(jti){const n=prompt('Max delegation depth from this agent (current children keep existing depth):','3');if(!n||isNaN(n))return;try{const r=await fetch(`${API}/v1/vat/${jti}/delegation-policy`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_depth_from_here:parseInt(n)})});if(r.ok){const d=await r.json();alert(d.changes.join('\n')||'Updated');location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
-async function adjustMaxChildren(jti){const n=prompt('Max number of sub-agents this agent can create:','5');if(!n||isNaN(n))return;try{const r=await fetch(`${API}/v1/vat/${jti}/delegation-policy`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_children:parseInt(n)})});if(r.ok){const d=await r.json();alert(d.changes.join('\n')||'Updated');location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
-async function toggleDelegation(jti, disable){if(!confirm(`${disable?'Disable':'This cannot be re-enabled. Disable'} delegation for this agent?`))return;try{const r=await fetch(`${API}/v1/vat/${jti}/delegation-policy`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed:!disable})});if(r.ok){const d=await r.json();alert(d.changes.join('\n')||'Policy updated');location.reload();}else{const e=await r.json();alert(e.detail||'Failed');}}catch(e){alert('Failed: '+e.message);}}
-async function saveDefaults(){const pd={ephemeral:document.getElementById('setEphemeral').checked,attention_gated:document.getElementById('setAttention').checked,geo_fenced:document.getElementById('setGeo').checked};const ab={max_spend_usd:parseFloat(document.getElementById('setSpend').value)||50,token_budget:parseInt(document.getElementById('setTokens').value)||500000,max_api_calls:parseInt(document.getElementById('setCalls').value)||1000};
-try{const r=await fetch(`${API}/v1/user/${enc(email)}/defaults`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({protection_defaults:pd,agent_budget_defaults:ab})});if(r.ok){const b=document.querySelector('.save-btn');b.textContent='Saved ✓';setTimeout(()=>b.textContent='Save Defaults',2000);}}catch(e){alert('Failed: '+e.message);}}
-init();
+        // Stats
+        document.getElementById('statVouches').textContent = vouchCount;
+        document.getElementById('statContacts').textContent = contacts.length;
+        document.getElementById('statVerifications').textContent = user.total_verifications || 0;
+
+        // Contacts
+        document.getElementById('contactCount').textContent = contacts.length + ' people';
+        const cl = document.getElementById('contactsList');
+        if (contacts.length === 0) {
+            cl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No contacts yet. Share your proof link to start building your trust graph.</div>';
+        } else {
+            cl.innerHTML = contacts.map(c => {
+                const state = c.state || 'pending';
+                const avatarClass = c.they_vouched && c.i_vouched ? 'mutual' : c.they_vouched || c.i_vouched ? 'one-way' : 'pending';
+                const statusClass = state === 'mutual' ? 'mutual' : state === 'vouched' ? 'vouched' : 'messaged';
+                const statusText = state === 'mutual' ? 'MUTUAL' : c.they_vouched ? 'VOUCHED YOU' : c.i_vouched ? 'YOU VOUCHED' : state.toUpperCase();
+                const initial = (c.name || c.email || '?').charAt(0).toUpperCase();
+                return '<div class="contact"><div class="contact-avatar ' + avatarClass + '">' + initial + '</div><div><div class="contact-name">' + (c.name || c.email) + '</div><div class="contact-email">' + c.email + '</div></div><div class="contact-status ' + statusClass + '">' + statusText + '</div></div>';
+            }).join('');
+        }
+
+        // Next Actions
+        const actions = [];
+        if (vouchCount === 0) {
+            actions.push({icon:'🤝', text:'Get your first vouch', sub:'Share your proof link with someone to verify your identity', href:'/auth?email=' + encodeURIComponent(email), color:'var(--teal)'});
+        }
+        if (vouchCount > 0 && vouchCount < 3) {
+            actions.push({icon:'🤝', text:'Get more vouches', sub:'Each vouch strengthens your trust score. You have ' + vouchCount + ' — aim for 3+', href:'/auth?email=' + encodeURIComponent(email), color:'var(--teal)'});
+        }
+        if (contacts.filter(c => !c.they_vouched).length > 0) {
+            actions.push({icon:'📨', text:'Request vouches from contacts', sub:contacts.filter(c => !c.they_vouched).length + ' contacts haven\'t vouched for you yet', href:'/auth', color:'var(--purple)'});
+        }
+        actions.push({icon:'🤖', text:'Delegate to an AI agent', sub:'Create a scoped authority token with spending limits', href:'/agents?email=' + encodeURIComponent(email), color:'var(--purple)'});
+        actions.push({icon:'✉️', text:'Send a verified message', sub:'Messages with cryptographic provenance', href:'/msg?from=' + encodeURIComponent(email), color:'var(--amber)'});
+        if (contacts.length >= 2) {
+            actions.push({icon:'👥', text:'Create a governance group', sub:'Set up quorum voting for agent authorization', href:'/groups?email=' + encodeURIComponent(email), color:'var(--emerald)'});
+        }
+
+        document.getElementById('actionsList').innerHTML = actions.map(a =>
+            '<a href="' + a.href + '" class="action"><div class="action-icon" style="background:rgba(45,212,191,0.05)">' + a.icon + '</div><div><div class="action-text">' + a.text + '</div><div class="action-sub">' + a.sub + '</div></div><div class="action-arrow">→</div></a>'
+        ).join('');
+
+        // Build D3 Trust Graph
+        buildTrustGraph(user, contacts, vouches);
+
+        // Show content
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('dashContent').style.display = 'block';
+
+    } catch(e) {
+        document.getElementById('loadingState').textContent = 'Error loading profile: ' + e.message;
+    }
+}
+
+function buildTrustGraph(user, contacts, vouches) {
+    const svg = d3.select('#trustGraph');
+    const container = document.getElementById('trustGraph');
+    const width = container.clientWidth;
+    const height = 300;
+    svg.attr('viewBox', `0 0 ${width} ${height}`);
+
+    // Build nodes and links
+    const nodes = [{
+        id: email,
+        name: user.name || email.split('@')[0],
+        score: user.trust_score || 0,
+        type: 'self',
+        radius: 28
+    }];
+    const links = [];
+
+    contacts.forEach(c => {
+        const isMutual = c.i_vouched && c.they_vouched;
+        nodes.push({
+            id: c.email,
+            name: c.name || c.email.split('@')[0],
+            score: c.trust_score || 0,
+            type: isMutual ? 'mutual' : c.they_vouched ? 'voucher' : 'contact',
+            radius: isMutual ? 22 : 18
+        });
+        links.push({
+            source: email,
+            target: c.email,
+            mutual: isMutual,
+            strength: isMutual ? 0.8 : 0.4
+        });
+    });
+
+    // Add vouch-received nodes not in contacts
+    const receivedVouches = vouches.vouches_received || [];
+    receivedVouches.forEach(v => {
+        if (!nodes.find(n => n.id === v.email)) {
+            nodes.push({
+                id: v.email,
+                name: v.person || v.email.split('@')[0],
+                score: 0,
+                type: 'voucher',
+                radius: 18
+            });
+            links.push({ source: email, target: v.email, mutual: false, strength: 0.5 });
+        }
+    });
+
+    // Colors
+    const colors = {
+        self: '#2DD4BF',
+        mutual: '#10B981',
+        voucher: '#7C3AED',
+        contact: '#6B7280'
+    };
+
+    // Force simulation
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(d => d.strength))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(d => d.radius + 10));
+
+    // Draw links
+    const link = svg.append('g')
+        .selectAll('line')
+        .data(links)
+        .join('line')
+        .attr('stroke', d => d.mutual ? '#10B981' : '#1E2230')
+        .attr('stroke-width', d => d.mutual ? 2 : 1)
+        .attr('stroke-dasharray', d => d.mutual ? 'none' : '4,4');
+
+    // Draw nodes
+    const node = svg.append('g')
+        .selectAll('g')
+        .data(nodes)
+        .join('g')
+        .call(d3.drag()
+            .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+            .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+            .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+        );
+
+    // Node circles
+    node.append('circle')
+        .attr('r', d => d.radius)
+        .attr('fill', d => {
+            const c = colors[d.type];
+            return c + '20';
+        })
+        .attr('stroke', d => colors[d.type])
+        .attr('stroke-width', d => d.type === 'self' ? 2.5 : 1.5);
+
+    // Node initials
+    node.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '-0.1em')
+        .attr('fill', d => colors[d.type])
+        .attr('font-size', d => d.type === 'self' ? '14px' : '11px')
+        .attr('font-weight', '700')
+        .text(d => d.name.charAt(0).toUpperCase());
+
+    // Node names below
+    node.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '1.1em')
+        .attr('fill', d => colors[d.type])
+        .attr('font-size', '8px')
+        .attr('font-weight', '600')
+        .text(d => d.name.length > 12 ? d.name.substring(0, 12) + '…' : d.name);
+
+    // Trust scores
+    node.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '2.2em')
+        .attr('fill', '#6B7280')
+        .attr('font-size', '7px')
+        .text(d => d.score > 0 ? d.score.toFixed(2) : '');
+
+    // Tick
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => Math.max(10, Math.min(width - 10, d.source.x)))
+            .attr('y1', d => Math.max(10, Math.min(height - 10, d.source.y)))
+            .attr('x2', d => Math.max(10, Math.min(width - 10, d.target.x)))
+            .attr('y2', d => Math.max(10, Math.min(height - 10, d.target.y)));
+        node.attr('transform', d => `translate(${Math.max(30, Math.min(width - 30, d.x))},${Math.max(30, Math.min(height - 30, d.y))})`);
+    });
+}
+
+loadDashboard();
 </script>
 </body>
 </html>

@@ -117,7 +117,10 @@ body { background: var(--bg); color: var(--white); font-family: -apple-system, s
         <div class="nav-brand-text"><span class="vac">VAC</span> <span class="proto">PROTOCOL</span></div>
     </a>
     <div class="nav-tabs">
-        <a class="nav-tab active" data-tab="verify" onclick="goTab('verify')">
+        <a class="nav-tab active" data-tab="dashboard" onclick="goTab('dashboard')">
+            <div class="nav-dot" style="background:var(--teal)"></div>Dashboard
+        </a>
+        <a class="nav-tab" data-tab="verify" onclick="goTab('verify')">
             <div class="nav-dot" style="background:var(--emerald)"></div>Verify
         </a>
         <a class="nav-tab" data-tab="agents" onclick="goTab('agents')">
@@ -144,6 +147,7 @@ body { background: var(--bg); color: var(--white); font-family: -apple-system, s
 const params = new URLSearchParams(window.location.search);
 const email = params.get('email') || '';
 const tabs = {
+    dashboard: '/dashboard' + (email ? '?email=' + encodeURIComponent(email) : ''),
     verify: '/auth' + (email ? '?email=' + encodeURIComponent(email) : ''),
     agents: '/agents' + (email ? '?email=' + encodeURIComponent(email) : ''),
     governance: '/groups' + (email ? '?email=' + encodeURIComponent(email) : ''),
@@ -207,7 +211,7 @@ window.addEventListener('message', (e) => {
 });
 
 // Load initial tab from hash or default to verify
-const initTab = window.location.hash.replace('#', '') || 'verify';
+const initTab = window.location.hash.replace('#', '') || 'dashboard';
 if (tabs[initTab]) {
     goTab(initTab);
 } else {
