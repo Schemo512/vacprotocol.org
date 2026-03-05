@@ -2128,20 +2128,13 @@ function updateTrustStatus(vouchData) {
     const count = vouchData.count || 0;
     const vouches = vouchData.vouches_received || [];
 
-    if (count >= 3) {
-        // VERIFIED — multiple vouches
+    if (count >= 1) {
+        // VERIFIED — at least one vouch
         if (badge) { badge.style.borderColor = '#10B981'; badge.style.background = 'rgba(16,185,129,0.1)'; }
-        if (badgeText) { badgeText.style.color = '#10B981'; badgeText.textContent = 'VERIFIED · ' + count + ' VOUCHES'; }
-        if (progressText) progressText.textContent = 'Strong trust graph. Your verification is recognised across the network.';
+        if (badgeText) { badgeText.style.color = '#10B981'; badgeText.textContent = 'VERIFIED · ' + count + ' VOUCH' + (count > 1 ? 'ES' : ''); }
+        if (progressText) progressText.textContent = 'Your identity is verified by the trust graph. Additional vouches strengthen your trust score.';
         if (eyebrow) { eyebrow.textContent = 'VERIFIED ✓'; eyebrow.style.color = '#10B981'; }
         if (title) title.textContent = "You're Verified";
-    } else if (count >= 1) {
-        // VOUCHED — at least one vouch
-        if (badge) { badge.style.borderColor = '#7C3AED'; badge.style.background = 'rgba(124,58,237,0.1)'; }
-        if (badgeText) { badgeText.style.color = '#7C3AED'; badgeText.textContent = 'VOUCHED · ' + count + ' VOUCH' + (count > 1 ? 'ES' : ''); }
-        if (progressText) progressText.textContent = count === 1 ? 'One vouch received. Get 2 more vouches to reach Verified status.' : count + ' vouches received. Get ' + (3 - count) + ' more to reach Verified status.';
-        if (eyebrow) { eyebrow.textContent = 'VOUCHED ✓'; eyebrow.style.color = '#7C3AED'; }
-        if (title) title.textContent = "You're Vouched";
     }
 
     // Update trust score display
