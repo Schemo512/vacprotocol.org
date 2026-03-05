@@ -443,6 +443,12 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
             </div>
         </div>
     </div>
+    <!-- Speed toggle -->
+    <div id="speedToggle" style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;">
+        <button onclick="setSpeed('relaxed')" id="speedRelaxed" style="font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-tertiary);cursor:pointer;">Relaxed</button>
+        <button onclick="setSpeed('normal')" id="speedNormal" style="font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;border:1px solid var(--teal);background:rgba(45,212,191,0.1);color:var(--teal);cursor:pointer;">Normal</button>
+        <button onclick="setSpeed('fast')" id="speedFast" style="font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-tertiary);cursor:pointer;">Fast</button>
+    </div>
     <div class="timer-label" id="timerLabel">Recording in</div>
     <div class="countdown-ring-wrap" id="countdownRingWrap">
         <svg viewBox="0 0 100 100">
@@ -650,7 +656,28 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let authResult = null;
 let challengeData = null;
-let fingerFallback = 'none'; // 'none' = fingers, 'voice' = voice only
+let fingerFallback = 'none';
+let challengeSpeed = 'normal'; // 'relaxed', 'normal', 'fast'
+const SPEED_CONFIG = {
+    relaxed: { phrase: 5, digit: 2, countdown: 3 },
+    normal:  { phrase: 3, digit: 1, countdown: 2 },
+    fast:    { phrase: 2, digit: 0.8, countdown: 1 }
+};
+function setSpeed(speed) {
+    challengeSpeed = speed;
+    ['relaxed','normal','fast'].forEach(s => {
+        const btn = document.getElementById('speed' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (s === speed) {
+            btn.style.borderColor = 'var(--teal)';
+            btn.style.background = 'rgba(45,212,191,0.1)';
+            btn.style.color = 'var(--teal)';
+        } else {
+            btn.style.borderColor = 'var(--border)';
+            btn.style.background = 'none';
+            btn.style.color = 'var(--text-tertiary)';
+        }
+    });
+} // 'none' = fingers, 'voice' = voice only
 let retryAttempts = 0;
 const MAX_RETRIES = 5;
 let audioContext = null;
@@ -1208,7 +1235,7 @@ function startCountdown() {
     const timerEl = document.getElementById('countdownTimer');
     const ringFill = document.getElementById('countdownRingFill');
     const circumference = 2 * Math.PI * 39;
-    let count = 2;
+    let count = SPEED_CONFIG[challengeSpeed].countdown;
     timerEl.textContent = count;
     ringFill.style.strokeDashoffset = 0;
 
@@ -1216,7 +1243,7 @@ function startCountdown() {
         count--;
         if (count > 0) {
             timerEl.textContent = count;
-            ringFill.style.strokeDashoffset = circumference * ((2 - count) / 2);
+            ringFill.style.strokeDashoffset = circumference * ((SPEED_CONFIG[challengeSpeed].countdown - count) / SPEED_CONFIG[challengeSpeed].countdown);
         } else {
             clearInterval(interval);
             timerEl.textContent = '●';
@@ -1229,6 +1256,7 @@ function startCountdown() {
 
 function beginRecording() {
     document.getElementById('recIndicator').style.display = 'flex';
+    document.getElementById('speedToggle').style.display = 'none';
     document.getElementById('audioLevel').style.display = 'flex';
     document.getElementById('cameraBoxRec').classList.add('recording');
     document.getElementById('timerLabel').textContent = 'Recording';
@@ -1264,8 +1292,8 @@ function beginRecording() {
 
     // Simultaneous: say greeting (4s), then say+show each digit (2s each)
     const digits = challengeData?.digits || [];
-    const PHRASE_DURATION = 3;
-    const DIGIT_DURATION = 1;
+    const PHRASE_DURATION = SPEED_CONFIG[challengeSpeed].phrase;
+    const DIGIT_DURATION = SPEED_CONFIG[challengeSpeed].digit;
     const BUFFER = 0;
     const totalDuration = PHRASE_DURATION + (digits.length * DIGIT_DURATION) + BUFFER;
     const totalSeconds = Math.ceil(totalDuration);
