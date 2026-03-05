@@ -1208,7 +1208,7 @@ function startCountdown() {
     const timerEl = document.getElementById('countdownTimer');
     const ringFill = document.getElementById('countdownRingFill');
     const circumference = 2 * Math.PI * 39;
-    let count = 3;
+    let count = 2;
     timerEl.textContent = count;
     ringFill.style.strokeDashoffset = 0;
 
@@ -1216,7 +1216,7 @@ function startCountdown() {
         count--;
         if (count > 0) {
             timerEl.textContent = count;
-            ringFill.style.strokeDashoffset = circumference * ((3 - count) / 3);
+            ringFill.style.strokeDashoffset = circumference * ((2 - count) / 2);
         } else {
             clearInterval(interval);
             timerEl.textContent = '●';
@@ -1264,9 +1264,9 @@ function beginRecording() {
 
     // Simultaneous: say greeting (4s), then say+show each digit (2s each)
     const digits = challengeData?.digits || [];
-    const PHRASE_DURATION = 4;
+    const PHRASE_DURATION = 3;
     const DIGIT_DURATION = 2;
-    const BUFFER = 1;
+    const BUFFER = 0;
     const totalDuration = PHRASE_DURATION + (digits.length * DIGIT_DURATION) + BUFFER;
     const totalSeconds = Math.ceil(totalDuration);
 
