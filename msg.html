@@ -145,10 +145,8 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 <div class="nav-inner">
     <a href="/" class="nav-left">
         <svg class="nav-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="4"/>
-            <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.15" stroke="#6C5CE7" stroke-width="2"/>
-            <circle cx="50" cy="44" r="10" fill="none" stroke="#00CEC9" stroke-width="2.5"/>
-            <path d="M35 68 Q50 56 65 68" fill="none" stroke="#00CEC9" stroke-width="2.5" stroke-linecap="round"/>
+            <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/>
+            <polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/>
         </svg>
         <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
     </a>
@@ -253,11 +251,11 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div class="form-row">
         <div class="form-group">
             <label class="form-label">Recipient Name</label>
-            <input class="form-input" id="composeRecipientName" type="text" placeholder="Recipient name">
+            <input class="form-input" id="composeRecipientName" type="text" placeholder="Jason Calacanis">
         </div>
         <div class="form-group">
             <label class="form-label">Recipient Email</label>
-            <input class="form-input" id="composeRecipientEmail" type="email" placeholder="email@example.com">
+            <input class="form-input" id="composeRecipientEmail" type="email" placeholder="jason@launch.co">
             <div id="contactsList" style="display:none;margin-top:6px;"></div>
         </div>
     </div>
@@ -990,7 +988,7 @@ async function checkTrustForProtection() {
     }
 }
 
-init();
+// msgInit() called by SPA router
 </script>
 <script src="vac-themes.js"></script>
 <script>

@@ -61,7 +61,9 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 
 /* Quick stats row */
 .stats{display:flex;gap:12px;margin-bottom:16px}
-.stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color 0.15s}
+.stat[onclick]{cursor:pointer}
+.stat[onclick]:hover{border-color:var(--purple-border)}
 .stat-num{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--teal)}
 .stat-label{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-top:4px}
 
@@ -72,7 +74,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 <body>
 
 <nav class="nav">
-<img src="/branding/vac-logo-icon-dark.png" onerror="this.style.display='none'">
+<img style="display:none"><svg width="22" height="22" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
 <div class="nav-text"><span class="v">VAC</span> <span class="p">DASHBOARD</span></div>
 <div class="nav-badge auth" id="navBadge">LOADING</div>
 </nav>
@@ -94,13 +96,13 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 
 <!-- Quick Stats -->
 <div class="stats">
-<div class="stat"><div class="stat-num" id="statVouches">0</div><div class="stat-label">VOUCHES</div></div>
-<div class="stat"><div class="stat-num" id="statContacts">0</div><div class="stat-label">CONTACTS</div></div>
+<div class="stat" onclick="document.getElementById('trustGraph').scrollIntoView({behavior:'smooth'})"><div class="stat-num" id="statVouches">0</div><div class="stat-label">VOUCHES</div></div>
+<div class="stat" onclick="document.getElementById('contactsSection').scrollIntoView({behavior:'smooth'})"><div class="stat-num" id="statContacts">0</div><div class="stat-label">CONTACTS</div></div>
 <div class="stat"><div class="stat-num" id="statVerifications">0</div><div class="stat-label">VERIFICATIONS</div></div>
 </div>
 
 <!-- Trust Graph -->
-<div class="card">
+<div class="card" id="trustGraph">
 <div class="card-title">YOUR TRUST GRAPH <span style="font-size:10px;color:var(--teal);font-weight:400">Live network</span></div>
 <svg id="trustGraph"></svg>
 </div>
@@ -112,7 +114,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 </div>
 
 <!-- Contacts -->
-<div class="card">
+<div class="card" id="contactsSection">
 <div class="card-title">CONTACTS <span id="contactCount" style="font-weight:400"></span></div>
 <div id="contactsList"></div>
 </div>
@@ -125,6 +127,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 <a href="/agents?email=" class="action" id="linkAgents" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(124,58,237,0.1)">🤖</div><div><div class="action-text">Agents</div></div></a>
 <a href="/groups?email=" class="action" id="linkGroups" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(16,185,129,0.1)">👥</div><div><div class="action-text">Governance</div></div></a>
 <a href="/msg?from=" class="action" id="linkMsg" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(249,158,11,0.1)">✉️</div><div><div class="action-text">Messages</div></div></a>
+<a href="#" onclick="event.preventDefault();showQuickReauth()" class="action" id="linkReauth" style="flex:1;min-width:140px;margin:0"><div class="action-icon" style="background:rgba(108,92,231,0.1)">✋</div><div><div class="action-text">Test Re-auth</div></div></a>
 </div>
 </div>
 
@@ -135,6 +138,217 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 const API = 'https://vac-system-production.up.railway.app';
 const params = new URLSearchParams(window.location.search);
 const email = params.get('email') || '';
+
+// ── Session Token Management ──
+function getToken() { return sessionStorage.getItem('vac_token_' + email) || ''; }
+function setToken(t) { sessionStorage.setItem('vac_token_' + email, t); }
+function clearToken() { sessionStorage.removeItem('vac_token_' + email); }
+
+function authHeaders() {
+    const t = getToken();
+    return t ? { 'Authorization': 'Bearer ' + t } : {};
+}
+
+async function authFetch(url, opts = {}) {
+    opts.headers = { ...authHeaders(), ...(opts.headers || {}) };
+    const r = await fetch(url, opts);
+    if (r.status === 401) {
+        const body = await r.json().catch(() => ({}));
+        if (body.detail?.error === 'session_expired') {
+            showQuickReauth();
+            throw new Error('session_expired');
+        } else {
+            // No valid session at all — redirect to auth
+            clearToken();
+            window.location.href = '/auth?redirect=' + encodeURIComponent(window.location.href);
+            throw new Error('auth_required');
+        }
+    }
+    return r;
+}
+
+// ── Quick Re-auth UI ──
+function showQuickReauth() {
+    const overlay = document.createElement('div');
+    overlay.id = 'reauth-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(13,17,23,0.95);z-index:1000;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+    <div style="background:#151821;border:1px solid #1E2230;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;">
+        <svg width="32" height="32" viewBox="0 0 100 100" style="margin-bottom:16px"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg>
+        <div style="font-size:18px;font-weight:700;color:#F0F6FC;margin-bottom:8px;">Session Expired</div>
+        <div style="font-size:13px;color:#9CA3AF;margin-bottom:24px;">Quick re-verification required</div>
+        <div id="reauth-challenge" style="margin-bottom:20px;"></div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+            <button onclick="startQuickReauth()" style="padding:10px 24px;border-radius:8px;border:1px solid rgba(45,212,191,0.3);background:rgba(45,212,191,0.1);color:#2DD4BF;font-family:monospace;font-size:13px;font-weight:600;cursor:pointer;">Quick Re-verify</button>
+            <button onclick="window.location.href='/auth?redirect='+encodeURIComponent(window.location.href)" style="padding:10px 24px;border-radius:8px;border:1px solid #1E2230;background:transparent;color:#6B7280;font-family:monospace;font-size:13px;cursor:pointer;">Full Verify</button>
+        </div>
+        <div id="reauth-status" style="font-family:monospace;font-size:11px;color:#6B7280;margin-top:16px;"></div>
+    </div>`;
+    document.body.appendChild(overlay);
+}
+
+async function startQuickReauth() {
+    const status = document.getElementById('reauth-status');
+    const challengeDiv = document.getElementById('reauth-challenge');
+    status.textContent = 'Generating challenge...';
+    try {
+        const r = await fetch(API + '/v1/session/quick-challenge?email=' + encodeURIComponent(email), { method: 'POST' });
+        const ch = await r.json();
+        
+        // Show challenge with camera
+        challengeDiv.innerHTML = `
+        <div style="font-size:48px;margin-bottom:8px;">✋</div>
+        <div style="font-size:20px;font-weight:700;color:#2DD4BF;" id="reauth-instruction">${ch.instruction}</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:4px;">Hold your hand near your face · Camera will detect automatically</div>
+        <div style="position:relative;margin-top:16px;border-radius:12px;overflow:hidden;border:2px solid #1E2230;max-width:320px;margin-left:auto;margin-right:auto;">
+            <video id="reauth-video" autoplay playsinline muted style="width:100%;display:block;transform:scaleX(-1);background:#000;"></video>
+            <canvas id="reauth-canvas" style="display:none;"></canvas>
+            <div id="reauth-cam-status" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:monospace;font-size:11px;color:#2DD4BF;background:rgba(13,17,23,0.8);padding:4px 12px;border-radius:4px;">Starting camera...</div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+            <button id="reauth-capture-btn" onclick="captureAndVerify('${ch.challenge_id}')" disabled style="padding:10px 24px;border-radius:8px;border:none;background:#2DD4BF;color:#0D0F17;font-weight:700;font-family:monospace;font-size:14px;cursor:pointer;opacity:0.5;">Verify ✓</button>
+        </div>
+        <div style="margin-top:8px;"><button onclick="manualFingerFallback('${ch.challenge_id}',${ch.num_fingers})" style="background:none;border:none;color:#6B7280;font-family:monospace;font-size:10px;cursor:pointer;text-decoration:underline;">Camera not working? Enter manually</button></div>`;
+        
+        // Start camera
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            const video = document.getElementById('reauth-video');
+            video.srcObject = stream;
+            window._reauthStream = stream;
+            
+            const camStatus = document.getElementById('reauth-cam-status');
+            const captureBtn = document.getElementById('reauth-capture-btn');
+            
+            video.onloadedmetadata = () => {
+                camStatus.textContent = 'Show your fingers and tap Verify';
+                camStatus.style.color = '#10B981';
+                captureBtn.disabled = false;
+                captureBtn.style.opacity = '1';
+            };
+        } catch(camErr) {
+            document.getElementById('reauth-cam-status').textContent = 'Camera error: ' + camErr.message;
+            manualFingerFallback(ch.challenge_id, ch.num_fingers);
+        }
+        
+        status.textContent = '';
+    } catch(e) {
+        status.textContent = 'Error: ' + e.message;
+    }
+}
+
+async function captureAndVerify(challengeId) {
+    const video = document.getElementById('reauth-video');
+    const canvas = document.getElementById('reauth-canvas');
+    const status = document.getElementById('reauth-status');
+    const camStatus = document.getElementById('reauth-cam-status');
+    const btn = document.getElementById('reauth-capture-btn');
+    
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    camStatus.textContent = 'Sending to Gemini for finger detection...';
+    camStatus.style.color = '#F9A825';
+    
+    // Capture frame
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+    
+    try {
+        const r = await fetch(API + '/v1/session/quick-verify-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: challengeId, image_base64: imageBase64 })
+        });
+        
+        if (r.ok) {
+            const d = await r.json();
+            camStatus.textContent = '✓ Verified! Detected ' + d.detected_fingers + ' finger(s)';
+            camStatus.style.color = '#10B981';
+            setToken(d.token);
+            
+            // Stop camera
+            if (window._reauthStream) window._reauthStream.getTracks().forEach(t => t.stop());
+            
+            // Brief success flash then reload
+            setTimeout(() => {
+                document.getElementById('reauth-overlay').remove();
+                loadDashboard();
+            }, 800);
+        } else {
+            const e = await r.json();
+            const detail = e.detail || {};
+            if (detail.detected_fingers !== undefined) {
+                camStatus.textContent = 'Detected ' + detail.detected_fingers + ' finger(s) — wrong count. Try again!';
+            } else {
+                camStatus.textContent = detail.message || 'Detection failed — try again';
+            }
+            camStatus.style.color = '#F96167';
+            btn.disabled = false;
+            btn.textContent = 'Verify ✓';
+        }
+    } catch(e) {
+        camStatus.textContent = 'Error: ' + e.message;
+        camStatus.style.color = '#F96167';
+        btn.disabled = false;
+        btn.textContent = 'Verify ✓';
+    }
+}
+
+function manualFingerFallback(challengeId, numFingers) {
+    const challengeDiv = document.getElementById('reauth-challenge');
+    // Stop camera if running
+    if (window._reauthStream) window._reauthStream.getTracks().forEach(t => t.stop());
+    
+    const fingerWords = {1:'one',2:'two',3:'three',4:'four',5:'five'};
+    challengeDiv.innerHTML = '<div style="font-size:48px;margin-bottom:8px;">✋</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#2DD4BF;">Hold up ' + (fingerWords[numFingers]||numFingers) + ' finger' + (numFingers>1?'s':'') + '</div>' +
+        '<div style="margin-top:16px;display:flex;gap:8px;justify-content:center;align-items:center;">' +
+        '<input id="finger-input" type="number" min="1" max="5" style="width:60px;padding:10px;text-align:center;font-size:24px;font-weight:700;border-radius:8px;border:1px solid #1E2230;background:#0D0F17;color:#F0F6FC;font-family:monospace;" placeholder="#">' +
+        '<button onclick="submitQuickReauth(\'' + challengeId + '\')" style="padding:10px 20px;border-radius:8px;border:none;background:#2DD4BF;color:#0D0F17;font-weight:700;font-family:monospace;font-size:14px;cursor:pointer;">✓</button></div>';
+    
+    document.getElementById('finger-input').focus();
+    document.getElementById('finger-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') submitQuickReauth(challengeId);
+    });
+}
+
+async function submitQuickReauth(challengeId) {
+    const fingers = parseInt(document.getElementById('finger-input').value);
+    const status = document.getElementById('reauth-status');
+    if (!fingers || fingers < 1 || fingers > 5) { status.textContent = 'Enter a number 1-5'; return; }
+    status.textContent = 'Verifying...';
+    try {
+        const r = await fetch(API + '/v1/session/quick-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: challengeId, detected_fingers: fingers })
+        });
+        if (r.ok) {
+            const d = await r.json();
+            setToken(d.token);
+            document.getElementById('reauth-overlay').remove();
+            loadDashboard(); // Reload data with new token
+        } else {
+            const e = await r.json();
+            status.textContent = 'Failed: ' + (e.detail?.message || e.detail || 'Try again');
+        }
+    } catch(e) {
+        status.textContent = 'Error: ' + e.message;
+    }
+}
+
+// ── Check for token from auth redirect ──
+const tokenFromUrl = params.get('token');
+if (tokenFromUrl) {
+    setToken(tokenFromUrl);
+    // Clean URL
+    const cleanUrl = window.location.pathname + '?email=' + encodeURIComponent(email);
+    window.history.replaceState({}, '', cleanUrl);
+}
 
 if (!email) {
     document.getElementById('loadingState').textContent = 'No email provided. Go to vacprotocol.org/auth to verify.';
@@ -149,7 +363,7 @@ async function loadDashboard() {
     if (!email) return;
     try {
         const [userResp, profileResp, vouchResp] = await Promise.all([
-            fetch(API + '/v1/user/' + encodeURIComponent(email)),
+            authFetch(API + '/v1/user/' + encodeURIComponent(email)),
             fetch(API + '/v1/trust-profile/' + encodeURIComponent(email)),
             fetch(API + '/v1/vouches?email=' + encodeURIComponent(email) + '&direction=received')
         ]);

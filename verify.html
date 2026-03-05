@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>VAC — Verify</title>
+<style>
+:root {
+    --bg: #0a0a0a; --surface: #111; --border: #222; --border-light: #333;
+    --text: #e0e0e0; --text-muted: #888; --text-dim: #555;
+    --green: #22c55e; --green-dim: #16a34a; --red: #ef4444; --amber: #f59e0b;
+    --radius: 12px; --radius-sm: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100dvh; display: flex; justify-content: center; align-items: flex-start;
+    padding: 20px;
+}
+.container {
+    width: 100%; max-width: 440px; margin-top: 40px;
+}
+.logo {
+    text-align: center; margin-bottom: 32px;
+}
+.logo-text { font-size: 32px; font-weight: 700; color: var(--green); }
+.logo-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; letter-spacing: 0.5px; }
+.card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 16px;
+}
+.card-title {
+    font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #fff;
+}
+.card-subtitle {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 20px;
+}
+.sender-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #1a1a1a; border: 1px solid var(--border); border-radius: 20px;
+    padding: 8px 16px; margin-bottom: 16px;
+}
+.sender-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #000;
+}
+.sender-name { font-weight: 500; font-size: 14px; }
+.message-box {
+    background: #0d0d0d; border-left: 3px solid var(--green); padding: 12px 16px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 20px;
+    font-style: italic; color: var(--text-muted); font-size: 14px;
+}
+.input-group { margin-bottom: 16px; }
+.input-label {
+    display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.input-field {
+    width: 100%; padding: 14px 16px; background: #0d0d0d; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text); font-size: 16px;
+    outline: none; transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--green); }
+.input-field::placeholder { color: var(--text-dim); }
+.otp-input {
+    text-align: center; font-size: 28px; font-weight: 700; letter-spacing: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.btn {
+    width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+    font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary { background: var(--green); color: #000; }
+.btn-primary:hover { background: var(--green-dim); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--border-light); color: var(--text); }
+.btn-confirm { background: var(--green); color: #000; }
+.btn-decline { background: transparent; color: var(--red); border: 1px solid var(--red); }
+.btn-decline:hover { background: rgba(239,68,68,0.1); }
+.btn-row { display: flex; gap: 12px; }
+.btn-row .btn { flex: 1; }
+.spinner {
+    width: 20px; height: 20px; border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.status-msg {
+    text-align: center; padding: 12px; border-radius: var(--radius-sm); font-size: 14px;
+    margin-bottom: 16px;
+}
+.status-error { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.status-success { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.status-info { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+.video-player {
+    width: 100%; border-radius: var(--radius); margin-top: 16px; background: #000;
+}
+.trust-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
+    padding: 4px 10px; border-radius: 12px; font-weight: 500;
+}
+.trust-high { background: rgba(34,197,94,0.15); color: var(--green); }
+.trust-medium { background: rgba(245,158,11,0.15); color: var(--amber); }
+.trust-low { background: rgba(136,136,136,0.15); color: var(--text-muted); }
+.list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.list-item:last-child { border-bottom: none; }
+.list-person { display: flex; align-items: center; gap: 12px; }
+.list-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px; color: var(--text);
+}
+.list-name { font-weight: 500; font-size: 14px; }
+.list-detail { font-size: 12px; color: var(--text-muted); }
+.list-meta { text-align: right; }
+.list-meta .source-tag {
+    font-size: 10px; padding: 2px 8px; border-radius: 8px;
+    background: rgba(34,197,94,0.1); color: var(--green);
+}
+.tabs {
+    display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+}
+.tab {
+    flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 500;
+    cursor: pointer; background: transparent; color: var(--text-muted); border: none;
+    transition: all 0.2s;
+}
+.tab.active { background: var(--green); color: #000; }
+.checklist { list-style: none; }
+.checklist li {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px; cursor: pointer;
+    user-select: none;
+}
+.checklist li:last-child { border-bottom: none; }
+.check-box {
+    width: 22px; height: 22px; min-width: 22px; border-radius: 6px;
+    border: 2px solid var(--border-light); display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s; margin-top: 1px;
+}
+.check-box.checked { background: var(--green); border-color: var(--green); }
+.check-box.checked::after { content: '✓'; color: #000; font-size: 14px; font-weight: 700; }
+.relationship-chips {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+}
+.chip {
+    padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border);
+    font-size: 13px; cursor: pointer; background: transparent; color: var(--text-muted);
+    transition: all 0.2s;
+}
+.chip.selected { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
+.expire-tag {
+    font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 12px;
+}
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 480px) {
+    body { padding: 16px; }
+    .container { margin-top: 20px; }
+    .card { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="logo">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;"><svg width="28" height="28" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg><div class="logo-text">VAC</div></div>
+        <div class="logo-sub">Verified Authenticated Communication</div>
+    </div>
+
+    <!-- ========== SCREEN: LOADING ========== -->
+    <div id="screen-loading" class="card" style="text-align:center;padding:40px;">
+        <div class="spinner" style="margin:0 auto 16px;border-color:rgba(34,197,94,0.2);border-top-color:#22c55e;"></div>
+        <p style="color:var(--text-muted);font-size:14px;">Loading...</p>
+    </div>
+
+    <!-- ========== SCREEN: VERIFY — Email Entry ========== -->
+    <div id="screen-verify-email" class="hidden">
+        <div class="card fade-in">
+            <div class="sender-badge" id="verify-sender-badge"></div>
+            <div class="card-title">Secure video for you</div>
+            <div class="card-subtitle">Verify your email to watch</div>
+            <div id="verify-message-box" class="message-box hidden"></div>
+            <div id="verify-email-error" class="status-msg status-error hidden"></div>
+            <div class="input-group">
+                <label class="input-label">Your email</label>
+                <input type="email" id="verify-email" class="input-field" placeholder="name@example.com" autocomplete="email">
+            </div>
+            <button class="btn btn-primary" id="btn-send-otp" onclick="sendOTP()">
+                Send verification code
+            </button>
+            <div class="expire-tag" id="verify-expires"></div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: VERIFY — OTP Entry ========== -->
+    <div id="screen-verify-otp" class="hidden">
+        <div class="card fade-in">
+            <div class="card-title">Enter verification code</div>
+            <div class="card-subtitle">Sent to <span id="otp-email-display"></span></div>
+            <div id="otp-error" class="status-msg status-error hidden"></div>
+            <div class="input-group">
+                <input type="text" id="otp-code" class="input-field otp-input" maxlength="6"
+                    placeholder="000000" inputmode="numeric" autocomplete="one-time-code">
+            </div>
+            <button class="btn btn-primary" id="btn-verify-otp" onclick="verifyOTP()">
+                Verify
+            </button>
+            <button class="btn btn-secondary" style="margin-top:12px;" onclick="sendOTP()">
+                Resend code
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: VERIFY — Video Unlocked ========== -->
+    <div id="screen-video" class="hidden">
+        <div class="card fade-in">
+            <div class="status-msg status-success">✅ Verified — video unlocked</div>
+            <div class="sender-badge" id="video-sender-badge"></div>
+            <div id="video-message" class="message-box hidden"></div>
+            <video id="video-player" class="video-player" controls playsinline></video>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: VOUCH — Review Request ========== -->
+    <div id="screen-vouch" class="hidden">
+        <div class="card fade-in">
+            <div class="card-title">Vouch request</div>
+            <div class="card-subtitle" id="vouch-subtitle"></div>
+            <div id="vouch-message" class="message-box hidden"></div>
+
+            <div id="vouch-checklist-section">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">By vouching, you confirm:</p>
+                <ul class="checklist" id="vouch-checklist">
+                    <li onclick="toggleCheck(this)"><div class="check-box"></div><span>I know this person personally</span></li>
+                    <li onclick="toggleCheck(this)"><div class="check-box"></div><span>They are who they say they are</span></li>
+                    <li onclick="toggleCheck(this)"><div class="check-box"></div><span>I'm comfortable putting my name to this</span></li>
+                </ul>
+            </div>
+
+            <div class="input-group" style="margin-top:16px;">
+                <label class="input-label">Your relationship</label>
+                <div class="relationship-chips" id="relationship-chips">
+                    <button class="chip" onclick="selectChip(this)">Colleague</button>
+                    <button class="chip" onclick="selectChip(this)">Friend</button>
+                    <button class="chip" onclick="selectChip(this)">Manager</button>
+                    <button class="chip" onclick="selectChip(this)">Client</button>
+                    <button class="chip" onclick="selectChip(this)">Family</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Note (optional)</label>
+                <input type="text" id="vouch-note" class="input-field" placeholder="e.g. Worked together for 3 years">
+            </div>
+
+            <div id="vouch-error" class="status-msg status-error hidden"></div>
+
+            <div class="btn-row">
+                <button class="btn btn-confirm" id="btn-vouch-confirm" onclick="confirmVouch(true)" disabled>
+                    ✅ Vouch
+                </button>
+                <button class="btn btn-decline" onclick="confirmVouch(false)">
+                    Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: VOUCH — Confirmed ========== -->
+    <div id="screen-vouch-done" class="hidden">
+        <div class="card fade-in" style="text-align:center;">
+            <div style="font-size:48px;margin-bottom:16px;" id="vouch-done-icon">✅</div>
+            <div class="card-title" id="vouch-done-title">Vouch confirmed</div>
+            <p style="color:var(--text-muted);font-size:14px;margin-top:8px;" id="vouch-done-msg"></p>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: TRUST PROFILE ========== -->
+    <div id="screen-profile" class="hidden">
+        <div class="card fade-in">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div class="card-title" id="profile-name"></div>
+                <div class="trust-badge" id="profile-trust-badge"></div>
+            </div>
+            <div class="card-subtitle" id="profile-email"></div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('authorized-me')">Authorized Me</button>
+                <button class="tab" onclick="switchTab('i-authorized')">I Authorized</button>
+                <button class="tab" onclick="switchTab('vouches')">Vouches</button>
+            </div>
+
+            <div id="tab-authorized-me" class="tab-content"></div>
+            <div id="tab-i-authorized" class="tab-content hidden"></div>
+            <div id="tab-vouches" class="tab-content hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN: ERROR ========== -->
+    <div id="screen-error" class="hidden">
+        <div class="card fade-in" style="text-align:center;">
+            <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+            <div class="card-title" id="error-title">Something went wrong</div>
+            <p style="color:var(--text-muted);font-size:14px;margin-top:8px;" id="error-msg"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const API = window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://vac-backend-production.up.railway.app';
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+    videoId: null,
+    vouchId: null,
+    profileEmail: null,
+    email: '',
+    videoData: null,
+    vouchData: null,
+};
+
+// ============================================================
+// ROUTER
+// ============================================================
+async function route() {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+
+    // /verify/vid_xxxx
+    if (path.startsWith('/verify/')) {
+        state.videoId = path.split('/verify/')[1];
+        await loadVerify();
+        return;
+    }
+
+    // /vouch/vch_xxxx
+    if (path.startsWith('/vouch/')) {
+        state.vouchId = path.split('/vouch/')[1];
+        await loadVouch();
+        return;
+    }
+
+    // /profile/email@example.com
+    if (path.startsWith('/profile/')) {
+        state.profileEmail = decodeURIComponent(path.split('/profile/')[1]);
+        await loadProfile();
+        return;
+    }
+
+    // Hash-based routes (for single-page demo)
+    if (hash.startsWith('#verify=')) {
+        state.videoId = hash.split('#verify=')[1];
+        await loadVerify();
+        return;
+    }
+    if (hash.startsWith('#vouch=')) {
+        state.vouchId = hash.split('#vouch=')[1];
+        await loadVouch();
+        return;
+    }
+    if (hash.startsWith('#profile=')) {
+        state.profileEmail = decodeURIComponent(hash.split('#profile=')[1]);
+        await loadProfile();
+        return;
+    }
+
+    showError('No action specified', 'Use a verify or vouch link to get started.');
+}
+
+// ============================================================
+// SCREENS
+// ============================================================
+function showScreen(id) {
+    document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+    document.getElementById('screen-' + id).classList.remove('hidden');
+}
+
+function showError(title, msg) {
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-msg').textContent = msg;
+    showScreen('error');
+}
+
+// ============================================================
+// VERIFY FLOW
+// ============================================================
+async function loadVerify() {
+    try {
+        const resp = await fetch(`${API}/v1/video/${state.videoId}`);
+        if (resp.status === 410) { showError('Expired', 'This video has expired.'); return; }
+        if (resp.status === 404) { showError('Not found', 'This video does not exist.'); return; }
+        if (!resp.ok) { showError('Error', 'Could not load video info.'); return; }
+
+        state.videoData = await resp.json();
+        const v = state.videoData;
+
+        // Auth level: link_only skips verification
+        if (v.auth_level === 'link_only') {
+            // Direct play
+            document.getElementById('video-sender-badge').innerHTML = senderBadge(v.sender_name);
+            if (v.message) {
+                document.getElementById('video-message').textContent = v.message;
+                document.getElementById('video-message').classList.remove('hidden');
+            }
+            document.getElementById('video-player').src = v.video_url || '';
+            showScreen('video');
+            return;
+        }
+
+        // Show email entry
+        document.getElementById('verify-sender-badge').innerHTML = senderBadge(v.sender_name);
+        if (v.message) {
+            document.getElementById('verify-message-box').textContent = v.message;
+            document.getElementById('verify-message-box').classList.remove('hidden');
+        }
+        const exp = new Date(v.expires_at);
+        document.getElementById('verify-expires').textContent = `Expires ${exp.toLocaleDateString()} at ${exp.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+        showScreen('verify-email');
+
+    } catch (e) {
+        showError('Connection error', 'Could not reach the server.');
+    }
+}
+
+async function sendOTP() {
+    const email = document.getElementById('verify-email').value.trim();
+    if (!email || !email.includes('@')) {
+        showEl('verify-email-error', 'Please enter a valid email.');
+        return;
+    }
+    state.email = email;
+
+    const btn = document.getElementById('btn-send-otp');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const resp = await fetch(`${API}/v1/request-otp`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ video_id: state.videoId, email: email }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showEl('verify-email-error', data.detail || 'Could not send code.');
+            btn.disabled = false;
+            btn.textContent = 'Send verification code';
+            return;
+        }
+
+        // Show OTP entry
+        document.getElementById('otp-email-display').textContent = email;
+        showScreen('verify-otp');
+        document.getElementById('otp-code').focus();
+
+    } catch (e) {
+        showEl('verify-email-error', 'Connection error.');
+        btn.disabled = false;
+        btn.textContent = 'Send verification code';
+    }
+}
+
+async function verifyOTP() {
+    const code = document.getElementById('otp-code').value.trim();
+    if (code.length !== 6) {
+        showEl('otp-error', 'Enter the 6-digit code.');
+        return;
+    }
+
+    const btn = document.getElementById('btn-verify-otp');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const resp = await fetch(`${API}/v1/verify-otp`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ video_id: state.videoId, email: state.email, code: code }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showEl('otp-error', data.detail || 'Verification failed.');
+            btn.disabled = false;
+            btn.textContent = 'Verify';
+            return;
+        }
+
+        // Video unlocked
+        document.getElementById('video-sender-badge').innerHTML = senderBadge(data.sender_name);
+        if (data.message) {
+            document.getElementById('video-message').textContent = data.message;
+            document.getElementById('video-message').classList.remove('hidden');
+        }
+        document.getElementById('video-player').src = data.video_url;
+        showScreen('video');
+
+    } catch (e) {
+        showEl('otp-error', 'Connection error.');
+        btn.disabled = false;
+        btn.textContent = 'Verify';
+    }
+}
+
+// ============================================================
+// VOUCH FLOW
+// ============================================================
+async function loadVouch() {
+    try {
+        const resp = await fetch(`${API}/v1/vouch/${state.vouchId}`);
+        if (!resp.ok) { showError('Not found', 'This vouch request does not exist.'); return; }
+
+        state.vouchData = await resp.json();
+        const v = state.vouchData;
+
+        if (v.status !== 'pending') {
+            document.getElementById('vouch-done-icon').textContent = v.status === 'confirmed' ? '✅' : '❌';
+            document.getElementById('vouch-done-title').textContent = v.status === 'confirmed' ? 'Already vouched' : 'Declined';
+            document.getElementById('vouch-done-msg').textContent = `This vouch was ${v.status} on ${new Date(v.confirmed_at).toLocaleDateString()}`;
+            showScreen('vouch-done');
+            return;
+        }
+
+        document.getElementById('vouch-subtitle').innerHTML =
+            `<strong style="color:#fff;">${v.requester_name}</strong> is asking you to vouch for their identity`;
+        if (v.message) {
+            document.getElementById('vouch-message').textContent = v.message;
+            document.getElementById('vouch-message').classList.remove('hidden');
+        }
+        showScreen('vouch');
+
+    } catch (e) {
+        showError('Connection error', 'Could not load vouch request.');
+    }
+}
+
+function toggleCheck(li) {
+    const box = li.querySelector('.check-box');
+    box.classList.toggle('checked');
+    updateVouchBtn();
+}
+
+function selectChip(chip) {
+    chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    updateVouchBtn();
+}
+
+function updateVouchBtn() {
+    const allChecked = document.querySelectorAll('#vouch-checklist .check-box.checked').length === 3;
+    const hasRelationship = document.querySelector('.chip.selected');
+    document.getElementById('btn-vouch-confirm').disabled = !(allChecked && hasRelationship);
+}
+
+async function confirmVouch(confirmed) {
+    const relationship = document.querySelector('.chip.selected')?.textContent || null;
+    const note = document.getElementById('vouch-note').value.trim() || null;
+
+    const btn = confirmed ? document.getElementById('btn-vouch-confirm') : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>'; }
+
+    try {
+        const resp = await fetch(`${API}/v1/vouch/${state.vouchId}/confirm`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ confirmed, voucher_note: note, relationship }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showEl('vouch-error', data.detail || 'Failed.');
+            if (btn) { btn.disabled = false; btn.textContent = '✅ Vouch'; }
+            return;
+        }
+
+        document.getElementById('vouch-done-icon').textContent = confirmed ? '✅' : '❌';
+        document.getElementById('vouch-done-title').textContent = confirmed ? 'Thank you!' : 'Declined';
+        document.getElementById('vouch-done-msg').textContent = confirmed
+            ? `You've vouched for ${state.vouchData.requester_name}. This is now part of their trust profile.`
+            : 'You declined this vouch request.';
+        showScreen('vouch-done');
+
+    } catch (e) {
+        showEl('vouch-error', 'Connection error.');
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Vouch'; }
+    }
+}
+
+// ============================================================
+// TRUST PROFILE
+// ============================================================
+async function loadProfile() {
+    try {
+        const resp = await fetch(`${API}/v1/trust-profile/${encodeURIComponent(state.profileEmail)}`);
+        if (!resp.ok) { showError('Error', 'Could not load profile.'); return; }
+        const data = await resp.json();
+
+        document.getElementById('profile-email').textContent = data.email;
+        document.getElementById('profile-name').textContent = data.email.split('@')[0];
+
+        const ts = data.trust_score;
+        const badge = document.getElementById('profile-trust-badge');
+        badge.className = `trust-badge trust-${ts.level}`;
+        badge.textContent = `Trust: ${Math.round(ts.score * 100)}%`;
+
+        // Authorized Me tab
+        renderList('tab-authorized-me', data.authorizations.authorized_me, 'No one has authorized you yet');
+
+        // I Authorized tab
+        renderList('tab-i-authorized', data.authorizations.i_authorized, "You haven't authorized anyone yet");
+
+        // Vouches tab
+        const allVouches = [...(data.vouches.received || []).map(v => ({...v, dir: 'received'})),
+                           ...(data.vouches.given || []).map(v => ({...v, dir: 'given'}))];
+        renderVouchList('tab-vouches', allVouches);
+
+        showScreen('profile');
+    } catch (e) {
+        showError('Connection error', 'Could not reach server.');
+    }
+}
+
+function renderList(containerId, items, emptyMsg) {
+    const el = document.getElementById(containerId);
+    if (!items || items.length === 0) {
+        el.innerHTML = `<p style="color:var(--text-dim);font-size:14px;text-align:center;padding:20px 0;">${emptyMsg}</p>`;
+        return;
+    }
+    el.innerHTML = items.map(a => `
+        <div class="list-item">
+            <div class="list-person">
+                <div class="list-avatar">${(a.person || a.email || '?')[0].toUpperCase()}</div>
+                <div>
+                    <div class="list-name">${a.person || a.email}</div>
+                    <div class="list-detail">${a.note || a.email || ''}</div>
+                </div>
+            </div>
+            <div class="list-meta">
+                ${a.source ? `<span class="source-tag">${a.source}</span>` : ''}
+                <div class="list-detail">${a.at ? timeAgo(a.at) : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderVouchList(containerId, items) {
+    const el = document.getElementById(containerId);
+    if (!items || items.length === 0) {
+        el.innerHTML = '<p style="color:var(--text-dim);font-size:14px;text-align:center;padding:20px 0;">No vouches yet</p>';
+        return;
+    }
+    el.innerHTML = items.map(v => `
+        <div class="list-item">
+            <div class="list-person">
+                <div class="list-avatar">${(v.person || '?')[0].toUpperCase()}</div>
+                <div>
+                    <div class="list-name">${v.person}</div>
+                    <div class="list-detail">${v.dir === 'received' ? 'Vouched for you' : 'You vouched for them'}${v.relationship ? ' · ' + v.relationship : ''}</div>
+                </div>
+            </div>
+            <div class="list-meta">
+                <span class="source-tag">${v.type || 'identity'}</span>
+                <div class="list-detail">${v.at ? timeAgo(v.at) : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function senderBadge(name) {
+    const initial = (name || '?')[0].toUpperCase();
+    return `<div class="sender-avatar">${initial}</div><span class="sender-name">${name || 'Unknown'}</span>`;
+}
+
+function showEl(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function timeAgo(iso) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+}
+
+// Auto-advance OTP input
+document.addEventListener('DOMContentLoaded', () => {
+    const otpInput = document.getElementById('otp-code');
+    if (otpInput) {
+        otpInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+            if (e.target.value.length === 6) verifyOTP();
+        });
+    }
+    route();
+});
+</script>
+</body>
+</html>

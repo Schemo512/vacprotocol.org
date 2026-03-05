@@ -26,8 +26,16 @@ input:focus{outline:none;border-color:#2DD4BF}
 </style>
 </head>
 <body>
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px"><img src="/branding/vac-logo-icon-dark.png" style="width:36px;height:36px" onerror="this.style.display='none'"><h1>VAC Admin</h1></div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px"><svg width="36" height="36" viewBox="0 0 100 100"><polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#6C5CE7" stroke-width="5"/><polygon points="50,24 76,38 76,62 50,76 24,62 24,38" fill="#6C5CE7" fill-opacity="0.1" stroke="#6C5CE7" stroke-width="2.5"/></svg><h1>VAC Admin</h1></div>
 <div class="sub">vacprotocol.org/admin · Demo Controls</div>
+
+<div class="card">
+<div class="card-title">ADMIN IDENTITY</div>
+<div id="adminAuth">
+    <div style="font-size:13px;color:#9CA3AF;margin-bottom:8px;">Checking your biometric session...</div>
+</div>
+<div style="font-size:10px;color:#6B7280;margin-top:6px;font-family:monospace;">Admin access requires biometric verification. Your face is the password.</div>
+</div>
 
 <div class="card">
 <div class="card-title">SYSTEM STATS</div>
@@ -86,10 +94,67 @@ input:focus{outline:none;border-color:#2DD4BF}
 
 <script>
 const API = 'https://vac-system-production.up.railway.app';
+const params = new URLSearchParams(window.location.search);
+
+// ── Session Token Management ──
+// Look for token from any verified email in sessionStorage
+function findToken() {
+    for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key.startsWith('vac_token_')) return sessionStorage.getItem(key);
+    }
+    return params.get('token') || '';
+}
+
+let token = findToken();
+
+function getAdminHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (token) h['Authorization'] = 'Bearer ' + token;
+    return h;
+}
+
+// ── Check admin auth on load ──
+async function checkAdminAuth() {
+    const authDiv = document.getElementById('adminAuth');
+    if (!token) {
+        authDiv.innerHTML = '<div style="color:#F96167;font-size:13px;margin-bottom:8px;">No active session found.</div>' +
+            '<a href="/auth?redirect=' + encodeURIComponent(window.location.href) + '" class="btn" style="text-decoration:none;">Verify Identity →</a>';
+        return false;
+    }
+    try {
+        const r = await fetch(API + '/v1/session/verify', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.ok) {
+            const d = await r.json();
+            authDiv.innerHTML = '<div style="display:flex;align-items:center;gap:8px;">' +
+                '<div style="width:10px;height:10px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;"></div>' +
+                '<span style="color:#10B981;font-size:13px;font-weight:600;">' + d.email + '</span>' +
+                '<span style="font-family:monospace;font-size:10px;color:#6B7280;">AUTH: ' + d.auth_level.toUpperCase() + '</span></div>';
+            return true;
+        } else {
+            authDiv.innerHTML = '<div style="color:#F9A825;font-size:13px;margin-bottom:8px;">Session expired.</div>' +
+                '<a href="/auth?redirect=' + encodeURIComponent(window.location.href) + '" class="btn" style="text-decoration:none;">Re-verify →</a>';
+            return false;
+        }
+    } catch(e) {
+        authDiv.innerHTML = '<div style="color:#F96167;font-size:13px;">Error: ' + e.message + '</div>';
+        return false;
+    }
+}
+
+async function adminFetch(url, opts = {}) {
+    opts.headers = { ...getAdminHeaders(), ...(opts.headers || {}) };
+    const r = await fetch(url, opts);
+    if (r.status === 403) {
+        document.getElementById('adminAuth').innerHTML = '<div style="color:#F96167;font-size:13px;margin-bottom:8px;">Admin access denied. Verify with an authorized email.</div>' +
+            '<a href="/auth?redirect=' + encodeURIComponent(window.location.href) + '" class="btn" style="text-decoration:none;">Re-verify →</a>';
+    }
+    return r;
+}
 
 async function loadStats() {
     try {
-        const r = await fetch(API + '/v1/admin/stats');
+        const r = await adminFetch(API + '/v1/admin/stats');
         const d = await r.json();
         document.getElementById('stats').innerHTML =
             '<div class="stat"><span class="stat-num">' + d.users + '</span><span class="stat-label">users</span></div>' +
@@ -109,11 +174,11 @@ function log(el, msg) {
 
 async function clearVouches() {
     const email = document.getElementById('clearEmail').value;
-    const r = await fetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
     const d = await r.json();
     log('clearLog', JSON.stringify(d));
     async function clearGroups() {
-    const r = await fetch(API + '/v1/admin/groups', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/groups', {method:'DELETE'});
     const d = await r.json();
     log('groupLog', JSON.stringify(d));
     loadStats();
@@ -121,7 +186,7 @@ async function clearVouches() {
 
 async function nuclearReset() {
     try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
-    const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
     loadStats();
@@ -132,11 +197,11 @@ loadStats();
 
 async function clearUser() {
     const email = document.getElementById('clearEmail').value;
-    const r = await fetch(API + '/v1/admin/user/' + encodeURIComponent(email), {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/user/' + encodeURIComponent(email), {method:'DELETE'});
     const d = await r.json();
     log('clearLog', JSON.stringify(d));
     async function clearGroups() {
-    const r = await fetch(API + '/v1/admin/groups', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/groups', {method:'DELETE'});
     const d = await r.json();
     log('groupLog', JSON.stringify(d));
     loadStats();
@@ -144,7 +209,7 @@ async function clearUser() {
 
 async function nuclearReset() {
     try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
-    const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
     loadStats();
@@ -154,11 +219,11 @@ loadStats();
 }
 
 async function clearVouchesFor(email) {
-    const r = await fetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/vouches/' + encodeURIComponent(email), {method:'DELETE'});
     const d = await r.json();
     log('quickLog', email + ': ' + JSON.stringify(d));
     async function clearGroups() {
-    const r = await fetch(API + '/v1/admin/groups', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/groups', {method:'DELETE'});
     const d = await r.json();
     log('groupLog', JSON.stringify(d));
     loadStats();
@@ -166,7 +231,7 @@ async function clearVouchesFor(email) {
 
 async function nuclearReset() {
     try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
-    const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
     loadStats();
@@ -177,14 +242,14 @@ loadStats();
 
 async function resetBoth() {
     try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
-    await fetch(API + '/v1/admin/groups', {method:'DELETE'});
+    await adminFetch(API + '/v1/admin/groups', {method:'DELETE'});
     await clearVouchesFor('rob@violetshores.com');
     await clearVouchesFor('robzag@gmail.com');
     log('quickLog', '--- Both reset. Ready for fresh demo ---');
 }
 
 async function clearGroups() {
-    const r = await fetch(API + '/v1/admin/groups', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/groups', {method:'DELETE'});
     const d = await r.json();
     log('groupLog', JSON.stringify(d));
     loadStats();
@@ -192,13 +257,14 @@ async function clearGroups() {
 
 async function nuclearReset() {
     try { localStorage.removeItem('vac_verified'); localStorage.removeItem('vac_otp_confirmed'); } catch(e) {}
-    const r = await fetch(API + '/v1/admin/reset-all', {method:'DELETE'});
+    const r = await adminFetch(API + '/v1/admin/reset-all', {method:'DELETE'});
     const d = await r.json();
     log('nukeLog', JSON.stringify(d));
     loadStats();
 }
 
-loadStats();
+// Init: check auth then load stats
+checkAdminAuth().then(ok => { if (ok) loadStats(); });
 </script>
 </body>
 </html>
