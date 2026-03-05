@@ -78,7 +78,7 @@ async function loadStats() {
             '<div class="stat"><span class="stat-num">' + d.users + '</span><span class="stat-label">users</span></div>' +
             '<div class="stat"><span class="stat-num">' + d.tokens + '</span><span class="stat-label">tokens</span></div>' +
             '<div class="stat"><span class="stat-num">' + d.vouches_confirmed + '</span><span class="stat-label">vouches</span></div>' +
-            '<div class="stat"><span class="stat-num">' + d.vouch_links + '</span><span class="stat-label">vouch links</span></div>' +
+            '<div class="stat"><span class="stat-num">' + d.trust_edges + '</span><span class="stat-label">vouch links</span></div>' +
             '<div class="stat"><span class="stat-num">' + d.groups + '</span><span class="stat-label">groups</span></div>';
     } catch(e) { document.getElementById('stats').textContent = 'Error: ' + e.message; }
 }
