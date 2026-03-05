@@ -1902,7 +1902,7 @@ function showSuccess() {
 // Share actions
 function enterApp() {
     const email = userData().email || new URLSearchParams(window.location.search).get('email') || '';
-    window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#messages';
+    // window.location.href = '/app' -- disabled, SPA broken
 }
 
 function copyShareUrl() {
@@ -2155,7 +2155,7 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
     
     if (email && p.get('verified') === 'true') {
         // Already verified — go straight to the full app
-        window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify';
+        // auto-redirect disabled — stay on auth page
         return;
     }
     
@@ -2169,7 +2169,7 @@ goToStep = function(n) { _origGoToStep(n); setTimeout(checkScroll, 150); };
             const hasTrust = d.trust_score?.score > 0;
             if (hasVouches || hasAuth || hasTrust || d.verified) {
                 // Verified — redirect to app
-                window.location.href = '/app?email=' + encodeURIComponent(email) + '&verified=true#verify';
+                // auto-redirect disabled — stay on auth page
             }
         })
         .catch(() => {});
