@@ -170,14 +170,14 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
 .mod-score.fail { color: var(--error); }
 .mod-score.pending { color: var(--text-quaternary); }
 .mod-result { flex-wrap: wrap; }
-.mod-info { font-size: 14px; color: var(--text-quaternary); cursor: pointer; padding: 4px 6px; min-width: 24px; min-height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
+.mod-info { font-size: 16px; color: var(--text-tertiary); cursor: pointer; padding: 6px 8px; min-width: 32px; min-height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
 .mod-info:hover, .mod-info:active { color: var(--accent); }
 .mod-desc { display: none; width: 100%; font-size: clamp(9px, 1.1vw, 11px); color: var(--text-quaternary); padding: 2px 0 4px 28px; line-height: 1.4; }
 .mod-result.show-desc .mod-desc { display: block; }
 .mod-result.show-desc .mod-info { color: var(--accent); }
 
 /* Back button */
-.btn-back { position: absolute; top: clamp(8px, 2vh, 24px); left: 0; display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-tertiary); font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 0; transition: color 0.2s; }
+.btn-back { position: absolute; top: clamp(8px, 2vh, 24px); left: 0; display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-secondary); font-family: var(--mono); font-size: 12px; cursor: pointer; padding: 8px 4px; transition: color 0.2s; }
 .btn-back:hover { color: var(--text-primary); }
 .btn-back svg { opacity: 0.6; }
 
@@ -314,7 +314,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         </div>
     </div>
     <div style="text-align:center;margin-bottom:16px;">
-        <button id="toggleOrgBtn" onclick="toggleOrgFields()" style="background:none;border:none;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;">+ Add organisation details</button>
+        <button id="toggleOrgBtn" onclick="toggleOrgFields()" style="background:none;border:none;font-family:var(--mono);font-size:12px;color:var(--text-secondary);cursor:pointer;padding:8px 12px;">+ Add organisation details</button>
     </div>
     <button class="btn-primary" id="btnIdentity" onclick="goToCamera()">
         Continue
@@ -328,7 +328,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
                 Verify Code
             </button>
             <div style="text-align:center;margin-top:8px;">
-                <button onclick="resendAuthOTP()" style="background:none;border:none;font-family:var(--mono);font-size:10px;color:var(--text-tertiary);cursor:pointer;">Didn't get it? Resend code</button>
+                <button onclick="resendAuthOTP()" style="background:none;border:none;font-family:var(--mono);font-size:12px;color:var(--text-secondary);cursor:pointer;padding:6px 0;text-decoration:underline;">Didn't get it? Resend code</button>
             </div>
         </div>
     </div>
@@ -383,7 +383,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
                 <span id="avAudioPct" style="font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); min-width: 30px; text-align: right;">0%</span>
             </div>
             <div id="avMicTip" style="font-size: 11px; color: var(--text-quaternary); margin-top: 4px; display: none;"></div>
-            <button onclick="retryAVSetup()" style="display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; padding: 3px 8px; font-size: 11px; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 6px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+            <button onclick="retryAVSetup()" style="display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 6px 12px; font-size: 11px; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 6px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
                 Refresh camera &amp; mic
             </button>
@@ -580,7 +580,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
     <div style="margin-top:20px;text-align:center;">
         <a id="enterAppBtn" href="#" onclick="enterApp()" style="display:inline-block;background:var(--purple);color:white;font-family:var(--mono);font-size:13px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;cursor:pointer;">Enter VAC Protocol →</a>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);margin-top:8px;">Messages · Agents · Governance</div>
-        <div style="margin-top:12px"><a href="#" onclick="clearAndRestart()" style="font-family:var(--mono);font-size:10px;color:var(--text-quaternary);text-decoration:underline;cursor:pointer;">Re-verify identity</a></div>
+        <div style="margin-top:14px"><a href="#" onclick="clearAndRestart()" style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);text-decoration:none;cursor:pointer;padding:8px 16px;border:1px solid var(--border);border-radius:6px;display:inline-block;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">Re-verify identity</a></div>
     </div>
 
     <!-- Share card -->
@@ -1171,7 +1171,7 @@ function goToChallenge() {
         const fb = document.createElement('div');
         fb.id = 'fingerFallback';
         fb.style.cssText = 'text-align:center;margin-top:8px';
-        fb.innerHTML = '<button onclick="setFingerFallback()" style="background:none;border:none;color:var(--text-quaternary);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;padding:4px">Cannot show fingers? Voice-only mode</button>';
+        fb.innerHTML = '<button onclick="setFingerFallback()" style="background:none;border:none;color:var(--text-secondary);font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px 4px">Cannot show fingers? Voice-only mode</button>';
         document.getElementById('challengeText').parentElement.appendChild(fb);
     }
     const recVid = document.getElementById('videoPreviewRec');
