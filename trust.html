@@ -305,28 +305,31 @@ function buildGraph(nodes, links) {
     });
 
     // Initial (big letter)
-    node.append('text').attr('text-anchor', 'middle').attr('dy', d => d.type === 'outside' ? '0.35em' : '-0.1em')
+    node.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
         .attr('fill', d => colors[d.type] || colors.contact)
-        .attr('font-size', d => d.type === 'self' ? '18px' : d.type === 'outside' ? '10px' : '14px')
+        .attr('font-size', d => d.type === 'self' ? '20px' : d.type === 'outside' ? '12px' : '15px')
         .attr('font-weight', '700').attr('font-family', 'var(--mono)')
         .text(d => d.type === 'outside' ? '?' : d.name.charAt(0).toUpperCase());
 
     // Name below initial
     node.filter(d => d.type !== 'outside').append('text')
-        .attr('text-anchor', 'middle').attr('dy', '1.2em')
-        .attr('fill', d => colors[d.type]).attr('font-size', '9px').attr('font-weight', '600').attr('font-family', 'var(--mono)')
-        .text(d => d.name.length > 14 ? d.name.substring(0, 14) + '…' : d.name);
+        .attr('text-anchor', 'middle')
+        .attr('y', d => d.radius + 16)
+        .attr('fill', '#D1D5DB').attr('font-size', '11px').attr('font-weight', '600').attr('font-family', 'var(--sans)')
+        .text(d => d.name.length > 16 ? d.name.substring(0, 16) + '…' : d.name);
 
     // Score below name
     node.filter(d => d.score > 0).append('text')
-        .attr('text-anchor', 'middle').attr('dy', '2.4em')
-        .attr('fill', '#6B7280').attr('font-size', '8px').attr('font-family', 'var(--mono)')
+        .attr('text-anchor', 'middle')
+        .attr('y', d => d.radius + 28)
+        .attr('fill', '#6B7280').attr('font-size', '10px').attr('font-family', 'var(--mono)')
         .text(d => d.score.toFixed(2));
 
     // Outside label
     node.filter(d => d.type === 'outside').append('text')
-        .attr('text-anchor', 'middle').attr('dy', '2em')
-        .attr('fill', '#6B7280').attr('font-size', '8px').attr('font-family', 'var(--mono)')
+        .attr('text-anchor', 'middle')
+        .attr('y', d => d.radius + 16)
+        .attr('fill', '#6B7280').attr('font-size', '10px').attr('font-family', 'var(--mono)')
         .text('FULL VERIFY');
 
     // Tooltip
@@ -350,7 +353,7 @@ function buildGraph(nodes, links) {
         .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.mutual ? 120 : 160).strength(d => d.strength))
         .force('charge', d3.forceManyBody().strength(d => d.type === 'self' ? -400 : d.type === 'outside' ? -50 : -200))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(d => d.radius + 15))
+        .force('collision', d3.forceCollide().radius(d => d.radius + 25))
         .force('x', d3.forceX(width / 2).strength(0.05))
         .force('y', d3.forceY(height / 2).strength(0.05));
 
