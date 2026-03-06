@@ -40,6 +40,8 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);height:100v
 .apps-trigger.open .arrow{transform:rotate(180deg)}
 .apps-menu{position:absolute;top:100%;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:300}
 .apps-menu.show{display:block}
+.apps-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:299;display:none}
+.apps-backdrop.show{display:block}
 .apps-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:background .15s;text-decoration:none;color:var(--white)}
 .apps-item:hover{background:rgba(45,212,191,0.05)}
 .apps-item.active{background:rgba(45,212,191,0.08)}
@@ -78,6 +80,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);height:100v
 <div class="nav-divider"></div>
 
 <!-- Apps Dropdown -->
+<div class="apps-backdrop" id="appsBackdrop" onclick="closeApps()"></div>
 <div class="apps-dropdown" id="appsDropdown">
 <div class="apps-trigger" id="appsTrigger" onclick="toggleApps()">
 <div class="dot" style="background:var(--purple)"></div>
@@ -193,8 +196,8 @@ function goApp(app) {
     // Keep dropdown trigger highlighted
     document.getElementById('appsTrigger').classList.add('open');
     
-    // Close menu
-    document.getElementById('appsMenu').classList.remove('show');
+    // Close menu + backdrop
+    closeApps();
     
     // Load page
     const frame = document.getElementById('appFrame');
@@ -206,18 +209,26 @@ function goApp(app) {
 function toggleApps() {
     const menu = document.getElementById('appsMenu');
     const trigger = document.getElementById('appsTrigger');
-    menu.classList.toggle('show');
-    if (!currentApp) trigger.classList.toggle('open');
+    const backdrop = document.getElementById('appsBackdrop');
+    const isOpen = menu.classList.contains('show');
+    if (isOpen) { closeApps(); } 
+    else { menu.classList.add('show'); backdrop.classList.add('show'); trigger.classList.add('open'); }
+}
+
+function closeApps() {
+    document.getElementById('appsMenu').classList.remove('show');
+    document.getElementById('appsBackdrop').classList.remove('show');
+    if (!currentApp) document.getElementById('appsTrigger').classList.remove('open');
 }
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
     const dd = document.getElementById('appsDropdown');
-    if (!dd.contains(e.target)) {
-        document.getElementById('appsMenu').classList.remove('show');
-        if (!currentApp) document.getElementById('appsTrigger').classList.remove('open');
-    }
+    if (!dd.contains(e.target)) { closeApps(); }
 });
+
+// Close dropdown on ESC
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeApps(); });
 
 // Listen for iframe messages
 window.addEventListener('message', (e) => {
