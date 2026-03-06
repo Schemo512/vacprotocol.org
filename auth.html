@@ -501,6 +501,7 @@ body { font-family: var(--font); color: var(--text-secondary); background: var(-
         <div class="mod-result" id="modLipSync"><span class="mod-status">⏳</span><span class="mod-name">Lip-Sync</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Confirms lip movements match spoken audio in real time</span></div>
         <div class="mod-result" id="modChallenge"><span class="mod-status">⏳</span><span class="mod-name">Challenge Response</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Matches spoken words against a unique server-generated phrase</span></div>
         <div class="mod-result" id="modFinger"><span class="mod-status">⏳</span><span class="mod-name">Finger Gesture</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Verifies correct finger count sequence shown near the face</span></div>
+        <div class="mod-result" id="modDuress"><span class="mod-status">⏳</span><span class="mod-name">Duress Detection</span><span class="mod-info" onclick="event.stopPropagation();toggleModDesc(this.parentElement)">ⓘ</span><span class="mod-score pending">—</span><span class="mod-desc">Checks for signs of coercion — unusual eye movement, forced expression, visible tension. Silent alarm if detected.</span></div>
         </div>
     </div>
     <!-- Under the Hood — engine analysis details -->
@@ -714,6 +715,10 @@ const FAIL_REASONS = {
     challenge_response: {
         reason: 'Spoken words did not match the challenge phrase.',
         tip: 'Read the challenge phrase exactly as shown — include the greeting and all digits.'
+    },
+    duress: {
+        reason: 'Duress check — monitoring for signs of coercion.',
+        tip: 'This runs silently. If you are safe, this will always pass.'
     },
     finger_gesture: {
         reason: 'Finger count sequence did not match the expected digits.',
@@ -1455,10 +1460,14 @@ async function runRealVerification(videoBlob) {
                 'lip_sync': 'modLipSync',
                 'challenge_response': 'modChallenge',
                 'finger_gesture': 'modFinger',
+                'duress': 'modDuress',
                 'geolocation': null, // not used in initial auth
             }[mod.name];
             if (elId) {
-                updateModality(elId, mod.status, mod.score, mod.name, mod.detail);
+                // Map duress status: clear→verified, alert→failed
+                var displayStatus = mod.status;
+                if (mod.name === 'duress') { displayStatus = mod.status === 'clear' ? 'verified' : 'failed'; }
+                updateModality(elId, displayStatus, mod.score, mod.name, mod.detail);
                 await sleep(150); // Stagger for visual effect
             }
         }
@@ -1550,6 +1559,7 @@ function updateModality(elId, status, score, modName, detail) {
             if (modName==='lip_sync'){lines.push('Lip-audio match: '+(detail.matches_audio?'yes':'no'));}
             if (modName==='challenge_response'){if(detail.heard)lines.push('Heard: '+detail.heard);if(detail.expected)lines.push('Expected: '+detail.expected);if(detail.match_ratio!==undefined)lines.push('Match: '+(detail.match_ratio*100).toFixed(0)+'%');}
             if (modName==='finger_gesture'){if(detail.digits_expected)lines.push('Expected: ['+detail.digits_expected.join(', ')+']');if(detail.digits_seen)lines.push('Gemini saw: ['+detail.digits_seen.join(', ')+']');if(detail.hand_near_face!==undefined)lines.push('Hand near face: '+(detail.hand_near_face?'yes':'no'));}
+            if (modName==='duress'){lines.push('Duress likelihood: '+(detail.duress_likelihood!==undefined?(detail.duress_likelihood*100).toFixed(0)+'%':'0%'));if(detail.indicators&&detail.indicators.length)lines.push('Indicators: '+detail.indicators.join(', '));else lines.push('No distress indicators detected');lines.push('Status: '+(detail.under_duress?'⚠️ ALERT — silent alarm triggered':'✅ Clear — no signs of coercion'));}
             dd.innerHTML = lines.join('<br>');
         }
     }
@@ -1590,7 +1600,7 @@ function toggleModalities() {
 }
 
 function updateModalitySummary() {
-    const mods = ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger'];
+    const mods = ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger', 'modDuress'];
     let passed = 0, failed = 0, pending = 0;
     mods.forEach(id => {
         const el = document.getElementById(id);
@@ -1773,7 +1783,7 @@ async function retryVerification() {
     if (retryAttempts >= MAX_RETRIES) return;
 
     // Reset modality displays
-    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger'].forEach(id => {
+    ['modFace', 'modDeepfake', 'modVoice', 'modLipSync', 'modChallenge', 'modFinger', 'modDuress'].forEach(id => {
         updateModality(id, 'pending', null);
     });
 
