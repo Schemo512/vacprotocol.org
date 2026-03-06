@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <!-- graph-v4-cachebust-20260306 -->
-<script src="/trust-graph.js"></script>
 <style>
 :root{--bg:#0D0F17;--surface:#151821;--border:#1E2230;--teal:#2DD4BF;--purple:#7C3AED;--emerald:#10B981;--coral:#F96167;--amber:#F59E0B;--white:#FFF;--gray:#9CA3AF;--muted:#6B7280;--light:#D1D5DB;--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -488,8 +487,8 @@ async function loadDashboard() {
         ).join('');
 
         // Build D3 Trust Graph
-        // Use the production trust graph engine
-        VACTrustGraph.render('#trustGraphSvg', { email: email, api: API });
+        // Inline D3 trust graph
+        buildTrustGraph(user, contacts, vouches);
 
         // Show content
         document.getElementById('loadingState').style.display = 'none';
@@ -531,9 +530,8 @@ function buildScoreBreakdown(user, vouches) {
 }
 
 loadDashboard();
-</script>
-</body>
-</html>function buildTrustGraph(user, contacts, vouches) {
+
+function buildTrustGraph(user, contacts, vouches) {
     const svgEl = document.getElementById('trustGraphSvg');
     if (!svgEl) return;
     const svg = d3.select('#trustGraphSvg');
@@ -695,6 +693,7 @@ function buildScoreBreakdown(user, vouches) {
 }
 
 loadDashboard();
+
 </script>
 </body>
 </html>
