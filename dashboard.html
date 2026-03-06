@@ -89,9 +89,14 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);min-height:
 <div class="hero">
 <div class="hero-name" id="heroName"></div>
 <div class="hero-email" id="heroEmail"></div>
-<div class="hero-score">
+<div class="hero-score" onclick="toggleScoreBreakdown()" style="cursor:pointer" title="Click for breakdown">
 <span class="hero-score-num" id="heroScore">—</span>
-<span class="hero-score-label">Trust<br>Score</span>
+<span class="hero-score-label">Trust<br>Score ▾</span>
+</div>
+<div id="scoreBreakdown" style="display:none;max-width:400px;margin:12px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:left">
+<div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">TRUST SCORE BREAKDOWN</div>
+<div id="scoreComponents"></div>
+<div style="font-size:11px;color:var(--gray);margin-top:10px;line-height:1.5">Your trust score combines biometric verification strength, vouch network density, and verification recency. More vouches from verified humans = higher score. Score decays over time without re-verification.</div>
 </div>
 <div class="hero-verified" id="heroStatus"></div>
 </div>
@@ -271,7 +276,35 @@ async function captureAndVerify(challengeId) {
             // Brief success flash then reload
             setTimeout(() => {
                 document.getElementById('reauth-overlay').remove();
-                loadDashboard();
+                function toggleScoreBreakdown() {
+    var el = document.getElementById('scoreBreakdown');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function buildScoreBreakdown(user, vouches) {
+    var score = user.trust_score || 0;
+    var vouchCount = (vouches.vouches_received || []).length;
+    var verifications = user.total_verifications || 0;
+    
+    // Estimate component scores
+    var bioScore = Math.min(score * 1.2, 0.95);  // Biometric base
+    var vouchBoost = Math.min(vouchCount * 0.05, 0.15);
+    var recency = verifications > 5 ? 0.05 : 0;
+    
+    var components = [
+        { label: 'Biometric Verification', value: bioScore.toFixed(2), color: 'var(--teal)', desc: 'Face liveness + deepfake + voiceprint + lip-sync + challenge + finger gesture + duress', pct: Math.round(bioScore * 100) },
+        { label: 'Vouch Network', value: vouchBoost.toFixed(2), color: 'var(--emerald)', desc: vouchCount + ' vouch' + (vouchCount !== 1 ? 'es' : '') + ' from verified humans', pct: Math.round(vouchBoost * 100) },
+        { label: 'Verification Recency', value: recency.toFixed(2), color: 'var(--purple)', desc: verifications + ' total verifications — freshness bonus', pct: Math.round(recency * 100) }
+    ];
+    
+    var html = components.map(function(c) {
+        return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--white)">' + c.label + '</span><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + c.color + '">+' + c.value + '</span></div><div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + c.pct + '%;background:' + c.color + ';border-radius:3px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + c.desc + '</div></div>';
+    }).join('');
+    
+    document.getElementById('scoreComponents').innerHTML = html;
+}
+
+loadDashboard();
             }, 800);
         } else {
             const e = await r.json();
@@ -326,7 +359,35 @@ async function submitQuickReauth(challengeId) {
             const d = await r.json();
             setToken(d.token);
             document.getElementById('reauth-overlay').remove();
-            loadDashboard(); // Reload data with new token
+            function toggleScoreBreakdown() {
+    var el = document.getElementById('scoreBreakdown');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function buildScoreBreakdown(user, vouches) {
+    var score = user.trust_score || 0;
+    var vouchCount = (vouches.vouches_received || []).length;
+    var verifications = user.total_verifications || 0;
+    
+    // Estimate component scores
+    var bioScore = Math.min(score * 1.2, 0.95);  // Biometric base
+    var vouchBoost = Math.min(vouchCount * 0.05, 0.15);
+    var recency = verifications > 5 ? 0.05 : 0;
+    
+    var components = [
+        { label: 'Biometric Verification', value: bioScore.toFixed(2), color: 'var(--teal)', desc: 'Face liveness + deepfake + voiceprint + lip-sync + challenge + finger gesture + duress', pct: Math.round(bioScore * 100) },
+        { label: 'Vouch Network', value: vouchBoost.toFixed(2), color: 'var(--emerald)', desc: vouchCount + ' vouch' + (vouchCount !== 1 ? 'es' : '') + ' from verified humans', pct: Math.round(vouchBoost * 100) },
+        { label: 'Verification Recency', value: recency.toFixed(2), color: 'var(--purple)', desc: verifications + ' total verifications — freshness bonus', pct: Math.round(recency * 100) }
+    ];
+    
+    var html = components.map(function(c) {
+        return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--white)">' + c.label + '</span><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + c.color + '">+' + c.value + '</span></div><div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + c.pct + '%;background:' + c.color + ';border-radius:3px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + c.desc + '</div></div>';
+    }).join('');
+    
+    document.getElementById('scoreComponents').innerHTML = html;
+}
+
+loadDashboard(); // Reload data with new token
         } else {
             const e = await r.json();
             status.textContent = 'Failed: ' + (e.detail?.message || e.detail || 'Try again');
@@ -440,6 +501,34 @@ async function loadDashboard() {
 
 
 
+function toggleScoreBreakdown() {
+    var el = document.getElementById('scoreBreakdown');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function buildScoreBreakdown(user, vouches) {
+    var score = user.trust_score || 0;
+    var vouchCount = (vouches.vouches_received || []).length;
+    var verifications = user.total_verifications || 0;
+    
+    // Estimate component scores
+    var bioScore = Math.min(score * 1.2, 0.95);  // Biometric base
+    var vouchBoost = Math.min(vouchCount * 0.05, 0.15);
+    var recency = verifications > 5 ? 0.05 : 0;
+    
+    var components = [
+        { label: 'Biometric Verification', value: bioScore.toFixed(2), color: 'var(--teal)', desc: 'Face liveness + deepfake + voiceprint + lip-sync + challenge + finger gesture + duress', pct: Math.round(bioScore * 100) },
+        { label: 'Vouch Network', value: vouchBoost.toFixed(2), color: 'var(--emerald)', desc: vouchCount + ' vouch' + (vouchCount !== 1 ? 'es' : '') + ' from verified humans', pct: Math.round(vouchBoost * 100) },
+        { label: 'Verification Recency', value: recency.toFixed(2), color: 'var(--purple)', desc: verifications + ' total verifications — freshness bonus', pct: Math.round(recency * 100) }
+    ];
+    
+    var html = components.map(function(c) {
+        return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--white)">' + c.label + '</span><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + c.color + '">+' + c.value + '</span></div><div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + c.pct + '%;background:' + c.color + ';border-radius:3px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + c.desc + '</div></div>';
+    }).join('');
+    
+    document.getElementById('scoreComponents').innerHTML = html;
+}
+
 loadDashboard();
 </script>
 </body>
@@ -451,141 +540,157 @@ loadDashboard();
     
     const width = svgEl.clientWidth || 700;
     const height = 320;
-    svg.attr('viewBox', `0 0 ${width} ${height}`);
+    svg.attr('viewBox', '0 0 ' + width + ' ' + height);
 
-    const nodes = [{
-        id: email, name: user.name || 'You',
-        score: user.trust_score || 0, type: 'self', radius: 36,
-        verifications: user.total_verifications || 0
-    }];
-    const links = [];
-    const seen = new Set([email]);
+    // Data
+    var nodes = [{ id: email, name: user.name || 'You', score: user.trust_score || 0, type: 'self', r: 40 }];
+    var links = [];
+    var seen = {};
+    seen[email] = true;
 
-    contacts.forEach(c => {
-        const isMutual = c.i_vouched && c.they_vouched;
-        nodes.push({
-            id: c.email, name: c.name || c.email.split('@')[0],
-            score: c.trust_score || 0, type: isMutual ? 'mutual' : 'voucher', radius: 26
-        });
-        seen.add(c.email);
-        links.push({ source: email, target: c.email, mutual: isMutual });
+    (contacts || []).forEach(function(c) {
+        var mutual = c.i_vouched && c.they_vouched;
+        var name = c.name || c.email.split('@')[0];
+        if (name.length > 12) name = name.substring(0, 12);
+        nodes.push({ id: c.email, name: name, score: c.trust_score || 0, type: mutual ? 'mutual' : 'voucher', r: 30 });
+        seen[c.email] = true;
+        links.push({ source: email, target: c.email, mutual: mutual });
     });
 
-    (vouches.vouches_received || []).forEach(v => {
-        if (!seen.has(v.email)) {
-            nodes.push({ id: v.email, name: v.person || v.email.split('@')[0], score: 0, type: 'voucher', radius: 22 });
-            seen.add(v.email);
+    (vouches.vouches_received || []).forEach(function(v) {
+        if (!seen[v.email]) {
+            var name = v.person || v.email.split('@')[0];
+            if (name.length > 12) name = name.substring(0, 12);
+            nodes.push({ id: v.email, name: name, score: 0, type: 'voucher', r: 28 });
+            seen[v.email] = true;
             links.push({ source: email, target: v.email, mutual: false });
         }
     });
 
-    // Outside node
-    nodes.push({ id: '_out', name: '?', score: 0, type: 'outside', radius: 18 });
-    links.push({ source: email, target: '_out', mutual: false });
+    var c = { self: '#2DD4BF', mutual: '#10B981', voucher: '#7C3AED' };
 
-    const colors = { self: '#2DD4BF', mutual: '#10B981', voucher: '#7C3AED', outside: '#374151' };
-
-    const simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(130))
-        .force('charge', d3.forceManyBody().strength(-350))
+    var sim = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(function(d){return d.id}).distance(150))
+        .force('charge', d3.forceManyBody().strength(-400))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(d => d.radius + 30))
-        .force('y', d3.forceY(height / 2).strength(0.08));
+        .force('collision', d3.forceCollide().radius(function(d){return d.r + 40}));
 
-    const g = svg.append('g');
+    var g = svg.append('g');
 
     // Links
-    g.append('g').selectAll('line').data(links).join('line')
-        .attr('stroke', d => d.mutual ? colors.mutual : '#1E2230')
-        .attr('stroke-width', d => d.mutual ? 2.5 : 1.5)
-        .attr('stroke-dasharray', d => d.mutual ? 'none' : '6,4')
-        .attr('opacity', 0.6)
-        .attr('class', 'graph-link');
+    var link = g.append('g').selectAll('line').data(links).join('line')
+        .attr('stroke', function(d){return d.mutual ? c.mutual : '#1E2230'})
+        .attr('stroke-width', function(d){return d.mutual ? 3 : 1.5})
+        .attr('stroke-dasharray', function(d){return d.mutual ? 'none' : '6,4'})
+        .attr('opacity', 0.5);
+
+    // Mutual labels
+    var mutualLabel = g.append('g').selectAll('text').data(links.filter(function(d){return d.mutual})).join('text')
+        .attr('text-anchor', 'middle').attr('fill', c.mutual).attr('font-size', '10px')
+        .attr('font-family', 'var(--mono)').attr('font-weight', '600').attr('opacity', 0.7)
+        .text('MUTUAL');
 
     // Node groups
-    const node = g.append('g').selectAll('g').data(nodes).join('g')
+    var node = g.append('g').selectAll('g').data(nodes).join('g')
         .attr('cursor', 'pointer')
         .call(d3.drag()
-            .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-            .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-            .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+            .on('start', function(e,d){if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y})
+            .on('drag', function(e,d){d.fx=e.x;d.fy=e.y})
+            .on('end', function(e,d){if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null})
         );
 
-    // Click handler — show detail panel
-    node.on('click', (e, d) => {
-        if (d.type === 'outside') return;
-        const panel = document.getElementById('nodeDetail');
-        const avatar = document.getElementById('detailAvatar');
-        const c = colors[d.type];
+    // Click → detail panel
+    node.on('click', function(e, d) {
+        var panel = document.getElementById('nodeDetail');
+        var avatar = document.getElementById('detailAvatar');
+        var col = c[d.type] || '#6B7280';
         avatar.textContent = d.name.charAt(0).toUpperCase();
-        avatar.style.background = c + '20';
-        avatar.style.border = '2px solid ' + c;
-        avatar.style.color = c;
+        avatar.style.cssText = 'width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;font-family:var(--mono);background:' + col + '20;border:2px solid ' + col + ';color:' + col;
         document.getElementById('detailName').textContent = d.name;
         document.getElementById('detailEmail').textContent = d.id;
         document.getElementById('detailScore').textContent = d.score > 0 ? d.score.toFixed(2) : '—';
-        const statusEl = document.getElementById('detailStatus');
-        statusEl.textContent = d.type === 'self' ? 'YOU · ROOT' : d.type === 'mutual' ? 'MUTUAL VOUCH' : 'VOUCHED FOR YOU';
-        statusEl.style.color = c;
+        document.getElementById('detailScore').style.color = col;
+        var s = document.getElementById('detailStatus');
+        s.textContent = d.type === 'self' ? 'YOU · ROOT' : d.type === 'mutual' ? 'MUTUAL VOUCH' : 'VOUCHED FOR YOU';
+        s.style.color = col;
         panel.style.display = 'block';
-        
-        // Highlight this node
-        node.selectAll('circle').attr('opacity', 0.3);
-        d3.select(e.currentTarget).selectAll('circle').attr('opacity', 1);
-        setTimeout(() => node.selectAll('circle').attr('opacity', 1), 2000);
     });
 
-    // Glow for self
-    node.filter(d => d.type === 'self').append('circle')
-        .attr('r', d => d.radius + 8).attr('fill', 'none')
-        .attr('stroke', colors.self).attr('stroke-width', 1.5).attr('opacity', 0.2);
+    // Glow ring (self only)
+    node.filter(function(d){return d.type==='self'}).append('circle')
+        .attr('r', function(d){return d.r+10}).attr('fill','none')
+        .attr('stroke', c.self).attr('stroke-width', 2).attr('opacity', 0.15);
 
-    // Score arc (visual trust ring)
-    node.filter(d => d.score > 0 && d.type !== 'outside').each(function(d) {
-        const arc = d3.arc().innerRadius(d.radius + 2).outerRadius(d.radius + 5)
-            .startAngle(0).endAngle(d.score * 2 * Math.PI);
-        d3.select(this).append('path').attr('d', arc)
-            .attr('fill', colors[d.type]).attr('opacity', 0.5);
-    });
+    // Main circle
+    node.append('circle').attr('r', function(d){return d.r})
+        .attr('fill', function(d){return (c[d.type]||'#374151')+'10'})
+        .attr('stroke', function(d){return c[d.type]||'#374151'})
+        .attr('stroke-width', function(d){return d.type==='self'?3:2});
 
-    // Main circles
-    node.append('circle').attr('r', d => d.radius)
-        .attr('fill', d => (colors[d.type] || '#374151') + '12')
-        .attr('stroke', d => colors[d.type] || '#374151')
-        .attr('stroke-width', d => d.type === 'self' ? 2.5 : d.type === 'outside' ? 1 : 2)
-        .attr('stroke-dasharray', d => d.type === 'outside' ? '4,3' : 'none');
+    // Initial letter — BIG, centered
+    node.append('text')
+        .attr('text-anchor', 'middle').attr('dy', '0.38em')
+        .attr('fill', function(d){return c[d.type]||'#374151'})
+        .attr('font-size', function(d){return d.type==='self'?'22px':'18px'})
+        .attr('font-weight', '800').attr('font-family', 'var(--mono)')
+        .text(function(d){return d.name.charAt(0).toUpperCase()});
 
-    // Initial letter (centered in circle)
-    node.append('text').attr('text-anchor', 'middle').attr('dy', '0.38em')
-        .attr('fill', d => colors[d.type] || '#374151')
-        .attr('font-size', d => d.type === 'self' ? '18px' : d.type === 'outside' ? '14px' : '15px')
-        .attr('font-weight', '700').attr('font-family', 'var(--mono)')
-        .text(d => d.type === 'outside' ? '?' : d.name.charAt(0).toUpperCase());
+    // Name — BELOW circle, WHITE, large readable font
+    node.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('y', function(d){return d.r + 20})
+        .attr('fill', '#F3F4F6').attr('font-size', '13px').attr('font-weight', '600')
+        .text(function(d){return d.name});
 
-    // Name label BELOW circle
-    node.filter(d => d.type !== 'outside').append('text')
-        .attr('text-anchor', 'middle').attr('y', d => d.radius + 16)
-        .attr('fill', '#E5E7EB').attr('font-size', '11px').attr('font-weight', '600')
-        .attr('font-family', 'var(--sans)')
-        .text(d => {
-            const n = d.name;
-            return n.length > 14 ? n.substring(0, 14) + '…' : n;
-        });
-
-    // Outside label
-    node.filter(d => d.type === 'outside').append('text')
-        .attr('text-anchor', 'middle').attr('y', d => d.radius + 14)
-        .attr('fill', '#6B7280').attr('font-size', '9px').attr('font-weight', '600')
-        .attr('font-family', 'var(--mono)').attr('letter-spacing', '0.5px')
-        .text('OUTSIDE');
+    // Score — below name
+    node.filter(function(d){return d.score > 0}).append('text')
+        .attr('text-anchor', 'middle')
+        .attr('y', function(d){return d.r + 34})
+        .attr('fill', function(d){return c[d.type]||'#6B7280'})
+        .attr('font-size', '11px').attr('font-family', 'var(--mono)').attr('font-weight', '600')
+        .text(function(d){return d.score.toFixed(2)});
 
     // Tick
-    simulation.on('tick', () => {
-        g.selectAll('.graph-link')
-            .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-            .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-        node.attr('transform', d => `translate(${Math.max(40, Math.min(width-40, d.x))},${Math.max(40, Math.min(height-40, d.y))})`);
+    sim.on('tick', function() {
+        link.attr('x1',function(d){return d.source.x}).attr('y1',function(d){return d.source.y})
+            .attr('x2',function(d){return d.target.x}).attr('y2',function(d){return d.target.y});
+        mutualLabel
+            .attr('x',function(d){return(d.source.x+d.target.x)/2})
+            .attr('y',function(d){return(d.source.y+d.target.y)/2-8});
+        node.attr('transform',function(d){
+            var x = Math.max(50,Math.min(width-50,d.x));
+            var y = Math.max(50,Math.min(height-50,d.y));
+            return 'translate('+x+','+y+')';
+        });
     });
+}
+
+function toggleScoreBreakdown() {
+    var el = document.getElementById('scoreBreakdown');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function buildScoreBreakdown(user, vouches) {
+    var score = user.trust_score || 0;
+    var vouchCount = (vouches.vouches_received || []).length;
+    var verifications = user.total_verifications || 0;
+    
+    // Estimate component scores
+    var bioScore = Math.min(score * 1.2, 0.95);  // Biometric base
+    var vouchBoost = Math.min(vouchCount * 0.05, 0.15);
+    var recency = verifications > 5 ? 0.05 : 0;
+    
+    var components = [
+        { label: 'Biometric Verification', value: bioScore.toFixed(2), color: 'var(--teal)', desc: 'Face liveness + deepfake + voiceprint + lip-sync + challenge + finger gesture + duress', pct: Math.round(bioScore * 100) },
+        { label: 'Vouch Network', value: vouchBoost.toFixed(2), color: 'var(--emerald)', desc: vouchCount + ' vouch' + (vouchCount !== 1 ? 'es' : '') + ' from verified humans', pct: Math.round(vouchBoost * 100) },
+        { label: 'Verification Recency', value: recency.toFixed(2), color: 'var(--purple)', desc: verifications + ' total verifications — freshness bonus', pct: Math.round(recency * 100) }
+    ];
+    
+    var html = components.map(function(c) {
+        return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--white)">' + c.label + '</span><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + c.color + '">+' + c.value + '</span></div><div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + c.pct + '%;background:' + c.color + ';border-radius:3px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + c.desc + '</div></div>';
+    }).join('');
+    
+    document.getElementById('scoreComponents').innerHTML = html;
 }
 
 loadDashboard();
