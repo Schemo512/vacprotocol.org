@@ -109,7 +109,6 @@ textarea.form-input { min-height: 80px; resize: vertical; }
 </style>
 </head>
 <body>
-<div id="vacBackBar" style="display:none;height:32px;background:#0D0F17;border-bottom:1px solid #1E2230;padding:0 16px;font-family:monospace;font-size:11px;"><a href="/app" style="color:#6B7280;text-decoration:none;line-height:32px;" onmouseover="this.style.color='#2DD4BF'" onmouseout="this.style.color='#6B7280'">← Back to VAC Protocol</a></div><script>if(window.parent===window)document.getElementById("vacBackBar").style.display="block";</script>
 <nav class="nav">
     <div class="nav-inner">
         <a class="nav-brand" href="/">
@@ -473,14 +472,19 @@ async function runNextStep() {
         
         // Audit: transaction
         const s = data.step || {};
+        const stepModel = s.model || 'anthropic/claude-sonnet-4-20250514';
+        const [stepProv, stepMid] = stepModel.split('/');
+        const provNames = { anthropic: 'Claude', openai: 'OpenAI', xai: 'Grok', google: 'Gemini' };
         addAuditEntry('transaction', {
             txNumber: s.step || '?',
             agent: 'Research Agent',
+            model: `${provNames[stepProv] || stepProv} (${stepMid || '?'})`,
             inputTokens: (s.input_tokens || 0).toLocaleString(),
             outputTokens: (s.output_tokens || 0).toLocaleString(),
             cost: (s.cost_usd || 0).toFixed(4),
-            chain: `${document.getElementById('ownerEmail').value} ✓ → Coordinator → Research Agent`,
-            runningTotal: (data.total_spend_usd || 0).toFixed(4)
+            chain: `${document.getElementById('ownerEmail').value} ✓ → Coordinator → Research Agent → ${provNames[stepProv] || stepProv}`,
+            runningTotal: (data.total_spend_usd || 0).toFixed(4),
+            routing: s.routing ? `Task: ${s.routing.task_type}, Score: ${s.routing.score?.total}` : null
         });
 
         // Update budget
@@ -536,15 +540,41 @@ function renderStep(step, budget) {
     const cls = pct > 90 ? 'exceeded' : pct > 70 ? 'running' : '';
     const tokenCls = pct > 90 ? 'danger' : pct > 70 ? 'warn' : 'ok';
 
+    // Athena model attribution
+    const modelStr = step.model || 'anthropic/claude-sonnet-4-20250514';
+    const [provId, modelId] = modelStr.split('/');
+    const providerColors = { anthropic: '#D4A574', openai: '#74AA9C', xai: '#1DA1F2', google: '#4285F4' };
+    const providerIcons = { anthropic: '◈', openai: '◉', xai: '✕', google: '◆' };
+    const providerNames = { anthropic: 'Claude', openai: 'OpenAI', xai: 'Grok', google: 'Gemini' };
+    const provColor = providerColors[provId] || '#C9A84C';
+    const provIcon = providerIcons[provId] || '◈';
+    const provName = providerNames[provId] || provId;
+    const modelLabel = modelId ? modelId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Unknown';
+
+    // Routing info
+    const routing = step.routing;
+    let routingHtml = '';
+    if (routing && routing.score) {
+        routingHtml = `<div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-top:4px;padding:4px 8px;background:rgba(201,168,76,0.06);border-radius:4px;border:1px solid rgba(201,168,76,0.12);">
+            ◈ Athena routing: ${routing.task_type || '?'} task → ${routing.recommended || '?'} · Score: ${routing.score.total || '?'} (strength: ${routing.score.strength || '?'}, tier: ${routing.score.tier || '?'}, cost: ${routing.score.cost || '?'})
+            ${routing.alternatives?.length ? ' · Alt: ' + routing.alternatives.map(a => a.label + ' (' + a.score + ')').join(', ') : ''}
+        </div>`;
+    }
+
     const el = document.createElement('div');
     el.className = `step ${cls}`;
     el.style.animation = 'escalation-in 0.3s ease';
     el.innerHTML = `
         <div class="step-header">
-            <span class="step-label"><svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='var(--teal)' stroke-width='2' stroke-linecap='round'><rect x='2' y='6' width='20' height='12' rx='2'/><circle cx='8' cy='12' r='1.5' fill='var(--teal)'/><circle cx='16' cy='12' r='1.5' fill='var(--teal)'/><path d='M9 2h6M12 2v4'/></svg> Research Agent · API Call #${step.step || '?'}</span>
+            <span class="step-label">
+                <span style="color:${provColor};font-size:14px;margin-right:4px;">${provIcon}</span>
+                <span style="color:${provColor};font-weight:600;">${provName}</span>
+                <span style="color:var(--text-quaternary);"> · ${modelLabel} · API Call #${step.step || '?'}</span>
+            </span>
             <span class="step-tokens ${tokenCls}">${(step.total_tokens || 0).toLocaleString()} tokens</span>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-bottom:6px;">Chain: Human ✓ (${getRoleLabel()}) → Coordinator → Research Agent · Authorized by delegation · Ceiling: $${humanCeiling.spend}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-quaternary);margin-bottom:6px;">Chain: Human ✓ (${getRoleLabel()}) → Coordinator → Research Agent → <span style="color:${provColor}">${provName}</span> · Authorized by delegation · Ceiling: $${humanCeiling.spend}</div>
+        ${routingHtml}
         <div class="step-content">${escapeHtml(step.content)}</div>
         <div class="step-cost">
             Input: ${(step.input_tokens || 0).toLocaleString()} · Output: ${(step.output_tokens || 0).toLocaleString()} · Cost: $${(step.cost_usd || 0).toFixed(4)}
@@ -809,7 +839,9 @@ function renderAuditTrail() {
             detail = `<strong>CARD ISSUED</strong> to ${entry.agent}<br>Limit: ${entry.tokenLimit?.toLocaleString()} tokens · $${entry.spendCap} cap · ${entry.maxTx} max transactions<br>Authorized by: ${entry.authorizer} (Trust: ${entry.trustScore})`;
         } else if (entry.type === 'transaction') {
             icon = '◉'; color = 'var(--text-secondary)';
-            detail = `<strong>TX #${entry.txNumber}</strong> · ${entry.agent}<br>Tokens: ${entry.inputTokens} in / ${entry.outputTokens} out · Cost: $${entry.cost}<br>Chain: ${entry.chain} · Running total: $${entry.runningTotal}`;
+            const modelLine = entry.model ? `<br><span style="color:#C9A84C;">◈ Model: ${entry.model}</span>` : '';
+            const routingLine = entry.routing ? `<br><span style="color:var(--text-quaternary);">Athena routing: ${entry.routing}</span>` : '';
+            detail = `<strong>TX #${entry.txNumber}</strong> · ${entry.agent}${modelLine}<br>Tokens: ${entry.inputTokens} in / ${entry.outputTokens} out · Cost: $${entry.cost}<br>Chain: ${entry.chain} · Running total: $${entry.runningTotal}${routingLine}`;
         } else if (entry.type === 'limit_reached') {
             icon = '⊘'; color = 'var(--error)';
             detail = `<strong>CARD LIMIT REACHED</strong> · ${entry.reason}<br>Agent frozen. Awaiting human re-authorization.<br>Total spent: ${entry.totalTokens?.toLocaleString()} tokens / $${entry.totalSpend}`;
