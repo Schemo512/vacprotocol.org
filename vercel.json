@@ -37,6 +37,10 @@
             "destination": "/auth.html"
         },
         {
+            "source": "/tribunal",
+            "destination": "/tribunal-demo.html"
+        },
+        {
             "source": "/dashboard",
             "destination": "/dashboard.html"
         },
