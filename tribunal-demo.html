@@ -262,10 +262,13 @@ document.querySelectorAll('.tab').forEach(t=>{
 
 // A REAL Ed25519+JWT token minted from the live VAC production backend for this demo.
 // Verifiable by anyone at the URL below — this is the live tech, not a mock.
+// Durable: issued to the backend's PERSISTENT store (survives redeploys) with a
+// 10-year expiry so the independent-verify link does not go dead. Confirmed
+// /v1/vat/verify returns {"valid":true} HTTP 200 (persistent.tokens incremented on mint).
 const REAL_TOKEN = {
-  jti:"vat_root_7bfa0731a846",
+  jti:"vat_root_1d7283c653f4",
   trust:0.95,
-  verify:"https://vacprotocol.org/vat/verify/vat_root_7bfa0731a846"
+  verify:"https://vacprotocol.org/vat/verify/vat_root_1d7283c653f4"
 };
 
 let cur=null, stepIdx=-1;
