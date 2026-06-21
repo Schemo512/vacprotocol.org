@@ -91,7 +91,7 @@ body {
 .nav-icon { width: 24px; height: 24px; }
 .nav-wordmark { font-weight: 800; font-size: 13px; color: var(--text-primary); letter-spacing: 2px; }
 .nav-wordmark span { font-weight: 500; color: var(--text-tertiary); letter-spacing: 1.2px; }
-.nav-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; }
+.nav-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); }
 .nav-badge.valid { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
 .nav-badge.invalid { color: var(--error); background: var(--error-bg); border: 1px solid var(--error-border); }
 
@@ -376,7 +376,7 @@ body {
         </svg>
         <div class="nav-wordmark">VAC <span>PROTOCOL</span></div>
     </a>
-    <div class="nav-badge valid" id="nav-badge">VERIFIED</div>
+    <div class="nav-badge" id="nav-badge">VERIFYING…</div>
 </div></nav>
 
 <div class="page">
@@ -455,16 +455,20 @@ function switchTheme(id) {
 function render(data, verif, budgetData) {
     const app = document.getElementById('app');
     const theme = (typeof VACTheme !== 'undefined') ? VACTheme.current() : { meta: {} };
+    const nb = document.getElementById('nav-badge');
 
     if (!data) {
+        if (nb) { nb.textContent = 'NOT FOUND'; nb.className = 'nav-badge invalid'; }
         app.innerHTML = '<div class="error-card"><div class="error-title">Token Not Found</div><div class="error-msg">This verification link may have expired or been revoked.<br><br><a href="https://vacprotocol.org">Learn about VAC Protocol \u2192</a></div></div>';
         return;
     }
 
     const { chain_display: cd, claim_mapping: cm, verification: v } = data;
     const ok = v.valid;
-    const nb = document.getElementById('nav-badge');
-    if (!ok) { nb.textContent = 'INVALID'; nb.className = 'nav-badge invalid'; }
+    if (nb) {
+        if (ok) { nb.textContent = 'VERIFIED'; nb.className = 'nav-badge valid'; }
+        else { nb.textContent = 'INVALID'; nb.className = 'nav-badge invalid'; }
+    }
 
     const root = cd.find(n => n.is_root);
     const method = root ? root.verification_method : 'multi_modal';
